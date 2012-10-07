@@ -1,7 +1,7 @@
 
 clear Message
 
-Message{1} = 'Basepair, base stacking, or letter pair constraint is specified above the diagonal.';
+Message{1} = 'Basepair, base stacking, base phosphate, or letter pair constraint is specified above the diagonal.';
 
 Message{2} = '';
 
@@ -41,9 +41,15 @@ Message{19} = 'To specify that the nucleotides must match a certain pattern, typ
 
 Message{20} = '';
 
-Message{21} = 'One can restrict to pairs that play a certain role in the secondary and tertiary structure.  For pairs that are nested, type "N" or "nested".  For pairs that cross nested interactions but involve nucleotides in the same branch of the RNA, type "local" or "L".  For long-range or distant interactions, between different branches of the RNA, type "long-range", "distant", "D", or "LR".  Note that "nested", "local", and "distant" are mutually exclusive.  They can be negated with ~, but ~local only returns distant interactions, not nested ones.';
+Message{21} = 'To require that two nucleotides make a base-phosphate interaction, enter BPh in the corresponding yellow box. This will select pairs of nucleotides in which the first nucleotide''s base is a hydrogen bond donor and the second nucleotide''s phosphate is an acceptor. To reverse the roles, type PhB. To specify particular base-phosphate categories, type 0BPh, 1BPh, 2BPh, ..., 9BPh, or 0PhB, 1PhB, etc. For near base-phosphate interactions, type nBPh, nPhB, n1BPh, n1PhB, etc.';
 
-Message{22} = 'To specify bases on the same strand that form cWW pairs that flank a hairpin, internal, or junction loop, type "flank" or "F".  Note:  for internal and junction loops, flanking nucleotides should be on the same strand, one on each side of the internal or junction loop.  Such flanking nucleotides usually do not interact with one another.';
+Message{22} = '';
+
+Message{23} = 'One can restrict to pairs that play a certain role in the secondary and tertiary structure.  For pairs that are nested, type "N" or "nested".  For pairs that cross nested interactions but involve nucleotides in the same branch of the RNA, type "local" or "L".  For long-range or distant interactions, between different branches of the RNA, type "long-range", "distant", "D", or "LR".  Note that "nested", "local", and "distant" are mutually exclusive.  They can be negated with ~, but ~local only returns distant interactions, not nested ones.';
+
+Message{24} = '';
+
+Message{25} = 'To specify bases on the same strand that form cWW pairs that flank a hairpin, internal, or junction loop, type "flank" or "F".  Note:  for internal and junction loops, flanking nucleotides will be on the same strand, one on each side of the internal or junction loop.  Such flanking nucleotides usually do not interact with one another.';
 
 mEditBoxWrap(Message,'Interaction help');
 

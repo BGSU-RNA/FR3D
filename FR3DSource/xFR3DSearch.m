@@ -4,6 +4,22 @@
 % Change the list of PDB files to be searched by editing zFileNameList
 % Change the query by editing xSpecifyQuery
 
+% The result of running xFR3DSearch is a variable Search with these fields:
+%   
+%    .Query                     % a description of the search parameters
+%    .Filenames                 % names of files that were searched
+%    .TotalTime                 % how much time the search took
+%    .Date                      % date of the search
+%    .Time                      % time the search was started
+%    .SaveName                  % name for the saved search file
+%    .Candidates                % L x N+1 matrix of indices of candidates
+                                % L is the number of candidates found
+                                % N is the number of search nucleotides
+                                % the last column of Candidates is the index
+                                % of the file in which the candidate was found
+%    .Discrepancy               % geometric discrepancy of each candidate
+                                % from the query, for geometric searches
+
 if ~exist('Verbose'),
   Verbose = 1;                               % default is to print output
 end
@@ -20,9 +36,9 @@ end
 % ----------------------------------------- Load PDB files if needed --------
 
 if ~exist('File'),                           % if no molecule data is loaded,
-  [File,SIndex] = zAddNTData(Filenames,2,[],Verbose);   % load PDB data
+  [File,SIndex] = zAddNTData(Filenames,0,[],Verbose);   % load PDB data
 else
-  [File,SIndex] = zAddNTData(Filenames,2,File,Verbose); %add PDB data if needed
+  [File,SIndex] = zAddNTData(Filenames,0,File,Verbose); %add PDB data if needed
 end                       % SIndex tells which elements of File to search
 
 % ------------------------------------------- Store actual filenames
@@ -95,7 +111,7 @@ Candidates = xFindCandidates(File(SIndex),Query,Verbose);  % screen for candidat
 
 if ~isempty(Candidates),                         % some candidate(s) found
  if Query.Geometric > 0,
-  [Discrepancy, Candidates] = xRankCandidates(File(SIndex),Query,Candidates);
+  [Discrepancy, Candidates] = xRankCandidates(File(SIndex),Query,Candidates,Verbose);
   if Verbose > 0,
     fprintf('Found %d candidates in the desired discrepancy range\n',length(Discrepancy));
   end

@@ -34,7 +34,7 @@ fprintf('\n');
 if nargin == 3,
   fprintf('%6.4f',Disc);                 % display discrepancy if passed
 else
-  fprintf('       ');
+  fprintf('      ');
 end
 
 for j=1:length(Indices),
@@ -52,10 +52,12 @@ for i=1:length(Indices),
     elseif j == i,
       fprintf('%6s', [File.NT(Indices(i)).Base Config{File.NT(Indices(i)).Syn+1}]);
     else
-      fprintf('%6d', abs(Indices(i)-Indices(j)));
+      fprintf('%6d', File.Range(Indices(i),Indices(j)));% display interaction range
+%     fprintf('%6d', abs(Indices(i)-Indices(j)));
     end
   end
   fprintf('\n');
 end
 
 drawnow
+

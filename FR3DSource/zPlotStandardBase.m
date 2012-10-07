@@ -40,12 +40,11 @@ end
   Z = [Q(H(code),:); Q(1,:)];
   k = [1 2]; 
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',0.5*[1 1 1],'LineWidth',2,'LineStyle','-');
-
   if textoption > 0,
     hold on
 
     for j=1:L,
-      text(Q(j,1)+0.1, Q(j,2), AtomNames{j,code});
+      text(Q(j,1), Q(j,2), 0.1, AtomNames{j,code},'FontSize',6);
     end
     title(['Standard ' BaseNames(code)])
   end

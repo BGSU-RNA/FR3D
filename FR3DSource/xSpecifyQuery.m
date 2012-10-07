@@ -29,7 +29,7 @@
 %     larger discrepancies; often, you get the same candidate with one or two
 %     nucleotides different but much higher discrepancy.  Default is 1 when
 %     Query.NumNT > 6.
- 
+
 function [Query] = xSpecifyQuery(QName);
 
 if nargin > 0,
@@ -41,6 +41,7 @@ else                        % change the following line to change the query!
   Query.Name = 'StackedPair'; 
   Query.Name = 'Stack';
   Query.Name = 'Basepair';
+  Query.Name = 'Sarcin5Symb';
 end
 
 Query.SearchFiles = '1s72';        % default is to search 1s72

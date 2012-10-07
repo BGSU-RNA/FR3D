@@ -4,8 +4,9 @@
 %   Value 1 : prints a wide listing to the Matlab command window
 %   Value 2 : prints a wide listing to an Editbox
 %   Value 3 : prints a narrow listing to an Editbox
-%   Value 5 : returns a wide listing
+%   Value 5 : returns a wide listing, doesn't print anything
 %   Value 6 : returns the text of the narrow listing
+%   Value 7 : narrow listing with information on the organism
 
 % The PC compiled version does both 2 and 3.
 
@@ -15,11 +16,17 @@
 function [Text] = xListCandidates(Search,NumToOutput,WheretoOutput,Param)
 
 File        = Search.File;
-Query       = Search.Query;
 Candidates  = Search.Candidates;
 
+if ~isfield(Search,'Query'),
+  Query.Geometric = 0;
+  Query.Name = '';
+else
+  Query = Search.Query;
+end
+
 [s,t]       = size(Candidates);
-N           = Query.NumNT;
+N           = t-1;
 
 if s == 0,
   fprintf('There are no candidates to list\n');
@@ -86,7 +93,7 @@ if isfield(Search,'GroupLabel'),
   Text{t} = [Text{t} ' Group    '];
 end
 
-if WheretoOutput < 3,
+if any(WheretoOutput == [1 2 5]),
   for i=1:N,
     for j=(i+1):N,
       Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
@@ -94,7 +101,7 @@ if WheretoOutput < 3,
   end
   
   c = 'Configuration                                      ';
-  Text{t} = [Text{t} sprintf('  %s', c(1:N))];
+  Text{t} = [Text{t} sprintf(' %s', c(1:N))];
   
   for i=1:N,
     for j=(i+1):N,
@@ -105,10 +112,17 @@ if WheretoOutput < 3,
   for i=1:N,
     for j=1:N,
       if j ~= i,
-        Text{t} = [Text{t} sprintf('%5s', [num2str(i) '-' num2str(j)])];
+        Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
       end
     end
   end
+
+  for i=1:N,
+    for j=(i+1):N,
+      Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
+    end
+  end
+  
 end   
 
 if N == 2,
@@ -121,16 +135,11 @@ Config = {'A' , 'S'};
 
 for i=1:min(s,NumToOutput),
 
-  Text{i+t} = '';
-
   f = double(Candidates(i,N+1));               % file number for this candidate
-  if WheretoOutput < 4,
-    Text{i+t} = [Text{i+t} sprintf('%10s', File(f).Filename)];
-  else
-    Text{i+t} = [Text{i+t} sprintf('%10s', File(f).Filename)];
-  end
-
   Indices = Candidates(i,1:N);                 % indices of nucleotides
+
+  Text{i+t} = '';
+  Text{i+t} = [Text{i+t} sprintf('%10s', File(f).Filename)];
 
   if isfield(Search,'DisttoCenter'),
     Text{i+t} = [Text{i+t} sprintf('%12.4f',Search.DisttoCenter(i))];
@@ -145,7 +154,7 @@ for i=1:min(s,NumToOutput),
     Text{i+t} = [Text{i+t} sprintf('%5s',File(f).NT(Indices(j)).Number)];    
   end
 
-  Text{i+t} = [Text{i+t} sprintf(' ')];
+  Text{i+t} = [Text{i+t} ' '];
 
   for j=1:N,
     Text{i+t} = [Text{i+t} sprintf('%s',File(f).NT(Indices(j)).Chain)];
@@ -156,7 +165,7 @@ for i=1:min(s,NumToOutput),
     Text{i+t} = [Text{i+t} ' ' GL(1:10)];
   end
 
-  if WheretoOutput < 3,
+  if any(WheretoOutput == [1 2 5]),
     for k=1:length(Indices),
       for j=(k+1):length(Indices),
         C1 = File(f).NT(Indices(k)).Code;
@@ -180,10 +189,18 @@ for i=1:min(s,NumToOutput),
     for k=1:length(Indices),
       for j=1:length(Indices),
         if j ~= k,
-         Text{i+t} = [Text{i+t} sprintf('%5s', zBasePhosphateText(File(f).BasePhosphate(Indices(k),Indices(j))))];
+         Text{i+t} = [Text{i+t} sprintf('%6s', zBasePhosphateText(File(f).BasePhosphate(Indices(k),Indices(j))))];
         end
       end
     end
+
+    for k=1:length(Indices),
+      for j=(k+1):length(Indices),
+        bbc = max(File(f).Backbone(Indices(j),Indices(k)),File(f).Backbone(Indices(k),Indices(j)));
+        Text{i+t} = [Text{i+t} sprintf('%6s', zBackboneText(bbc))];
+      end
+    end
+
   end
     
   if N == 2,                        % special treatment for basepairs
@@ -203,15 +220,34 @@ for i=1:min(s,NumToOutput),
     if isfield(File,'Range'),
       ii = Candidates(i,1);
       jj = Candidates(i,2);
-      if (File(f).Range(ii,jj) == 0) && abs(File(f).Edge(ii,jj)) < 15,
+      if (File(f).Range(ii,jj) == 0) % && abs(File(f).Edge(ii,jj)) < 15,
         r = ' Nested';
       elseif File(f).Range(ii,jj) > 0,
         r = sprintf(' Range %4d', full(File(f).Range(ii,jj)));
+      else
+        r = '';
       end
       Text{i+t} = [Text{i+t} r];
     end
   end
 
+  if isfield(File,'Nucl') && (WheretoOutput < 4),
+    a = {};
+    for j = 1:N,
+      if ~isempty(File(f).Nucl(Candidates(i,j)).Motif),
+        a = [a File(f).Nucl(Candidates(i,j)).Motif(1).Name];
+      end
+    end
+%    u = unique(a);
+    u = a;
+    for uu = 1:length(u),
+      Text{i+t} = [Text{i+t} ' ' u{uu}];
+    end
+  end
+
+  if WheretoOutput == 7,
+    Text{i+t} = [Text{i+t} ' ' File(f).Info.Source ' | ' File(f).Info.Descriptor];
+  end
 end
 
 % -------------------------------------- Additional notifications and info
@@ -241,7 +277,7 @@ if WheretoOutput == 3,
   mEditbox(Text,'List of Candidates',10);
 elseif WheretoOutput == 2,
   mEditbox(Text,'Wide list of Candidates',7);
-elseif WheretoOutput == 1,
+elseif any(WheretoOutput == [1 7]),
   for i=1:length(Text),
     fprintf('%s\n',Text{i});
   end

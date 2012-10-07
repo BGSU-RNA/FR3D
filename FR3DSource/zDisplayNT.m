@@ -119,8 +119,8 @@ if strcmp(class(File),'char'),
   File = zGetNTData(Filename,0);
 end
 
-if nargin == 1,
-  NTList = 1:File.NumNT;                  % display them all
+if nargin == 1 || isempty(NTList),
+  NTList = 1:length(File.NT);                  % display them all
 end
 
 % if NTList is a cell array of numbers, look up the indices

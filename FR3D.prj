@@ -3,9 +3,10 @@
 <project>
 
   <MATLABPath>
-    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\NewFR3D\FR3D</Directory>
     <Directory>C:\Program Files\MATLAB\R2007a\toolbox\compiler\deploy</Directory>
     <Directory>C:\Documents and Settings\zirbel\My Documents\MATLAB</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\Matlab\m2html</Directory>
     <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\general</Directory>
     <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\ops</Directory>
     <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\lang</Directory>
@@ -53,10 +54,10 @@
     <Directory>C:\Program Files\MATLAB\R2007a\toolbox\shared\optimlib</Directory>
     <Directory>C:\Program Files\MATLAB\R2007a\work</Directory>
     <Directory>C:\Program Files\MATLAB\R2007a\toolbox\javabuilder\javabuilder</Directory>
-    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\FR3DSource</Directory>
-    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\PDBFiles</Directory>
-    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\PrecomputedData</Directory>
-    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\SearchSaveFiles</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\NewFR3D\FR3D\FR3DSource</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\NewFR3D\FR3D\PDBFiles</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\NewFR3D\FR3D\PrecomputedData</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\NewFR3D\FR3D\SearchSaveFiles</Directory>
   </MATLABPath>
 
   <MCCProperties>
@@ -83,7 +84,7 @@
 
   <file_info>
     <category name="Main function">
-      <file>C:\Documents and Settings\zirbel\My Documents\FR3D\FR3D.m</file>
+      <file>C:\Documents and Settings\zirbel\My Documents\NewFR3D\FR3D\FR3D.m</file>
     </category>
     <category name="Other files"/>
     <category name="C/C++ files"/>

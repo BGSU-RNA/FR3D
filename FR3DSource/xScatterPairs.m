@@ -1,6 +1,6 @@
 % xScatterPairs displays multiple 3d scatter plots of pair parameters, with a menu that allows one to color points in different orders, or display different nucleotides from the candidates
 
-function [FigsDone] = xScatterPairs(Search,N1,N2,ViewParam,Param)
+function [ppp] = xScatterPairs(Search,N1,N2,ViewParam,Param)
 
 warning off
 
@@ -17,6 +17,8 @@ Candidates = Search.Candidates;
 N     = t - 1;                                     % number of nucleotides
 File  = Search.File;
 CL    = zClassLimits;                              % read ClassLimits matrix
+
+ppp = 1:L;                                         % default ordering
 
 if exist('PairExemplars.mat','file') > 0,
   load('PairExemplars','Exemplar');
@@ -147,6 +149,7 @@ if Recolor > 0,
  end
 
   [y,i] = sort(Color);
+  ppp   = i;                                    % permutation
   Pair  = Pair(i);
   Color = Color(i);
 
@@ -160,7 +163,7 @@ switch ViewParam.Color,
   case 3, ColorAxis =  [15 19];
   case 4, ColorAxis =  [-12 30];
   case 5, ColorAxis =  [1 16];
-  case 6, ColorAxis =  [-90 270];
+  case 6, ColorAxis =  [min(Color) max(Color)];      % color by angle
   case 7, ColorAxis =  [min(Color) max(Color)];
   case 8, ColorAxis =  [-1 3];
   case 9, ColorAxis =  [0 4];
@@ -182,8 +185,9 @@ clf
 figure(ViewParam.FigNum)
 clf
 
-%set(gcf,'Renderer','OpenGL');
+%set(gcf,'Renderer','OpenGL');     % fast rotation
 %set(gcf,'Renderer','zbuffer')
+%set(gcf,'Renderer','painters')
 
 for k = 1:length(Pair),                              % Loop through pairs
   p      = Pair(k);

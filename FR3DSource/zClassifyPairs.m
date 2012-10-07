@@ -26,7 +26,7 @@ end
 
 % -------- First screening of base pairs ------------------------------------ 
 
-DistCutoff = 10.5;                                % max distance for interaction
+DistCutoff = 10.5;                              % max distance for interaction
 [i,j] = find((File.Distance < DistCutoff).*(File.Distance > 0)); 
                                                 % screen by C-C distance
 k = find(i<j);                                  % look at each pair only once
@@ -48,7 +48,10 @@ for k = 1:length(i),                            % loop through possible pairs
   Ni = File.NT(i(k));                           % nucleotide i information
   Nj = File.NT(j(k));                           % nucleotide j information
 
-  [Pair,s] = zClassifyPair(Ni,Nj,CL,Exemplar,0,Verbose);
+  [Pair,s,coplanar] = zClassifyPair(Ni,Nj,CL,Exemplar,0,Verbose);
+
+  File.Coplanar(i(k),j(k)) = coplanar;
+  File.Coplanar(j(k),i(k)) = coplanar;
 
   if ~isempty(Pair),
 
@@ -63,7 +66,7 @@ for k = 1:length(i),                            % loop through possible pairs
       File.Edge(i(k),j(k)) = -Pair.Edge;
       File.Edge(j(k),i(k)) =  Pair.Edge;
     end
- 
+
     % --------------------------- code class to distinguish AA, CC, ... cases
 
     if (Ni.Code == Nj.Code) & (abs(Pair.Class) < 15),

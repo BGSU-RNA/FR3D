@@ -3,7 +3,7 @@
 function [void] = zListPairs(Pair,VP)
 
 if ~isfield(VP,'ListItems')
-  ListItems = [1 22 2 3 4 5 6 9 10 11 12 13 14 16 17];
+  ListItems = [1 22 2 3 4 5 6 9 10 11 12 13 14 16 17 18];
 else
   ListItems = VP.ListItems;
 end

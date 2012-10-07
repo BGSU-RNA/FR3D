@@ -1,2 +1,0 @@
-# Copyright 2007 The MathWorks, Inc.
-

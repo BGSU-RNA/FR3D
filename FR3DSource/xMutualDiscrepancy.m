@@ -1,12 +1,16 @@
 % xMutualDiscrepancy computes the mutual distances between candidates
 
-function [Search] = xMutualDiscrepancy(File,Search)
+function [Search] = xMutualDiscrepancy(File,Search,Limit)
 
 Query      = Search.Query;
 Candidates = Search.Candidates;
 
 N     = Query.NumNT;
 [s,t] = size(Candidates);
+
+if nargin > 2,
+  s = min(s,Limit);
+end
 
 if ~isfield(Query,'LocWeight'),              % should not be necessary
   Query.LocWeight = ones(1,N);
@@ -27,7 +31,7 @@ if min(Search.DiscComputed(1,1:s)) == 0,             % some not computed
       c1.LocWeight   = Query.LocWeight;
       c1.AngleWeight = Query.AngleWeight;
       c1.LDiscCutoff = Inf;
-      c1 = xPrecomputeForDiscrepancy(c1);
+      c1             = xPrecomputeForDiscrepancy(c1);
 
       for j=1:k-1,
         f2 = Candidates(j,N+1);

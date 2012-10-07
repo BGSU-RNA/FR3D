@@ -9,13 +9,17 @@ end
 
 for f = 1:length(File),
 
-if length(File.NT) > 1,
+File(f).Crossing = sparse(zeros(length(File.NT)));
+File(f).Range    = sparse(zeros(length(File.NT)));
+
+if length(File(f).NT) > 1,
+
+E = fix(abs(File(f).Edge)); % matrix of pairwise interactions w/o BPh
 
 C = fix(abs(File(f).Edge))+0.001*(fix(abs(File(f).BasePhosphate+File(f).BasePhosphate')));                  % matrix of interactions, including base-phosphate
-E = fix(abs(File(f).Edge)); % matrix of base-base interactions
 
 for i = 1:length(C(:,1)),
-  C(i,i) = 0;               % remove phosphate self interactions
+  C(i,i) = 0;               % remove base-phosphate self interactions
 end
 
 C = triu(C);                % sparse matrix of pairwise interactions
@@ -25,25 +29,26 @@ C = triu(C);                % sparse matrix of pairwise interactions
 c = fix(c);                 % remove decimal from base-phosphate
 
 k = find((j > i));          % ignore self interactions
-
 i = i(k);
 j = j(k);
 c = c(k);
 
 [y,k] = sort(j-i);          % order by distance from diagonal
-
 i = i(k);
 j = j(k);
 c = c(k);
 
-d = zeros(size(c));                              % current interaction range
+d = zeros(size(c));                          % current interaction range
+cww = zeros(size(c));                        % number of cWW's crossed
 
-for m = 1:length(i),                             % go through all pairs once
-  if (c(m) == 1) && (d(m) == 0),                 % cWW pair, not pseudoknotted
+for m = 1:length(i),                         % go through all pairs once
+  if (c(m) == 1) && (d(m) == 0),             % cWW pair, not pseudoknotted
 
     p =     (i <= i(m)) .* (j >= i(m)) .* (j <= j(m));
     p = p + (i >= i(m)) .* (i <= j(m)) .* (j >= j(m));
     q = find(p);                      % indices of pairs that overlap i(m),j(m)
+
+
 
 %    d(q) = max(d(q), abs(i(m)-i(q))+abs(j(m)-j(q))); 
                             % increase interaction range for these pairs
@@ -54,7 +59,12 @@ for m = 1:length(i),                             % go through all pairs once
                             % of how many nucleotides this pair would need to
                             % move over to get uncrossed, keep the maximum
 
-%    d(q) = d(q) + 1;        % count number of nested cWW's crossed
+    p =     (i < i(m)) .* (j > i(m)) .* (j < j(m));
+    p = p + (i > i(m)) .* (i < j(m)) .* (j > j(m));
+    q = find(p);                      % indices of pairs that overlap i(m),j(m)
+
+
+    cww(q) = cww(q) + 1;        % count number of nested cWW's crossed
 
     d(m) = 0;               % don't inadvertently make this non-nested!
 
@@ -75,19 +85,24 @@ for m = 1:length(i),                             % go through all pairs once
   end
 end
 
-d = min(d,abs(i-j));                % adjust for local in-strand interactions
+d = min(d,abs(i-j)-1);              % adjust for local in-strand interactions
 
-i = [i; length(File(f).NT)];
+i = [i; length(File(f).NT)];        % append a blank interaction for size
 j = [j; length(File(f).NT)];
 d = [d; 0];
 c = [c; 0];
+cww = [cww; 0];
 
 S = sparse(i,j,d);
 S = S + S';
 File(f).Range = S;
 
+S = sparse(i,j,cww);
+S = S + S';
+File(f).Crossing = S;
+
 if Verbose > 1,
-  fprintf('%s has %d basepairs, of which %d are local.\n', File.Filename, full(sum(sum((C > 0) .* (C < 15)))), full(sum(sum(((S<=10).*C > 0) .* ((S<=10).*C < 15)))));
+  fprintf('%s has %d basepairs, of which %d are local.\n', File(f).Filename, full(sum(sum((C > 0) .* (C < 15)))), full(sum(sum(((S<=10).*C > 0) .* ((S<=10).*C < 15)))));
   for m = 1:14,
     all = length(find(c==m));
     local = length(find((c==m).*(d<=10)));
@@ -100,13 +115,13 @@ if Verbose > 1,
   [y,h] = sort(i(q));
   q = q(h);
   for m = 1:length(q),
-    fprintf('%s%s with %s%s\n', File.NT(i(q(m))).Base,File.NT(i(q(m))).Number, File.NT(j(q(m))).Base, File.NT(j(q(m))).Number);
+    fprintf('%s%s with %s%s\n', File(f).NT(i(q(m))).Base,File(f).NT(i(q(m))).Number, File(f).NT(j(q(m))).Base, File(f).NT(j(q(m))).Number);
   end
 end
 
 else
 
-  File.Range = [];
+  File(f).Range = [];
 
 end
 

@@ -1,254 +1,336 @@
 % zPhosphateInteractions checks all nearby pairs of bases for base-phosphate
 % interactions, and stores them in a sparse matrix field BasePhosphate
 
-function [File] = zPhosphateInteractions(File,Verbose)
+function [File,D] = zPhosphateInteractions(File,Verbose,Self)
 
-if nargin == 1,
+if nargin < 2,
   Verbose = 0;
 end
 
-PHA = [];
-PHC = [];
-PHG = [];
-PHU = [];
-count = [0 0 0 0];
-
-zStandardBases
-Sugar = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
-
-Lim(2,:) = [15 13 16 12];     % total number of atoms, including hydrogen
+if nargin < 3,
+  Self = 1;
+end
 
 t = cputime;
 
+% ------------------------------  Meanings of the classification codes:
+    %  1  A C2-H2  interacts with oxygen of phosphate, called 2BPh
+    %  2  A N6-1H6 interacts with oxygen of phosphate, called 6BPh
+    %  3  A N6-2H6 interacts with oxygen of phosphate, called 7BPh
+    %  4  A C8-H8  interacts with oxygen of phosphate, called 0BPh
+    %  5  C N4-2H4 interacts with oxygen of phosphate, called 6BPh
+    %  6  C N4-1H4 interacts with oxygen of phosphate, called 7BPh
+    %  7  C N4-1H4 and C5-H5 interact with 2 oxygens of phosphate, called 8BPh
+    % 18  C N4-1H4 and C5-H5 interact with just one oxygen, called 7BPh
+    %  8  C C5-H5  interacts with oxygen of phosphate, called 9BPh
+    %  9  C C6-H6  interacts with oxygen of phosphate, called 0BPh
+    % 10  G N2-1H2 interacts with oxygen of phosphate, called 1BPh
+    % 11  G N2-2H2 interacts with oxygen of phosphate, called 3BPh
+    % 12  G N2-2H2 and N1-H1 interacts with 2 oxygens of phosphate, called 4BPh
+    % 19  G N2-2H2 and N1-H2 interact with just one oxygen, called 4BPh
+    % 13  G N1-H1  interacts with oxygen of phosphate, called 5BPh
+    % 14  G C8-H8  interacts with oxygen of phosphate, called 0BPh
+    % 15  U N3-H3  interacts with oxygen of phosphate, called 5BPh
+    % 16  U C5-H5  interacts with oxygen of phosphate, called 9BPh
+    % 17  U C6-H6  interacts with oxygen of phosphate, called 0BPh
+
+    % Categories 18 and 19 are internal to FR3D.  They are displayed 8BPh, 4BPh
+
+% ------------------------------ temporary cutoffs! 
+
+CarbonDist    = 4.0;                           % max massive - oxygen distance
+nCarbonDist   = 5;                           % near category
+
+NitrogenDist  = 3.5;                           % max massive - oxygen distance
+nNitrogenDist = 5.0;                           % near category
+
+AL = 130;                                      % angle limit for BPh
+nAL = 90;                                     % angle limit for nBPh
+
+DL([4 6 11]) = NitrogenDist;
+DL([7 8 9])  = CarbonDist;
+
+nDL([4 6 11]) = nNitrogenDist;
+nDL([7 8 9])  = nCarbonDist;
+
+% ------------------------------ temporary cutoffs! 
+
+CarbonDist    = 4.0;                           % max massive - oxygen distance
+nCarbonDist   = 5;                           % near category
+
+NitrogenDist  = 3.5;                           % max massive - oxygen distance
+nNitrogenDist = 5.0;                           % near category
+
+AL = 130;                                      % angle limit for BPh
+nAL = 90;                                     % angle limit for nBPh
+
+DL([4 6 11]) = NitrogenDist;
+DL([7 8 9])  = CarbonDist;
+
+nDL([4 6 11]) = nNitrogenDist;
+nDL([7 8 9])  = nCarbonDist;
+
+% ------------------------------ specify cutoffs for classification
+
+CarbonDist    = 4.0;                           % max massive - oxygen distance
+nCarbonDist   = 4.5;                           % near category
+
+NitrogenDist  = 3.5;                           % max massive - oxygen distance
+nNitrogenDist = 4.0;                           % near category
+
+AL = 130;                                      % angle limit for BPh
+nAL = 110;                                     % angle limit for nBPh
+
+DL([4 6 11]) = NitrogenDist;
+DL([7 8 9])  = CarbonDist;
+
+nDL([4 6 11]) = nNitrogenDist;
+nDL([7 8 9])  = nCarbonDist;
+
+% ------------------------------- define basic data
+
+D = [];                          % where to save data if Verbose
+T = [];                          % data on which hydrogen with which oxygen(s)
+
+zStandardBases
+Sugar = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P','O3 of next'};
+
+p   = [9 13 11 12];                           % rows of the phosphate oxygens
+pn  = {'O5*','O3*','O1P','O2P'};              % names of phosphate oxygens
+
+% ------------------------------ loop through files and classify
+
 for f = 1:length(File),
+ if File(f).NumNT > 1,
+  if isempty(File(f).Distance),
+    c = cat(1,File(f).NT(1:File(f).NumNT).Center); % nucleotide centers
+    File(f).Distance = zMutualDistance(c,16); % compute distances < 16 Angs
+  end
 
-File(f).BasePhosphate = sparse(zeros(File(f).NumNT));
+  File(f).BasePhosphate = sparse(zeros(File(f).NumNT));
 
-% -------- First screening of base pairs ------------------------------------ 
+  % -------- First screening of base pairs ----------------------------------- 
 
-DistCutoff = 16;                                % max distance for interaction
-[i,j] = find((File(f).Distance < DistCutoff).*(File(f).Distance > 0)); 
-
-i = [i; (1:length(File.NT))'];                      % self interactions
-j = [j; (1:length(File.NT))'];
-
-%[i,j] = find(((File(f).Distance == 0))); 
+  DistCutoff = 16;                              % max distance for interaction
+  [i,j] = find((File(f).Distance < DistCutoff).*(File(f).Distance > 0)); 
                                                 % screen by C-C distance
-                                                % allow self interactions
 
-% -------- Screen and analyze pairs ----------------------------------------- 
+  if Self > 0,
+    i = [i; (1:length(File(f).NT))'];             % allow self interactions
+    j = [j; (1:length(File(f).NT))'];             % allow self interactions
+%    i = [(1:length(File(f).NT))'; i];             % allow self interactions
+%    j = [(1:length(File(f).NT))'; i];             % allow self interactions
+  end
 
-pc = 1;                                         % counter for valid pairs
-p   = [9 11 12 13];                             % rows of the phosphate oxygens
+  % -------- Screen and analyze pairs ----------------------------------------
 
-for k = 1:length(i),                            % loop through possible pairs
+  for k = 1:length(i),                          % loop through possible pairs
+   N1 = File(f).NT(i(k));                       % nucleotide i information
+   N2 = File(f).NT(j(k));                       % nucleotide j information
 
-  N1 = File(f).NT(i(k));                        % nucleotide i information
-  N2 = File(f).NT(j(k));                        % nucleotide j information
+   DT = [];                                     % accumulate data here
 
-  ph = (N2.Sugar(10,:)-N1.Center) * N1.Rot;     % phosphorus displacement  
+   ph = (N2.Sugar(10,:)-N1.Fit(1,:)) * N1.Rot;  % phosphorus displacement
+   if abs(ph(3)) < 4.5,                         % phosphorus close to plane
 
-  % preliminary elliptical screening based on the location of the phosphorus
-
-  if (abs(ph(3)) < 2),
-   if (ph*diag([1 1 6])*ph' < 60),
-    c = N1.Code;
-    switch c
+    switch N1.Code
       case 1,                         % Base A
               h   = [11 12 14 15];    % rows of the base hydrogens
+              hn  = {'H2','H8','1H6','2H6'}; % names of the base hydrogens
               m   = [ 9  7  6  6];    % rows of the corresponding massive atoms
               e   = [ 1  4  2  3];    % code for location of the interaction
       case 2,                         % Base C
               h   = [10 11 12 13];
+              hn  = {'H6','H5','1H4','2H4'}; % names of the base hydrogens
               m   = [ 7  8  6  6];
               e   = [ 9  8  6  5];
       case 3,                         % Base G
               h   = [12 13 15 16];
+              hn  = {'H1','H8','1H2','2H2'}; % names of the base hydrogens
               m   = [ 4  7 11 11];
               e   = [13 14 10 11];
       case 4,                         % Base U
               h   = [ 9 11 12];
+              hn  = {'H5','H3','H6'}; % names of the base hydrogens
               m   = [ 8  4  7];
               e   = [16 15 17];
     end
 
-    dis = zDistance(N1.Fit(h,:), N2.Sugar(p,:)); % distances between hyd & O's
+    dis = zDistance(N1.Fit(m,:), N2.Sugar(p,:)); % distances between mass & O's
+    nearDL = nDL(m)' * ones(1,4);     % limits to compare to
+    dis = dis .* (dis < nearDL);      % massive-oxygen pairs close enough
 
-    [ii,jj] = find(dis < 3.2);        % only keep those within 3.2 Angstroms
+    g = [];                           % internal classification number
+    w = [];                           % which oxygen interacts
+    Angle = [];
+    Dist  = [];
 
-    g = 0;
+    for mm = 1:length(m),             % massive atom to consider
+     pp = find(dis(mm,:));            % oxygens close enough to consider
+     for n = 1:length(pp),            % loop through potential oxygens
+      Angle(n)=zAngle(N1.Fit(m(mm),:),N1.Fit(h(mm),:),N2.Sugar(p(pp(n)),:));
+                                      % base massive - hydrogen - oxygen angle
+      Dist(n) = dis(mm,pp(n));        % distance
+     end
 
-    for kk = 1:length(ii),
-      Angle=zAngle(N1.Fit(m(ii(kk)),:),N1.Fit(h(ii(kk)),:),N2.Sugar(p(jj(kk)),:));
-      if Angle > 120,
+     PAngle = zAngle(N1.Fit(m(mm),:),N1.Fit(h(mm),:),N2.Sugar(10,:));
+                                  % base massive - hydrogen - phosphorus angle
+     PDist  = zDistance(N1.Fit(m(mm),:),N2.Sugar(10,:));        % distance
 
-        if ((Angle < 150) || (dis(ii(kk),jj(kk)) > 2.6)) % near case
-          if (g == 0)
-            g = e(ii(kk)) + 100;
-            sdist(pc) = File(f).Distance(i(k),j(k));
-            pc = pc + 1;
-          end
-        elseif (g == 6) || (g == 8),      % falls into two categories
-          g = 7;
-        elseif (g == 11) || (g == 13),    % falls into two categories
-          g = 12;
+     [u,v] = min(-Angle+60*Dist);     % order by quality of potential bond
+
+     for n = 1:length(pp),            % loop through potential oxygens
+      if Angle(n) > nAL,              % good enough to be "near" base-phosph
+
+        if ((Angle(n) > AL) && (Dist(n) < DL(m(mm)))) % true BPh pair
+          g = [g e(mm)];              % assign a non-near class.
+          w = [w pp(n)];              % record which oxygen it is 
+          T = [T; [f i(k) j(k) e(mm) pp(n)]];
         else
-          g = e(ii(kk));
-          sdist(pc) = File(f).Distance(i(k),j(k));
-          pc = pc + 1;
+          g = [g e(mm) + 100];        % > 100 means "near"
+          w = [w pp(n)];              % record which oxygen it is
         end
 
-        File(f).BasePhosphate(i(k),j(k)) =   g;
+        if Verbose > 1,
+          % store information for later display
+          ox = (N2.Sugar(p(pp(n)),:)-N1.Fit(1,:)) * N1.Rot; % oxygen displ
 
-        if Verbose > 0,
-          ox = (N2.Sugar(p(jj(kk)),:)-N1.Fit(1,:)) * N1.Rot; % oxygen displ
-          ph2= (N2.Sugar(10,:)-N1.Fit(1,:)) * N1.Rot;     % phosphorus displacement  
-          a = [ox dis(ii(kk),jj(kk)) Angle File(f).Distance(i(k),j(k)) ph2];
-          count(c) = count(c) + 1;
-          switch c
-            case 1,     PHA(count(c),:) = a;
-            case 2,     PHC(count(c),:) = a;
-            case 3,     PHG(count(c),:) = a;
-            case 4,     PHU(count(c),:) = a;
+          a = [f i(k) j(k) N1.Code g(end) mm pp(n) Angle(n) Dist(n) ox ph File(f).Distance(i(k),j(k)) (v(1)==n) -u(1) PAngle PDist str2num(N1.Number) str2num(N2.Number)];
+
+% [ g(end) v(1) == n]
+
+          % Columns:
+          % 1  file number
+          % 2  index of base
+          % 3  index of nucleotide using phosphate
+          % 4  code of base
+          % 5  classification number for this massive-oxygen pair
+          % 6  which massive atom is interacting
+          % 7  which oxygen is interacting
+          % 8  angle of interaction, in degrees
+          % 9  distance from massive atom to oxygen, in Angstroms
+          %10  displacement of oxygen atom relative to C1' of base
+          %13  displacement of phophorus atom relative to C1' of base
+          %16  distance between centers of the two bases
+          %17  1 if this is the best oxygen for this hydrogen, 0 otherwise
+          %18  approximate quality of the hydrogen bond
+          %19  angle made by massive, hydrogen, phosphorus
+          %20  distance from massive to phosphorus
+          %21  nucleotide number of base
+          %22  nucleotide number of phosphate donor
+          %23  (to be added below) classification of this interaction
+
+          if length(a(1,:)) == 22,
+            DT = [DT; a];                  % append data to data matrix
           end
 
-          if Verbose > 1,
-            %[kk ii(kk) jj(kk) f i(k) j(k) p(jj(kk))]
-            %size(jj)
-            %size(ii)
-            %h(ii(kk))
-            %p(jj(kk))
-            %dis(ii(kk),jj(kk))
+%          zOtherPhosphateInteractions
 
-            fprintf('%6s base %s%5s %3s phosphate %s%5s %3s length %6.2f angle %6.2f interaction %s\n', File(f).Filename, N1.Base, N1.Number, AtomNames{h(ii(kk)),c}, N2.Base, N2.Number, Sugar{p(jj(kk))}, dis(ii(kk),jj(kk)), Angle, zEdgeText(File(f).Edge(i(k),j(k))));
+          if Verbose > 3,
+            fprintf('%6s base %s%5s %3s BPcode %3d %4s phosphate donor %s%5s %13s length %6.2f angle %6.2f interaction %s', File(f).Filename, N1.Base, N1.Number, AtomNames{h(mm),N1.Code}, g(end), zBasePhosphateText(g(end)), N2.Base, N2.Number, Sugar{p(pp(n))}, dis(mm,pp(n)), Angle(n), zEdgeText(File(f).Edge(i(k),j(k))));
+
+
+            if a(17) == 1,
+              fprintf('Best\n');
+            else
+              fprintf('\n');
+            end
           end
         end
 
       end
-    end
-   end
-  end
-  
-end   % loop over pairs
-end   % loop over files
+
+     end  % loop over potential oxygens
+    end   % loop over massive atoms
+
+     if length(g) > 0,
+       if (min(g) < 100) && (max(g) > 100),
+         w = w(find(g < 100));
+         g = g(find(g < 100));               % remove near classifications
+       end
+       if length(g) > 1,                     % multiple bonds
+         g = sort(g);
+         if (g(1) == 6) && (g(end) == 8) && (min(w) < max(w)),
+           g = 7;                            % two different oxygens
+         elseif (g(1) == 6) && (g(end) == 8) && (min(w) == max(w)),
+           g = 18;
+         elseif (g(1) == 11) && (g(end) == 13) && (min(w) < max(w)),
+           g = 12;                           % two bonds formed
+         elseif (g(1) == 11) && (g(end) == 13) && (min(w) == max(w)),
+           g = 19;                           % two bonds formed
+         elseif (min(g) == max(g)),
+           g = g(1);
+         elseif (g(end) < 100) && (Verbose > 0),
+           fprintf('zPhosphateInteractions: Another case to consider: ');
+           fprintf('File %s Base index %4d Phosphate index %4d Classes ', File(f).Filename, i(k), j(k));
+           for m = 1:length(g),
+             fprintf('%d ', g(m));
+           end
+           fprintf('\n');
+         end
+       end
+
+       File(f).BasePhosphate(i(k),j(k)) =   g(1);  % record classification
+
+       if Verbose > 1,
+         if ~isempty(DT),
+           D = [D; [DT g(1)*ones(length(DT(:,1)),1)]];
+         end 
+       end
+
+     end
+
+   end    % if vertical displacement of phosphate is less than 6 Angstroms
+  end     % loop over nucleotide pairs
+ end      % if File.NumNT > 1
+end       % loop over files
+
 
 if Verbose > 1,
+  fprintf('Classifying base-phosphate interactions took %8.2f minutes\n', (cputime-t)/60);
+  zPhosDisplay(D,0);                     % display parameters graphically
+end
 
-fprintf('Classifying base-phosphate interactions took %8.2f minutes\n', (cputime-t)/60);
 
-figure(5)
-%hist(sdist,30);
-%max(sdist)
 
-for v = 1:4,
-  figure(v)
-  clf
-  switch v,
-    case 1,     c = PHA(:,4);
-                scatter3(PHA(:,1), PHA(:,2), PHA(:,3),4,c,'filled')
-                hold on
-                scatter3(PHA(:,7), PHA(:,8), PHA(:,9),4,0*c,'filled')
-                text(8,0,'2BP');
-                text(5,8,'5BP');
-                text(-3,7.3,'6BP');
-                text(-4,-3,'9BP');
-    case 2,     c = PHC(:,4);
-                scatter3(PHC(:,1), PHC(:,2), PHC(:,3),4,c,'filled')
-                hold on
-                scatter3(PHC(:,7), PHC(:,8), PHC(:,9),4,0*c,'filled')
-                text(5,6,'5BP');
-                text(-2,8,'6BP');
-                text(-4.3,6.3,'7BP');
-                text(-5.7,4.5,'8BP');
-                text(-4,-2.8,'9BP');
-    case 3,     c = PHG(:,4);
-                scatter3(PHG(:,1), PHG(:,2), PHG(:,3),4,c,'filled')
-                hold on
-                scatter3(PHG(:,7), PHG(:,8), PHG(:,9),4,0*c,'filled')
-                text(8,-2.4,'1BP');
-                text(8.5,3,'3BP');
-                text(7.2,4.8,'4BP');
-                text(6,6,'5BP');
-                text(-4.5,-2.5,'9BP');
-    case 4,     c = PHU(:,4);
-                scatter3(PHU(:,1), PHU(:,2), PHU(:,3),4,c,'filled')
-                hold on
-                scatter3(PHU(:,7), PHU(:,8), PHU(:,9),4,0*c,'filled')
-                text(6.5,3,'4BP');
-                text(-4,6,'8BP');
-                text(-2.9,-2,'9BP');
+if Verbose > 2,
+  for i = 1:(length(T(:,1))-1),
+    if (T(i,2) == T(i+1,2)) && (T(i,3) == T(i+1,3)),
+      if min(T(i,4),T(i+1,4)) == 6 && max(T(i,4),T(i+1,4)) == 8,
+        T(i,4)   = 7;
+        T(i+1,4) = 7;
+        T(i,5)   = 5+4*min(T(i,5),T(i+1,5))+max(T(i,5),T(i+1,5));
+        T(i+1,5) = 5+4*min(T(i,5),T(i+1,5))+max(T(i,5),T(i+1,5));
+      elseif min(T(i,4),T(i+1,4)) == 11 && max(T(i,4),T(i+1,4)) == 13,
+        T(i,4)   = 12;
+        T(i+1,4) = 12;
+        T(i,5)   = 5+4*min(T(i,5),T(i+1,5))+max(T(i,5),T(i+1,5));
+        T(i+1,5) = 5+4*min(T(i,5),T(i+1,5))+max(T(i,5),T(i+1,5));
+      end
+    end
   end
 
-  L = {'A','C','G','U'};
-
-  map = colormap;
-  map(1,:) = [0 0 0];
-  colormap(map);
-
-  caxis([1 4]);
-
-  zPlotStandardBase(v,1,0);                % plot base at the origin
-  rotate3d on
-  grid off
-  axis([-6 9 -3.5 8.5]);
-%  axis equal
-  view(2)
-  saveas(gcf,['Phosphate Interactions\PhosphateInteractions_' L{v} '.fig'],'fig')
+  [Table,Chi1,P,Labels] = crosstab(T(:,4),T(:,5));
 end
-
-end
-
-
-
-
-
 
 return
 
+% File = zAddNTData({'1s72','1j5e','2avy','2aw4','2j01'});
+% zPhosphateInteractions(File,3);
 
-
-
-
-
-for v = 1:4,
-  figure(v+4)
-  clf
-  switch v,
-    case 1,     hist(PHA(:,4),30);
-    case 2,     hist(PHC(:,4),30);
-    case 3,     hist(PHG(:,4),30);
-    case 4,     hist(PHU(:,4),30);
+Res = [];
+for f = 1:length(File);
+  if isempty(File(f).Info.Resolution),
+    Res(f) = 10;
+  else
+    Res(f) = File(f).Info.Resolution;
   end
 end
-
-for v = 1:4,
-  figure(v+8)
-  clf
-  switch v,
-    case 1,     hist(PHA(:,5),30);
-    case 2,     hist(PHC(:,5),30);
-    case 3,     hist(PHG(:,5),30);
-    case 4,     hist(PHU(:,5),30);
-  end
-end
-
-for v = 1:4,
-  figure(v+12)
-  clf
-  switch v,
-    case 1,     plot(PHA(:,4),PHA(:,5),'.');
-    case 2,     plot(PHC(:,4),PHC(:,5),'.');
-    case 3,     plot(PHG(:,4),PHG(:,5),'.');
-    case 4,     plot(PHU(:,4),PHU(:,5),'.');
-  end
-end
+File = File(find(Res <= 3.0));
 
 
-clf
-hist(nonzeros(File(1).BasePhosphate),30)
-pause
-hist(nonzeros(File(2).BasePhosphate),30)
-pause
-hist(nonzeros(File(3).BasePhosphate),30)
-pause
-hist(nonzeros(File(4).BasePhosphate),30)
+
+
+i = find(T(:,4) == 12);
+Search = [T(i,2) T(i,3) T(i,1)];
+xDisplayCandidates(File,Search)

@@ -10,12 +10,16 @@
 % allchains is a Cx1 cell array.  Each cell lists all chains that match the
 % corresponding nucleotide number
 
-function [ind,allchains] = zIndexLookup(File,Num,Chain)
+function [ind,allchains] = zIndexLookup(File,Num,Chain,Verbose)
 
 if nargin < 3,
   for k = 1:length(Num),
     Chain{k} = '';
   end
+end
+
+if nargin < 4,
+  Verbose = 1;
 end
 
 if strcmp(class(Num),'char'),
@@ -49,7 +53,10 @@ end
 % check for chain indicated in parentheses
 
 for k = 1:length(Numb),
-  if ~isempty(strfind(Numb{k},'(')),
+  if Numb{k}(1) == '(' || Numb{k}(1) == '_',         % chain only
+    Chai{k} = Numb{k}(2);
+    Numb{k} = '-';
+  elseif ~isempty(strfind(Numb{k},'(')),
     a = strfind(Numb{k},'(');
     b = strfind(Numb{k},')');
     Chai{k} = Numb{k}(a(1)+1:b(1)-1);     % extract chain
@@ -93,9 +100,9 @@ for k = 1:length(Numb)                      % loop through nucleotide numbers
     n = Numb{k};                            % kth specified number or range
     i = strfind(n,':');                     % find the colon
     Numb1 = n(1:(i-1));                     % first nucleotide number
-    p = LookUpOne(File,Numbers,Numb1,Chai{k});
+    p = LookUpOne(File,Numbers,Numb1,Chai{k},Verbose);
     Numb2 = n((i+1):length(n));             % second nucleotide number
-    q = LookUpOne(File,Numbers,Numb2,Chai{k});
+    q = LookUpOne(File,Numbers,Numb2,Chai{k},Verbose);
 
     m = length(ind);
 
@@ -123,6 +130,10 @@ for k = 1:length(Numb)                      % loop through nucleotide numbers
     for j = (m+1):mm,
       allchains{j} = ch;
     end
+  elseif Numb{k}(1) == '-',
+    ind = find(cat(2,File.NT.Chain) == Chai{k});
+  elseif strcmpi(Numb{k},'all'),
+    ind = 1:length(File.NT);                  % all nucleotides
   elseif any(Numb{k}(1) == 'bdefhijklmnopqrstvwxyz') && isfield(File.NT(1),'Hierarchy'),
     c = 1;                        % counter for number of indices found
     newind = [];
@@ -141,7 +152,7 @@ for k = 1:length(Numb)                      % loop through nucleotide numbers
       ind = [ind newind];
     end
   else
-    L = LookUpOne(File,Numbers,Numb{k},Chai{k});
+    L = LookUpOne(File,Numbers,Numb{k},Chai{k},Verbose);
 
     if length(L) > 0,
       ind = [ind L(1)];                       % add the first hit to the list
@@ -188,7 +199,7 @@ for k = 1:length(Numb),
 end
 
 %-------------------------------------------------------------------------
-function [ind] = LookUpOne(File,Numbers,N,Chain)
+function [ind] = LookUpOne(File,Numbers,N,Chain,Verbose)
 
     if any(N(1) == 'ACGU'),
       N = N(2:end);
@@ -199,14 +210,20 @@ function [ind] = LookUpOne(File,Numbers,N,Chain)
     ind = [];
     p = find(ismember(Numbers,N));
     if length(p) == 0,
-      fprintf('Could not find nucleotide %s in %s\n',N,File.Filename);
+      if Verbose > 0,
+        fprintf('Could not find nucleotide %s in %s\n',N,File.Filename);
+      end
     elseif length(p) == 1 & length(Chain) == 0, % one match, no chain specified
       ind = [ind p];
     elseif length(p) > 1 & length(Chain) == 0,% two matches, no chain specified
       ind = [ind p];
-      fprintf('Multiple matches found for %s in %s, consider specifying a chain\n', N, File.Filename);
+      if Verbose > 0,
+        fprintf('Multiple matches found for %s in %s, consider specifying a chain\n', N, File.Filename);
+      end
       for a = 1:length(ind),
-        fprintf('Nucleotide %s%s Chain %5s Index %5d\n', File.NT(ind(a)).Base, File.NT(ind(a)).Number, File.NT(ind(a)).Chain, ind(a));
+        if Verbose > 0,
+          fprintf('Nucleotide %s%s Chain %5s Index %5d\n', File.NT(ind(a)).Base, File.NT(ind(a)).Number, File.NT(ind(a)).Chain, ind(a));
+        end
       end
     elseif length(Chain) > 0,                    % chain specified
       c = 0;
@@ -217,8 +234,12 @@ function [ind] = LookUpOne(File,Numbers,N,Chain)
         end
       end
       if c == 0,
-        fprintf('Could not find nucleotide %s in chain %s in %s\n',N,Chain,File.Filename);
+        if Verbose > 0,
+          fprintf('Could not find nucleotide %s in chain %s in %s\n',N,Chain,File.Filename);
+        end
       elseif c > 1,
-        fprintf('Multiple matches found for %s in chain %s in %s\n', N,Chain,File.Filename);
+        if Verbose > 0,
+          fprintf('Multiple matches found for %s in chain %s in %s\n', N,Chain,File.Filename);
+        end
       end
     end

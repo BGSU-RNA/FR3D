@@ -15,7 +15,7 @@
 function [File,Index] = zAddNTData(Filenames,ReadCode,File,Verbose,PDBStart)
 
 if nargin < 2,
-  ReadCode = 1;                           % default is to read full files
+  ReadCode = 0;                           % default is to read .mat files
 end
 
 if nargin < 4,
@@ -29,11 +29,10 @@ if nargin >= 3,
   F = length(File);
   for j = 1:length(File),
     LoadedFiles{j} = lower(File(j).Filename);
+    if isempty(LoadedFiles{j}),
+      LoadedFiles{j} = '';                     % use empty string
+    end
   end
-end
-
-if (ReadCode == 0) || (ReadCode == 2),
-  ReadCode = 1;
 end
 
 if strcmp(class(Filenames),'char'),
@@ -56,7 +55,7 @@ if nargin == 5,
   else
     keep = [];
     for j=1:length(FullList),
-      if issorted([PDBStart(1:4); FullList{j}(1:4)],'rows'),
+      if issorted([lower(PDBStart(1:4)); lower(FullList{j}(1:4))],'rows'),
         keep = [keep j];
       end
     end
@@ -72,7 +71,7 @@ for f = 1:length(FullList),                       % loop through PDB list
   if ~isempty(FullList{f}),
     i = strmatch(lower(FullList{f}), LoadedFiles, 'exact');
     if isempty(i),                                  % if PDB not loaded,
-      NewF = zGetNTData(FullList{f},0,Verbose); %   load it
+      NewF = zGetNTData(FullList{f},ReadCode,Verbose); %   load it
       if ReadCode ~= 3,
         if F == 0,
           clear File
@@ -89,7 +88,7 @@ for f = 1:length(FullList),                       % loop through PDB list
     else                                      % but if PDB has been loaded
       Index(f) = i(1);                        %   point to first instance
       if length(File(i(1)).NT) == 0,
-        NewF = zGetNTData(File(Index(f)).Filename,0,Verbose);
+        NewF = zGetNTData(File(Index(f)).Filename,ReadCode,Verbose);
         if ReadCode ~= 3,
           File(Index(f)) = NewF;
           clear NewF;

@@ -151,7 +151,7 @@ if Sugar == 1,
   if LSugar > 0,
     A = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
     for j=1:12,
-      text(Z(j,1)+0.5,Z(j,2),Z(j,3), A{j},'fontweight','bold','FontSize',LSugar);
+      text(Z(j,1)+0.1,Z(j,2),Z(j,3), A{j},'fontweight','bold','FontSize',LSugar);
     end
   end
  elseif length(NT.Sugar(:,1)) == 12,   % for some reason, some have 9
@@ -172,7 +172,7 @@ if Sugar == 1,
   if LSugar > 0,
     A = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
     for j=1:12,
-      text(Z(j,1)+0.5,Z(j,2),Z(j,3), A{j},'fontweight','bold','FontSize',LSugar);
+      text(Z(j,1)+0.1,Z(j,2),Z(j,3), A{j},'fontweight','bold','FontSize',LSugar);
     end
   end
  end

@@ -52,7 +52,27 @@ if isfield(Query,'ExPairs'),                 % if screening by paircode
     D = D .* (E == 0);
   end
 end
+
+if isfield(Query,'OKBB'),           % if screening by backbone
+  if length(Query.OKBB{p,q} > 0),
+    E = sparse(zeros(size(D)));
+    for i=1:length(Query.OKBB{p,q}),
+      E = E + (fix(File.Backbone) + fix(File.Backbone') == Query.OKBB{p,q}(i));
+    end
+    D = D .* (E > 0);                         % include only those that match
+  end
+end
     
+if isfield(Query,'ExBB'),                 % if excluding by backbone
+  if length(Query.ExBB{p,q} > 0),
+    E = sparse(zeros(size(D)));
+    for i=1:length(Query.ExBB{p,q}),
+      E = E + (fix(File.Backbone) + fix(File.Backbone') == Query.ExBB{p,q}(i));
+    end
+    D = D .* (E == 0);
+  end
+end
+
 if isfield(Query,'BasePhos'),                 % if screening by base-phosphate
   if length(Query.BasePhos{p,q} > 0),
     E = sparse(zeros(size(D)));
@@ -89,19 +109,7 @@ end
 
 if isfield(Query,'Flank'),
   if ~isempty(Query.Flank{p,q}),
-    E = triu(fix(abs(File.Edge))==1) .* (File.Range == 0); % nested cWW's
-    H = sparse(zeros(File.NumNT,File.NumNT));
-    [i,j] = find(E);                     % indices of NT's making nested cWW's
-    a = [i; j];                           % all indices of nested cWW pairs
-    a = sort(a);
-    for k = 1:(length(a)-1),
-      if a(k+1) - a(k) > 1,
-        H(a(k),a(k+1)) = 1;              % these two flank something
-      end
-    end
-    H = H + H';
-    D = D .* H;                          % only keep pairs between nested cWW
-
+    D = D .* File.Flank;                 % only keep pairs between nested cWW
   end
 end
 
@@ -110,6 +118,30 @@ if isfield(Query,'Range'),               % screen by range restriction
     R = Query.Range{p,q};
     D = D .* (File.Range >= R(1)) .* (File.Range <= R(2));
   end
+end
+
+if isfield(Query,'Coplanar'),            % screen by coplanarity
+ if ~isempty(Query.Coplanar{p,q}),
+
+  switch Query.Coplanar{p,q}
+  case 0,
+    D = D .* (File.Coplanar < 0.5);      % ~cp
+  case 1,
+    D = D .* (File.Coplanar >= 0.5);     % cp
+  case 2,
+    D = D .* (File.Coplanar > 0);        % ncp cp
+  case 3,
+    D = D .* (File.Coplanar > 0) .* (File.Coplanar < 0.5);  % ncp
+  case 4,
+    D = D .* ((File.Coplanar == 0) + (File.Coplanar >= 0.5)); % ~ncp
+  case 5,
+    D = D .* (File.Coplanar == 0);       % ~ncp ~cp
+  end
+
+%figure(3)
+%hist(nonzeros(D),30)
+
+ end
 end
 
     

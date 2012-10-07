@@ -50,6 +50,33 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
   a = zCheckCutoffs(Pair.Displ,Pair.Normal,Pair.Ang,Pair.Gap,CL(:,:,Pair.Paircode));
                                            % find possible classifications
 
+  % ------------------------ check for coplanarity
+
+  Pair.Coplanar = 0;                      % default value
+  if (abs(Pair.Gap) < 2) && (Pair.MinDist < 5),
+    v  = N1.Center - N2.Center;           % vector from center to center
+    v  = v / norm(v);                     % normalize
+
+    dot1 = abs(v * N1.Rot(:,3));          % to calculate angle: v and normal
+    dot2 = abs(v * N2.Rot(:,3));
+
+    yy = 0.5;
+
+    if (dot1 < yy) && (dot2 < yy),         % angle > acos(yy) = 60 degrees
+
+      d = zDistance(N1.Fit(1:Lim(2,N1.Code),:), N2.Center); 
+                                           % distances to base 2 center
+      [y,m] = min(d);                      % identify the closest atom
+      m = m(1);                            % in case of a tie, use the first
+      Gap2 = N2.Rot(:,3)'*(N1.Fit(m,:)-N2.Center)';% height above plane of 1
+
+      if abs(Gap2) < 2,
+        Pair.Coplanar = min([(2-abs(Pair.Gap))/2 (2-abs(Gap2))/2 (yy-dot1)/yy (yy-dot2)/yy min(1,5-Pair.MinDist)]);
+
+      end
+    end
+  end
+
   % ---------- Notify and remove multiple classifications
 
   if length(a) > 1,
@@ -225,4 +252,5 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
   end
 
   Pair.EdgeText = zEdgeText(Pair.Edge,1,Pair.Paircode);  % ever used?
+
 

@@ -2,7 +2,7 @@
 % between bases in File that are close enough to possibly be interacting, then
 % classifies the interaction
 
-function [Pair,s] = zClassifyPair(N1,N2,CL,Exemplar,Force,Verbose)
+function [Pair,s,coplanar] = zClassifyPair(N1,N2,CL,Exemplar,Force,Verbose)
 
 if nargin < 5,
   Force = 0;
@@ -51,8 +51,13 @@ end
                                              % between glycosidic atoms,
                                              % relative to the plane of base 1
 
-  if (abs(sh(3)) < 5) || (Force > 0)           % if small vertical shift
+  coplanar = 0;                              % default value
+
+  if (abs(sh(3)) < 5) || (Force > 0)
+                                             % if small vertical shift
     Pair = zAnalyzePair(M1,M2,CL,Exemplar,sh,Verbose); % analyze and classify pair
+
+    coplanar = Pair.Coplanar;
 
     if (abs(Pair.Class) >= 30) && (M1.Code == M2.Code) && (Force == 0),  % re-analyze AA CC ...
       M2 = N1;                               % reverse roles of nucleotides
@@ -60,7 +65,7 @@ end
       s  = -1;
       sh2 = (M2.Fit(1,:)-M1.Fit(1,:)) * M1.Rot;   % vector shift from 1 to 2
       Pair2 = zAnalyzePair(M1,M2,CL,Exemplar,sh2,Verbose);%put other base at origin
-      if abs(Pair2.Class) < 24,              % some known interaction
+      if fix(abs(Pair2.Class)) ~= 30,        % some known interaction, or near
         Pair = Pair2;                        % matched with M2 at origin
       else                                   % other interaction, like stacking
         Pair.Class = Pair2.Class;            % original order, use 2nd class

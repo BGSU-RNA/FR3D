@@ -10,6 +10,15 @@ NewNames = '';
 
 if strcmpi(Filename,'AllFiles_list'),
   [s,NewNames] = mGetPDBFilenames;
+elseif ~isempty(strfind(Filename,'_equiv')),
+  load PDBInfo
+  Reference = strrep(Filename,'_equiv','');
+  NewNames  = {Reference};
+  for i = 1:length(t(:,1)),                      % loop through PDB files
+    if strcmpi(t{i,10},Reference),
+      NewNames = [NewNames; t(i,1)];
+    end
+  end
 elseif isempty(strfind(Filename,'_list')),
   NewNames = {Filename};
 elseif ~isempty(Filename),

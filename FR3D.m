@@ -169,6 +169,26 @@ if (~isfield(Search,'File')) && (length(Search.Candidates(:,1)) > 0),
   handles.File = File;
 end
 
+if isfield(Search,'File'),
+  if ~isfield(Search.File,'Backbone'),
+    if isfield(handles,'File'),
+      File = handles.File;
+      [File,FIndex] = zAddNTData(Search.CandidateFilenames,2,File);
+    else
+      [File,FIndex] = zAddNTData(Search.CandidateFilenames,2);
+    end
+    Search = xAddFiletoSearch(File(FIndex),Search);
+    save(['SearchSaveFiles' filesep Search.SaveName], 'Search');
+    save(l, 'Search');
+
+    fprintf('Saved updated version of this search\n');
+
+    handles.File = File;
+  end
+end
+
+Search.ActualFilename = strrep(f,'.mat','');
+
 mSetLoadedParameters
 
 handles.Search=Search;

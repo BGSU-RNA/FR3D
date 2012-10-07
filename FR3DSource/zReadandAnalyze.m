@@ -21,29 +21,50 @@
 %  Shift    Best shift from standard to observed locations
 %  Fit      Best fit of observed locations to standard base locations
 
-function [File] = zReadandAnalyze(Filename,Verbose)
+function [File] = zReadandAnalyze(PDBFilename,Verbose)
+
+i = strfind(PDBFilename,'.');
+Filename = PDBFilename(1:(i(end)-1));
 
 if nargin < 2,
   Verbose = 1;
 end
 
-% read Filename.pdb ----------------------------------------------------
+% read PDBFilename ----------------------------------------------------
 
-fid = fopen([Filename '.pdb'],'r');
+if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading']) == 7,
+  if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading' filesep PDBFilename]) == 2,
+    Stop = 1;
+    if Verbose > 0,
+      fprintf('zReadandAnalyze is skipping %s because it appeared in FR3D/PDBFiles/Trouble Reading\n', PDBFilename);
+    end
+  else
+    Stop = 0;
+  end
+else
+  Stop = 0;
+end
 
-if fid > 0,
+fid = fopen(PDBFilename,'r');
+
+if (fid > 0) && (Stop == 0),
 
 fclose(fid);
 
 a = 1000+round(8900*rand);
 
-TempFileName = ['##TempPDB' num2str(a)];
+TempFileName = ['##TempPDB' num2str(a) '.pdb'];
 
-Header = zExtractAtomsPDB(Filename,TempFileName,Verbose);
+Header = zExtractAtomsPDB(PDBFilename,TempFileName,Verbose);
 
-[ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, NTLETTER, CHAIN, NTNUMBER, P] = zReadPDBTextRead(TempFileName);
+[ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, NTLETTER, CHAIN, NTNUMBER, P, Readable] = zReadPDBTextRead(TempFileName);
 
-delete([TempFileName '.pdb']);
+delete(TempFileName);
+
+if Readable == 0,
+  fprintf('zReadandAnalyze was unable to read the PDB file %s\n',PDBFilename);
+  fprintf('Please move it to FR3D/PDBFiles/Trouble Reading.\n');
+end
 
 % Move models in NMR file apart ---------------------------------------------
 
@@ -70,6 +91,7 @@ Lim(2,:) = [15 13 16 12];     % total number of atoms, including hydrogen
 NT = [];                                    % nucleotide data structure
 n  = 1;                                     % current NT index
 i  = 1;                                     % current atom/row number
+unrec = 0;                                  % count unrecognized nucleotides
 
 while i < length(NTNUMBER),                 % go through all atoms
   Flag = 0;                                 % not a recognized nucleotide
@@ -227,7 +249,12 @@ while i < length(NTNUMBER),                 % go through all atoms
     NT(n).Center = mean(Loc(1:8,:));
     NT(n).Code   = 4;                          % A is 1, C is 2, etc.
   else 
-    fprintf('Unrecognized nucleotide: %s %s\n', NT(n).Base,NT(n).Number);
+    if unrec < 5,
+      if Verbose > 0,
+        fprintf('Unrecognized: %s %s\n', NT(n).Base,NT(n).Number);
+      end
+      unrec = unrec + 1;
+    end
     n = n - 1;                                 % not a recognized
                                                % nucleotide, do nothing
     Flag = 1;
@@ -284,6 +311,7 @@ end
 
 % Fill in fields of File ----------------------------------------------------
 
+File.PDBFilename = PDBFilename;
 File.Filename  = Filename;
 File.NT        = NT(1:NumNT);
 File.NumNT     = NumNT;
@@ -310,7 +338,7 @@ end
 
 else
 
-  fprintf('Could not open file %s.pdb\n', Filename);
+  fprintf('Could not open file %s\n', PDBFilename);
   NumNT = 0;
   File.Filename = Filename;
   File.NT        = [];
@@ -320,6 +348,7 @@ else
   File.Comment   = [];
   File.CI        = sparse(NumNT,NumNT);
   File.Edge      = sparse(NumNT,NumNT);
+  File.Coplanar  = sparse(NumNT,NumNT);
   File.Modified  = 0;
   File.Pair      = [];
   File.ClassVersion = 0;
@@ -331,9 +360,10 @@ else
   File.Info.Author      = '';
   File.Info.Keywords    = '';
   File.Info.Source      = '';
-  File.BasePhosphate = [];
+  File.BasePhosphate = sparse(NumNT,NumNT);
 
 end
 
 File = orderfields(File);
 
+end
