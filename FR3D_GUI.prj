@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<project>
+
+  <MATLABPath>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\compiler\deploy</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\MATLAB</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\Hydrogen bonds</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\Isostericity</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\Modified programs</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\Not ready for prime time</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\PDBFiles\Overlapping nucleotides</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\PDBFiles\Trouble reading</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\Parser</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\Parser\Old programs</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\Unused programs</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\general</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\ops</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\lang</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\elmat</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\elfun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\specfun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\matfun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\datafun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\polyfun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\funfun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\sparfun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\scribe</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\graph2d</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\graph3d</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\specgraph</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\graphics</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\uitools</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\strfun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\imagesci</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\iofun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\audiovideo</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\timefun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\datatypes</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\verctrl</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\codetools</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\helptools</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\winfun</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\demos</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\timeseries</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\hds</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\guide</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\matlab\plottools</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\local</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\shared\controllib</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\bioinfo\bioinfo</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\bioinfo\biolearning</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\bioinfo\microarray</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\bioinfo\mass_spec</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\bioinfo\proteins</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\bioinfo\biomatrices</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\bioinfo\biodemos</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\bioinfo\graphtheory</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\compiler</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\stats</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\toolbox\shared\optimlib</Directory>
+    <Directory>C:\Program Files\MATLAB\R2007a\work</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\PDBFiles</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\PrecomputedData</Directory>
+    <Directory>C:\Documents and Settings\zirbel\My Documents\FR3D\SearchSaveFiles</Directory>
+  </MATLABPath>
+
+  <MCCProperties>
+    <output/>
+    <wrapper>
+      <type>main</type>
+      <component_name>FR3D_GUI</component_name>
+    </wrapper>
+    <link>exe</link>
+    <create_vb_wrapper>false</create_vb_wrapper>
+    <intermediate_dir></intermediate_dir>
+    <output_dir></output_dir>
+    <generate_code_only>false</generate_code_only>
+    <verbose>false</verbose>
+    <MCR_runtime_options>
+      <share_mcr>false</share_mcr>
+    </MCR_runtime_options>
+    <options_file/>
+    <toolboxes_on_path shortcut="all"/>
+    <debug>false</debug>
+    <warning shortcut="default"/>
+    <license_file/>
+  </MCCProperties>
+
+  <file_info>
+    <category name="Main function">
+      <file>C:\Documents and Settings\zirbel\My Documents\FR3D\FR3D_GUI.m</file>
+    </category>
+    <category name="Other files"/>
+    <category name="C/C++ files"/>
+  </file_info>
+
+</project>
