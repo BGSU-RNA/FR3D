@@ -88,7 +88,7 @@ NOTE: Items enclosed in angle brackets ( < > ) are variables.
 	       the EV syntax utilizes forward
                slashes (/), delimited by colons (:). 
 	 NOTE: When deploying C and C++ standalone applications, it is possible
-               to run the shell script file run_FR3D_GUI.sh on UNIX and Mac
+               to run the shell script file run_FR3D.sh on UNIX and Mac
                instead of setting environment variables. See "Requirements
                for Standalone Applications," below.    
 	
@@ -100,18 +100,18 @@ NOTE: Items enclosed in angle brackets ( < > ) are variables.
         =========================================
   
 	All Platforms:
-		* FR3D_GUI.ctf (Component Technology File archive,
+		* FR3D.ctf (Component Technology File archive,
 		  platform-dependent on target machine)
 			
 	Windows:
 		* MCRInstaller.exe (self-extracting MATLAB Component Runtime
 		  library archive)  
-		* FR3D_GUI.exe (application created by MATLAB Compiler)
+		* FR3D.exe (application created by MATLAB Compiler)
 	UNIX:
 		* MCRInstaller.zip (MATLAB Component Runtime library 
 	 	  archive - manual unzip required)
-		* FR3D_GUI (application created by MATLAB Compiler)
-		* run_FR3D_GUI.sh (shell script that can be run 
+		* FR3D (application created by MATLAB Compiler)
+		* run_FR3D.sh (shell script that can be run 
                   to temporarily set environment paths and execute the application)
 
  	
@@ -119,10 +119,10 @@ NOTE: Items enclosed in angle brackets ( < > ) are variables.
         ============================================================
 
 	All Platforms:            
-		* FR3D_GUI.dll (shared library, file extension 
+		* FR3D.dll (shared library, file extension 
 		  varies by platform)
-		* FR3D_GUI.h (library header file)
-		* FR3D_GUI.ctf (Component Technology File archive,
+		* FR3D.h (library header file)
+		* FR3D.ctf (Component Technology File archive,
 		  platform-dependent on target machine)
 	
 	Windows:
@@ -139,11 +139,11 @@ NOTE: Items enclosed in angle brackets ( < > ) are variables.
        Requirements for .NET Components (Windows only):
        ================================================
 
-	* FR3D_GUI.ctf (Component Technology File archive)	
-	* FR3D_GUI.xml (documentation files)
-	* FR3D_GUI.pdb (program database file - if 
+	* FR3D.ctf (Component Technology File archive)	
+	* FR3D.xml (documentation files)
+	* FR3D.pdb (program database file - if 
 	  DEBUG option selected)
-	* FR3D_GUI.dll (component assembly file)
+	* FR3D.dll (component assembly file)
 	* MCRInstaller.exe (self-extracting MATLAB Component Runtime
 	  library archive)  
 		
@@ -151,8 +151,8 @@ NOTE: Items enclosed in angle brackets ( < > ) are variables.
        Requirements for COM Components (Windows only):
        ===============================================
 
-	* FR3D_GUI.ctf (Component Technology File archive)
-	* FR3D_GUI_1_0.dll (component containing 
+	* FR3D.ctf (Component Technology File archive)
+	* FR3D_1_0.dll (component containing 
 	  compiled M-code)
 	* _install.bat (script run by self-extracting executable)
 	* MCRInstaller.exe (self-extracting MATLAB Component Runtime
@@ -162,18 +162,18 @@ NOTE: Items enclosed in angle brackets ( < > ) are variables.
         Requirements for Java Components (All Platforms):
         =================================================
 
-	* FR3D_GUI.jar (Java archive containing Java 
-	  interface to M-code in FR3D_GUI.ctf)
-	* FR3D_GUI.ctf (Component Technology File archive,
+	* FR3D.jar (Java archive containing Java 
+	  interface to M-code in FR3D.ctf)
+	* FR3D.ctf (Component Technology File archive,
 	  platform-dependent on target machine)
 
 
         Requirements for COM Components for Use with Microsoft Excel (Windows only):
         ============================================================================
 
-	* FR3D_GUI_1_0.dll (component containing 
+	* FR3D_1_0.dll (component containing 
 	  compiled M-code)
-	* FR3D_GUI.ctf (Component Technology File archive)
+	* FR3D.ctf (Component Technology File archive)
 	* _install.bat (script run by self-extracting executable)
 	* <add_in_file>.xla (Excel add-ins found in:
 	  \distrib directory)  
