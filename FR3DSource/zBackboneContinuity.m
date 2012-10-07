@@ -3,7 +3,7 @@ function [File] = zBackboneContinuity(File)
 
 for f = 1:length(File),
 
-  File(f).Covalent = sparse(zeros(File(f).NumNT,File(f).NumNT));
+  File(f).Covalent = sparse([],[],[],File(f).NumNT,File(f).NumNT);
 
   d = [];
   g = [];
@@ -12,6 +12,8 @@ for f = 1:length(File),
     c = cat(1,File(f).NT(1:File(f).NumNT).Center); % nucleotide centers
     File(f).Distance = zMutualDistance(c,16); % compute distances < 16 Angstroms
   end
+
+
 
   for i = 2:length(File(f).NT),
     a = File(f).NT(i).Sugar(10,:);      % phosphorus of current NT

@@ -9,6 +9,10 @@
 
 function [Text] = xAlignCandidates(File,Search,Direction,Param)
 
+if nargin < 3,
+  Direction = 1;
+end
+
 Query      = Search.Query;
 Candidates = Search.Candidates;
 N          = Query.NumNT;
@@ -78,7 +82,7 @@ for c = 1:L,                                      % loop through candidates
   Text{t} = [sprintf('%15s', File(f).Filename)];
   if Query.Geometric > 0,
     if isfield(Search,'Discrepancy'),
-      Text{t} = [Text{t} sprintf('%11.4f',Search.Discrepancy(c))];
+      Text{t} = [Text{t} sprintf('%11.4f',full(Search.Discrepancy(c)))];
     elseif isfield(Search,'AvgDisc'),
       Text{t} = [Text{t} sprintf('%11.4f',Search.AvgDisc(c))];
     end
@@ -133,7 +137,25 @@ for c = 1:L,                                      % loop through candidates
   drawnow
 end
 
+% ------------------------- lengthen the lines to align better
+
+maxl = 0;
+for t = 1:length(Text),
+  maxl = max(maxl,length(Text{t}));
+end
+
+for t = 1:length(Text),
+  while length(Text{t}) < maxl,
+    Text{t} = [' ' Text{t}];
+  end
+end
+
 % --------------------------------------------- calculate statistics
+
+
+return
+
+
 
 Letters = {'A', 'C', 'G', 'U'};
 

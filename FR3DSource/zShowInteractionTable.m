@@ -29,6 +29,11 @@ fprintf(' Chain ');
 for j=1:length(Indices),
   fprintf('%s',File.NT(Indices(j)).Chain);
 end
+if isfield(File,'Info'),
+  if isfield(File.Info,'Resolution'),
+    fprintf('Resolution %6.1f', File.Info.Resolution);
+  end
+end
 fprintf('\n');
 
 if nargin == 3,
@@ -52,7 +57,7 @@ for i=1:length(Indices),
     elseif j == i,
       fprintf('%6s', [File.NT(Indices(i)).Base Config{File.NT(Indices(i)).Syn+1}]);
     else
-      fprintf('%6d', File.Range(Indices(i),Indices(j)));% display interaction range
+      fprintf('%6d', full(File.Crossing(Indices(i),Indices(j))));% display interaction range
 %     fprintf('%6d', abs(Indices(i)-Indices(j)));
     end
   end

@@ -66,7 +66,7 @@ elseif (Class == -1) & (Paircode == 9),
   Hydrogen(1).Distance = zDistance(N1.Fit(14,:),N2.Fit(6,:));
   Hydrogen(2).Angle    = zAngle(N1.Fit(4,:),N2.Fit(12,:),N2.Fit(4,:));
   Hydrogen(2).Distance = zDistance(N1.Fit(4,:),N2.Fit(12,:));
-elseif (Class == 1) & (Paircode == 7),
+elseif (Class == -1) & (Paircode == 7),
   Hydrogen(1).Angle    = zAngle(N1.Fit(6,:),N2.Fit(13,:),N2.Fit(6,:));
   Hydrogen(1).Distance = zDistance(N1.Fit(6,:),N2.Fit(13,:));
   Hydrogen(2).Angle    = zAngle(N1.Fit(4,:),N1.Fit(12,:),N2.Fit(4,:));
@@ -137,7 +137,7 @@ elseif (Class == 2) & (Paircode == 14),
   Hydrogen(1).Distance = zDistance(N1.Fit(13,:),N2.Fit(3,:));
   Hydrogen(2).Angle    = zAngle(N1.Fit(4,:),N2.Fit(11,:),N2.Fit(4,:));
   Hydrogen(2).Distance = zDistance(N1.Fit(4,:),N2.Fit(11,:));
-elseif (Class == 2) & (Paircode == 7),
+elseif (Class == -2) & (Paircode == 7),
   Hydrogen(1).Angle    = zAngle(N1.Fit(4,:),N1.Fit(12,:),N2.Fit(3,:));
   Hydrogen(1).Distance = zDistance(N1.Fit(12,:),N2.Fit(3,:));
   Hydrogen(2).Angle    = zAngle(N1.Fit(11,:),N1.Fit(16,:),N2.Fit(4,:));
@@ -323,7 +323,7 @@ elseif (Class == -5) & (Paircode == 9),
   Hydrogen(2).Distance = zDistance(N1.Fit(3,:),N2.Fit(12,:));
   Hydrogen(3).Angle    = zAngle(N1.Sugar(3,:),N2.Fit(16,:),N2.Fit(11,:));
   Hydrogen(3).Distance = zDistance(N1.Sugar(3,:),N2.Fit(16,:));
-elseif (Class == 5) & (Paircode == 7),
+elseif (Class == -5) & (Paircode == 7),
   Hydrogen(1).Angle    = zAngle(N1.Fit(4,:),N1.Fit(12,:),N2.Fit(3,:));
   Hydrogen(1).Distance = zDistance(N1.Fit(12,:),N2.Fit(3,:));
   Hydrogen(2).Angle    = zAngle(N1.Fit(11,:),N1.Fit(16,:),N2.Sugar(3,:));
@@ -402,7 +402,7 @@ elseif (Class == 6) & (Paircode == 14),
   Hydrogen(1).Distance = zDistance(N1.Fit(12,:),N2.Sugar(3,:));
   Hydrogen(2).Angle    = zAngle(N1.Fit(6,:),N1.Fit(13,:),N2.Fit(3,:));
   Hydrogen(2).Distance = zDistance(N1.Fit(13,:),N2.Fit(3,:));
-elseif (Class == 6) & (Paircode == 7),
+elseif (Class == -6) & (Paircode == 7),
   Hydrogen(1).Angle    = [];
   Hydrogen(1).Distance = zDistance(N1.Fit(6,:),N2.Sugar(3,:));
   Hydrogen(2).Angle    = zAngle(N1.Fit(4,:),N1.Fit(12,:),N2.Fit(3,:));
@@ -439,7 +439,7 @@ elseif (Class == 7) & (Paircode == 7),
 elseif (Class == -7) & (Paircode == 9),
   Hydrogen(1).Angle    = zAngle(N1.Fit(6,:),N1.Fit(15,:),N2.Fit(6,:));
   Hydrogen(1).Distance = zDistance(N1.Fit(15,:),N2.Fit(6,:));
-elseif (Class == 7) & (Paircode == 7),
+elseif (Class == -7) & (Paircode == 7),
   Hydrogen(1).Angle    = zAngle(N1.Fit(6,:),N2.Fit(10,:),N2.Fit(7,:));
   Hydrogen(1).Distance = zDistance(N1.Fit(6,:),N2.Fit(10,:));
 elseif (Class == 7) & (Paircode == 11),
@@ -471,7 +471,7 @@ elseif (Class == 8) & (Paircode == 14),
 elseif (Class == -8) & (Paircode == 9),
   Hydrogen(1).Angle    = zAngle(N1.Fit(6,:),N1.Fit(15,:),N2.Fit(6,:));
   Hydrogen(1).Distance = zDistance(N1.Fit(15,:),N2.Fit(6,:));
-elseif (Class == 8) & (Paircode == 7),
+elseif (Class == -8) & (Paircode == 7),
   Hydrogen(1).Angle    = zAngle(N1.Fit(10,:),N2.Fit(12,:),N2.Fit(6,:));
   Hydrogen(1).Distance = zDistance(N1.Fit(10,:),N2.Fit(12,:));
 elseif (Class == 8) & (Paircode == 11),
@@ -628,7 +628,7 @@ elseif (Class == -11) & (Paircode == 9),
   Hydrogen(3).Distance = zDistance(N1.Fit(11,:),N2.Fit(3,:));
   Hydrogen(4).Angle    = zAngle(N1.Fit(4,:),N2.Fit(15,:),N2.Fit(11,:));
   Hydrogen(4).Distance = zDistance(N1.Fit(4,:),N2.Fit(15,:));
-elseif (Class == 11) & (Paircode == 7),
+elseif (Class == -11) & (Paircode == 7),
   Hydrogen(1).Angle    = [];
   Hydrogen(1).Distance = zDistance(N1.Sugar(3,:),N2.Sugar(3,:));
   Hydrogen(2).Angle    = [];
@@ -700,7 +700,7 @@ elseif (Class == -12) & (Paircode == 9),
   Hydrogen(2).Distance = zDistance(N1.Fit(3,:),N2.Fit(15,:));
   Hydrogen(3).Angle    = zAngle(N1.Sugar(3,:),N2.Fit(16,:),N2.Fit(11,:));
   Hydrogen(3).Distance = zDistance(N1.Sugar(3,:),N2.Fit(16,:));
-elseif (Class == 12) & (Paircode == 7),
+elseif (Class == -12) & (Paircode == 7),
   Hydrogen(1).Angle    = zAngle(N1.Fit(11,:),N1.Fit(15,:),N2.Fit(3,:));
   Hydrogen(1).Distance = zDistance(N1.Fit(15,:),N2.Fit(3,:));
   Hydrogen(2).Angle    = zAngle(N1.Fit(11,:),N1.Fit(16,:),N2.Sugar(3,:));

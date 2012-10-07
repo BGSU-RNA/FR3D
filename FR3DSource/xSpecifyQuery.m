@@ -50,6 +50,16 @@ switch Query.Name
 
 % ---------------------------------- Searches from FR3D paper by Sarver et al
 
+case 'Perpendicular'
+  Query.Description    = 'Perpendicular interaction';
+  Query.Edges{1,2}     = '10 -28 28';
+  Query.SearchFiles    = {'2zue'};
+case 'Subcat'
+  Query.Description    = 'Basepair subcategory';
+  Query.Edges{1,2}      = '1.1 1.2 2.1 3.1 4.1 5.1 5.2 6.1 8.1 8.2 9.1 9.2 10.1 10.2 11.1 11.2 -1.1 -1.2 -2.1 -3.1 -4.1 -5.1 -5.2 -6.1 -8.1 -8.2 -9.1 -9.2 -10.1 -10.2 -11.1 -11.2';
+  Query.Edges{1,2}      = '10';
+  Query.SearchFiles    = {'Nonredundant_2009-05-14_list'};
+
 case 'Sarcin5Geo'
   Query.Description    = 'Sarcin five nucleotide geometric';
   Query.Filename       = '1s72';

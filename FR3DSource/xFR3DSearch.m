@@ -109,6 +109,24 @@ starttime = cputime;
 
 Candidates = xFindCandidates(File(SIndex),Query,Verbose);  % screen for candidates
 
+if 1 > 2,
+  L = length(Candidates(:,1));
+  C = sortrows(Candidates, [1 2 3]);
+  D = full(File.Distance);
+  a = [];
+  b = [];
+  c = [];
+  for i = 1:L,
+    fprintf('%s %s %s %8.4f %8.4f %8.4f\n', File.NT(C(i,1)).Number, File.NT(C(i,2)).Number, File.NT(C(i,3)).Number, D(C(i,1),C(i,2)), D(C(i,1),C(i,3)), D(C(i,2),C(i,3)));
+    a(i) = D(C(i,1),C(i,2));
+    b(i) = D(C(i,1),C(i,3));
+    c(i) = D(C(i,2),C(i,3));
+  end
+
+  [min(a) max(a) min(b) max(b) min(c) max(c)]
+end
+
+
 if ~isempty(Candidates),                         % some candidate(s) found
  if Query.Geometric > 0,
   [Discrepancy, Candidates] = xRankCandidates(File(SIndex),Query,Candidates,Verbose);
@@ -117,23 +135,60 @@ if ~isempty(Candidates),                         % some candidate(s) found
   end
 
    if (Query.ExcludeOverlap > 0) & (length(Discrepancy) > 0) ...
-     & (Query.NumNT > 2),
-     [Candidates, Discrepancy] = xReduceOverlap(Candidates,Discrepancy); 
+     & (Query.NumNT >= 2),
+
+     tt = cputime;
+
+%     [C, D] = xReduceRedundantCandidates(Candidates,Discrepancy); 
+
+%     fprintf('%d candidates after xReduceRedundantCandidates, time %8.6f\n', length(D),(cputime-tt));
+
+     tt = cputime;
+
+     [C, D] = xReduceOverlap(Candidates,Discrepancy); 
                                                  % quick reduction in number
-     [Candidates, Discrepancy] = xExcludeOverlap(Candidates,Discrepancy,400); 
+%     fprintf('%d candidates after xReduceOverlap, time %8.6f\n', length(D), (cputime-tt));
+
+     [Candidates, Discrepancy] = xExcludeOverlap(C,D,1000); 
                                                 % find top 400 distinct ones
+     tt = cputime;
+
+%     fprintf('%d candidates after xExcludeOverlap, time %8.6f\n', length(Discrepancy),(cputime-tt));
+
+     [Candidates, Discrepancy] = xExcludeRedundantCandidates(File(SIndex),Candidates,Discrepancy); 
+
+     tt = cputime;
+
+%     fprintf('%d candidates after xExcludeRedundantCandidates, time %8.6f\n', length(Discrepancy),(cputime-tt));
+
      if Verbose > 0,
        fprintf('Removed highly overlapping candidates, kept %d\n', length(Candidates(:,1)));
      end
    end
 
  elseif Query.NumNT > 2,
+
+  if (Query.ExcludeOverlap > 0) 
+    [Candidates] = xExcludeRedundantCandidates(File(SIndex),Candidates); 
+    if Verbose > 0,
+      fprintf('Removed candidates from redundant chains, kept %d\n', length(Candidates(:,1)));
+    end
+  end
+
   A = [Candidates sum(Candidates')'];        % compute sum of indices
   N = Query.NumNT;                           % number of nucleotides
   [y,i] = sortrows(A,[N+1 N+2 1:N]);         % sort by file, then this sum
   Candidates = Candidates(i,:);              % put all permutations together
   Discrepancy = (1:length(Candidates(:,1)))';% helps identify candidates
  else
+
+  if (Query.ExcludeOverlap > 0) 
+    [Candidates] = xExcludeRedundantCandidates(File(SIndex),Candidates); 
+    if Verbose > 0,
+      fprintf('Removed candidates from redundant chains, kept %d\n', length(Candidates(:,1)));
+    end
+  end
+
   N = Query.NumNT;                           % number of nucleotides
   [y,i] = sortrows(Candidates,[N+1 1 2]);
   Candidates = Candidates(i,:);              % put all permutations together
@@ -157,16 +212,16 @@ if ~isempty(Candidates),                         % some candidate(s) found
   Search.Candidates  = Candidates;
   Search.Discrepancy = Discrepancy;
 
-  Search = xAddFiletoSearch(File(SIndex),Search);
-
   if ~exist('UsingLibrary'),
 
     if ~(exist('SearchSaveFiles') == 7),     % if directory doesn't yet exist
       mkdir('SearchSaveFiles');
     end
 
+    Search = xAddFiletoSearch(File(SIndex),Search);  % moved here 2010-12-08 CLZ
     save(['SearchSaveFiles' filesep Search.SaveName], 'Search');
- end
+  end
+
 % ------------------------------------------------ Display results
 
  if Verbose > 0,

@@ -24,7 +24,7 @@ end
 
 if min(Search.DiscComputed(1,1:s)) == 0,             % some not computed
   for k=1:s,
-    if Search.DiscComputed(k) == 0,                % k has never been done
+    if Search.DiscComputed(1,k) == 0,                  % k has never been done
       f1             = Candidates(k,N+1);
       c1.NumNT       = Query.NumNT;                  % set up c1 as "Model"
       c1.NT          = File(f1).NT(Candidates(k,1:N));
@@ -36,10 +36,17 @@ if min(Search.DiscComputed(1,1:s)) == 0,             % some not computed
       for j=1:k-1,
         f2 = Candidates(j,N+1);
         c2 = File(f2).NT(Candidates(j,1:N));     
-        Search.Disc(j,k) = sqrt(xDiscrepancyFast(c1,c2))/Query.NumNT;
+
+        if exist('amal.txt','file') > 0 && N == 3,
+          Search.Disc(j,k) = xDiscrepancyForTriples(File(f1),Candidates(k,1:N),File(f2),Candidates(j,1:N));
+        elseif N > 2,
+          Search.Disc(j,k) = sqrt(xDiscrepancyFast(c1,c2))/Query.NumNT;
+        else
+          Search.Disc(j,k) = xDiscrepancyFast(c1,c2);
+        end
         Search.Disc(k,j) = Search.Disc(j,k);
       end
-      Search.DiscComputed(k) = 1;
+      Search.DiscComputed(1,k) = 1;
     end
   end
 end

@@ -34,7 +34,8 @@ end
 
 t = 1;
 for k = 1:length(Num),
-  N = regexprep(Num{k},'([ACGU])\s*([123456789])','$1$2'); % join base & number
+  N = regexprep(Num{k},'\t',' ');
+  N = regexprep(N,'([ACGU])\s*([123456789])','$1$2'); % join base & number
   N = regexprep(N,';| ',',');         % replace other delimeters with commas
   while strfind(N,',,'),              % replace double commas with single
     N = regexprep(N,',,',',');
@@ -54,8 +55,8 @@ end
 
 for k = 1:length(Numb),
   if Numb{k}(1) == '(' || Numb{k}(1) == '_',         % chain only
-    Chai{k} = Numb{k}(2);
-    Numb{k} = '-';
+    Chai{k} = Numb{k}(2);                            % extract the chain
+    Numb{k} = '#';                                   % special code
   elseif ~isempty(strfind(Numb{k},'(')),
     a = strfind(Numb{k},'(');
     b = strfind(Numb{k},')');
@@ -96,7 +97,8 @@ Numbers = cat(1,{File.NT(:).Number});
 allchains = [];
 
 for k = 1:length(Numb)                      % loop through nucleotide numbers
-  if ~isempty(strfind(Numb{k},':')),        % a range of numbers
+  if ~isempty(strfind(Numb{k},':')),
+                                            % a range of numbers
     n = Numb{k};                            % kth specified number or range
     i = strfind(n,':');                     % find the colon
     Numb1 = n(1:(i-1));                     % first nucleotide number
@@ -130,7 +132,7 @@ for k = 1:length(Numb)                      % loop through nucleotide numbers
     for j = (m+1):mm,
       allchains{j} = ch;
     end
-  elseif Numb{k}(1) == '-',
+  elseif Numb{k}(1) == '#',
     ind = find(cat(2,File.NT.Chain) == Chai{k});
   elseif strcmpi(Numb{k},'all'),
     ind = 1:length(File.NT);                  % all nucleotides

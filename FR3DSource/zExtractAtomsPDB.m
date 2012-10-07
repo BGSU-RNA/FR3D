@@ -1,5 +1,6 @@
 % zExtractAtomsPDB(Filename) reads Filename and writes out lines 
 % containing ATOM to a temporary file named Outputname
+%
 
 function [Header] = zExtractAtomsPDB(Filename,Outputname,Verbose)
 
@@ -13,11 +14,13 @@ Header.ModelStart = 1;
 
 if fid > 0
 
-  out = fopen(Outputname,'w');
+  out = fopen([Outputname '.txt'],'w');
 
   L = 1;
 
   c = 1;
+
+  % --------------- Skip past the header to the first atom
 
   while L > -1
     L = fgets(fid);
@@ -38,10 +41,13 @@ if fid > 0
 
   L = 1;
 
+  % ----------------- Read ATOM and HETATOM lines, write to the same file
+
   while L > -1
     L = fgets(fid);
     if L > -1
-      if strcmp(L(1:min(4,length(L))),'ATOM'),
+      if strcmp(L(1:min(4,length(L))),'ATOM') || strcmp(L(1:min(6,length(L))),'HETATM'),
+        L = strrep(L,'HETATM','HETA  ');           % so columns line up
         fprintf(out,'%s',L);
         c = c + 1;
       end

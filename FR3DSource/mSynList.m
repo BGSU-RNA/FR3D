@@ -17,6 +17,7 @@ synlist(1,length(File.NT))=0;
 chi_degree(1,length(File.NT))=0;
 
 for i=1:length(File.NT)
+  if File.NT(i).Code <= 4,
     %First define the vectors: O4P_C1P; GN_C1P; C1P_GN; C4orC2_GN;
     O4P_C1P     = File.NT(i).Sugar(1,:) - File.NT(i).Sugar(7,:);
     GN_C1P      = File.NT(i).Sugar(1,:) - File.NT(i).Loc(1,:);
@@ -49,4 +50,8 @@ for i=1:length(File.NT)
     else
         synlist(i) = 0; %anti
     end
+  else
+    synlist(i) = NaN;
+    chi_degree(i) = NaN;
+  end
 end

@@ -5,35 +5,40 @@ if nargin < 2,
   Verbose = 0;
 end
 
-File.Backbone = sparse(zeros(length(File.NT)));
+File.Backbone = sparse([],[],[],length(File.NT),length(File.NT));
 
 if exist('chiropraxis.jar') == 2 ...       % if chiropraxis is here
    && File.NumNT > 1 ...                   % and there is more than one NT
    && exist(File.PDBFilename) == 2,        % and the PDB file is available
 
-  d = which([File.Filename '.pdb']);
+  d = which(File.PDBFilename);
   e = which('chiropraxis.jar');
   g = which('suitename.0.3.070628.win.exe');
 
-  fid = fopen('tempbat.bat','w');
+  if Verbose > 0,
+    fprintf('Using dangle and suitename to classify backbone conformations.\n');
+  end
 
-  fprintf(fid,'echo off\n');
+  system(['java -cp "' e '" chiropraxis.dangle.Dangle rnabb < "' d '" > ' File.Filename '_dangle.txt']);
 
-  fprintf(fid,'java -cp "%s" chiropraxis.dangle.Dangle rnabb < "%s" > %s_dangle.txt\n', e, d, File.Filename);
+  system(['"' g '" < ' File.Filename '_dangle.txt > ' File.Filename '_suitename.txt']);
 
-  fprintf(fid,'"%s" < %s_dangle.txt > %s_suitename.txt\n', g, File.Filename, File.Filename);
+%  fid = fopen('tempbat.bat','w');
+%  fprintf(fid,'echo off\n');
+%  fprintf(fid,'java -cp "%s" chiropraxis.dangle.Dangle rnabb < "%s" > %s_dangle.txt\n', e, d, File.Filename);
+%  fprintf(fid,'"%s" < %s_dangle.txt > %s_suitename.txt\n', g, File.Filename, File.Filename);
+%  fprintf(fid,'pause\n');
+%  fclose(fid);
+%  !tempbat.bat
 
-  %fprintf(fid,'pause\n');
-
-  fclose(fid);
-
-  !tempbat.bat
+  % ------------------------------------------- read data written by suitename
 
   fid = fopen([File.Filename '_suitename.txt'],'r');
 
   if fid > 0
 
   clear T
+  T = [];
   L = 1;
   c = 1;
 
@@ -60,13 +65,15 @@ if exist('chiropraxis.jar') == 2 ...       % if chiropraxis is here
   %123456789012345678901234567890
   %:1:A: 388: :  G 33 p 1a 0.630
 
-  File.Backbone = sparse(zeros(length(File.NT)));
+  File.Backbone = sparse([],[],[],length(File.NT),length(File.NT));
 
   zBackboneCodes;
 
   Numbers = cat(1,{File.NT(:).Number});
 
   c = 0;                                      % current index in the file
+
+  
 
   for t = 1:length(T),
   a = T{t};
@@ -111,7 +118,9 @@ if exist('chiropraxis.jar') == 2 ...       % if chiropraxis is here
   end
   end
 
-  delete('tempbat.bat');
+
+%  delete('tempbat.bat');
+
   delete([File.Filename '_dangle.txt']);
   delete([File.Filename '_suitename.txt']);
 

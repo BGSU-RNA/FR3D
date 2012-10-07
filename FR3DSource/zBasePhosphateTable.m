@@ -47,13 +47,7 @@ Config = {'(A)' , '(S)'};
 for i=1:length(Indices),
   fprintf('%6s',[File.NT(Indices(i)).Base File.NT(Indices(i)).Number]);
   for j=1:length(Indices),
-    if j > i,
-      fprintf('%6s', zBasePhosphateText(File.BasePhosphate(Indices(i),Indices(j))));
-    elseif j == i,
-      fprintf('%6s', [File.NT(Indices(i)).Base Config{File.NT(Indices(i)).Syn+1}]);
-    else
-      fprintf('%6s', zBasePhosphateText(File.BasePhosphate(Indices(i),Indices(j))));
-    end
+    fprintf('%6s', zBasePhosphateText(File.BasePhosphate(Indices(i),Indices(j))));
   end
   fprintf('\n');
 end

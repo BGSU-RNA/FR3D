@@ -1,5 +1,4 @@
-% xExcludeOverlap(Candidates) removes candidates which overlap with one
-% another, leaving only the one that occurs first in the list
+% xExcludeOverlap(Candidates) removes candidates which overlap with one another, by intersecting the list of indices in each candidate, leaving only the one that occurs first in the list
 
 function [Candidates,Discrepancy] = xExcludeOverlap(Candidates,Discrepancy,Limit)
 

@@ -8,7 +8,7 @@
 % One can also use ranges of nucleotide numbers, as in
 % zDisplayNT('rr0033_23S',{'2548:2555','2557','2559:2566'},VP);
 
-function [void] = zDisplayNT(File,NTList,ViewParam)
+function [R,S] = zDisplayNT(File,NTList,ViewParam)
 
 % set default values
 
@@ -17,7 +17,7 @@ VP.LabelSugar= 0;
 VP.az        = 51;
 VP.el        = 14;
 VP.LineStyle = '-';              % default - thick solid lines
-VP.LineThickness = '2';          
+VP.LineThickness = 2;
 VP.AtOrigin  = 0;                % rotate all so first is at origin
 VP.Title     = 1;                % title with nucleotide numbers, filename
 VP.Grid      = 1;                % add a grid to the graph
@@ -25,9 +25,11 @@ VP.FontSize  = 10;               % will use Matlab's default unless overridden
 VP.Rotation  = eye(3);
 VP.Shift     = zeros(1,3);
 VP.LabelBases = 10;              % font size; use 0 to not label bases at all
+VP.GlycoAtomSize = 28;           % size to mark the glycosidic atom
 VP.WritePDB      = 0;
 VP.Animate   = 0;
 VP.AnimationFilename = '';
+VP.ShowBeta  = 0;                % show beta factor for each atom
 
 if nargin == 1,
   ViewParam = VP;
@@ -96,6 +98,10 @@ if isfield(ViewParam,'LabelBases'),
   VP.LabelBases = ViewParam.LabelBases;
 end
 
+if isfield(ViewParam,'GlycoAtomSize'),
+  VP.GlycoAtomSize = ViewParam.GlycoAtomSize;
+end
+
 if isfield(ViewParam,'WritePDB'),
   VP.WritePDB = ViewParam.WritePDB;
 end
@@ -112,6 +118,10 @@ if isfield(ViewParam,'Colors'),
   VP.Colors = ViewParam.Colors;
 end
 
+if isfield(ViewParam,'ShowBeta'),
+  VP.ShowBeta = ViewParam.ShowBeta;
+end
+
 % if File is a text string (filename), load the file and display
 
 if strcmp(class(File),'char'),
@@ -126,6 +136,7 @@ end
 % if NTList is a cell array of numbers, look up the indices
 
 if strcmp(class(NTList),'char'),
+  NTList = strrep(NTList,'/',' ');         % some people use this in papers
   NTList = {NTList};
 end
 
@@ -139,9 +150,10 @@ end
 
 %set(gcf,'Renderer','OpenGL');
 
-if VP.AtOrigin == 1,
-  R = File.NT(Indices(1)).Rot;             % Rotation matrix for first base
-  S = File.NT(Indices(1)).Fit(1,:);        % Location of glycosidic atom
+if VP.AtOrigin > 0,
+  v = fix(VP.AtOrigin);
+  R = File.NT(Indices(v)).Rot;             % Rotation matrix for first base
+  S = File.NT(Indices(v)).Fit(1,:);        % Location of glycosidic atom
 else
   R = VP.Rotation;
   S = VP.Shift;
@@ -166,7 +178,9 @@ end
 
 Title = strcat(Title,[' ' strrep(FN,'_','\_')]);
 
-title(Title);
+if VP.Title > 0,
+  title(Title);
+end
 axis equal
 view(VP.az,VP.el);
 
@@ -179,10 +193,11 @@ end
 rotate3d on
 
 if VP.WritePDB == 1,
-  if VP.AtOrigin == 1,
+  if VP.AtOrigin > 0,
+    v = fix(VP.AtOrigin);
     G = eye(3);
-    R = File.NT(Indices(1)).Rot * G(:,[2 3 1]);% Rotation matrix for first base
-    S = File.NT(Indices(1)).Fit(1,:);        % Location of glycosidic atom
+    R = File.NT(Indices(v)).Rot * G(:,[2 3 1]);% Rotation matrix for first base
+    S = File.NT(Indices(v)).Fit(1,:);        % Location of glycosidic atom
   else
     R = VP.Rotation;
     S = VP.Shift;
@@ -264,7 +279,6 @@ if VP.Animate == 1,
   
     Title = strcat(Title,[' ' strrep(FN,'_','\_')]);
   
-%    title(Title);
     axis equal
     axis([-maxradius maxradius -maxradius maxradius minheight maxheight]);
     set(gca,'TickLength',[0 0]);

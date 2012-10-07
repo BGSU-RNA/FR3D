@@ -44,7 +44,7 @@ end
     hold on
 
     for j=1:L,
-      text(Q(j,1), Q(j,2), 0.1, AtomNames{j,code},'FontSize',6);
+      text(Q(j,1), Q(j,2), 0.1, AtomNames{j,code},'FontSize',10);
     end
     title(['Standard ' BaseNames(code)])
   end

@@ -11,4 +11,12 @@ NewNT.Sugar = (NT.Sugar - ones(s,1)*S) * R; % rotate sugar too
 NewNT.Base  = NT.Base;
 NewNT.Number= NT.Number;
 
+if NT.Code == 5,
+  NewNT.AtomName = NT.AtomName;
+end
+
+if isfield(NT,'Beta'),
+  NewNT.Beta  = NT.Beta;
+end
+
 zPlotOneNT(NewNT,ViewParam)

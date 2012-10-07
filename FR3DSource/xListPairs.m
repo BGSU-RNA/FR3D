@@ -28,7 +28,7 @@ for i = 1:length(ListItems),
     case 15, Header = [Header '   Hand'];
     case 16, Header = [Header ' N.Exem'];
     case 17, Header = [Header '  EDist'];
-    case 18, Header = [Header ' Hydrogen angles'];
+    case 18, Header = [Header ' Hydrogen distances, angles'];
     case 19, Header = [Header ' Overlap'];
     case 21, Header = [Header 'PairDisc'];
     case 22, Header = [Header ' Resol'];
@@ -75,7 +75,13 @@ for k=1:length(Pair)
           end
         case 18, if length(p.Hydrogen) > 0,
                    for i=1:length(p.Hydrogen),
-                     Text{k+1} = [Text{k+1} sprintf('%6.1f ', p.Hydrogen(i).Angle)];
+                     Text{k+1} = [Text{k+1} sprintf('%6.1f ', p.Hydrogen(i).Distance)];
+                     if ~isempty(p.Hydrogen(i).Angle),
+                       Text{k+1} = [Text{k+1} sprintf('%6.1f ', p.Hydrogen(i).Angle)];
+                     else
+                       Text{k+1} = [Text{k+1} 'No ang'];
+                     end
+
                    end
                  else
                    Text{k+1} = [Text{k+1} sprintf('                 ')];

@@ -34,12 +34,14 @@ else
   
   if ~isempty(File),
     for f = 1:max(Candidates(:,N+1)),            % loop through files
-      Search.File(f).Edge     = sparse(zeros(1,1));
-      Search.File(f).BasePhosphate = sparse(zeros(1,1));
-      Search.File(f).Range    = sparse(zeros(1,1));
-      Search.File(f).Crossing = sparse(zeros(1,1));
-      Search.File(f).Covalent = sparse(zeros(1,1));
-      Search.File(f).Backbone = sparse(zeros(1,1));
+      Search.File(f).Edge     = sparse([],[],[],N,N);
+      Search.File(f).BasePhosphate = sparse([],[],[],N,N);
+      Search.File(f).BaseRibose = sparse([],[],[],N,N);
+      Search.File(f).Range    = sparse([],[],[],N,N);
+      Search.File(f).Crossing = sparse([],[],[],N,N);
+      Search.File(f).Covalent = sparse([],[],[],N,N);
+      Search.File(f).Backbone = sparse([],[],[],N,N);
+      Search.File(f).Coplanar = sparse([],[],[],N,N);
 
     end
   
@@ -50,9 +52,11 @@ else
       Search.File(f).Filename      = File(f).Filename;
       Search.File(f).NumNT         = File(f).NumNT; % max number, some empty
       Search.File(f).Info          = File(f).Info;
-  
+
       Indices = Cand(i,1:N);               % indices of nucleotides
-  
+
+      Indices = xNeighborhood(File(f),Indices,4);  % largest neighborhood
+
       for j = Indices,
         Search.File(f).NT(j) = File(f).NT(j);
         for k = Indices,
@@ -60,6 +64,8 @@ else
           Search.File(f).Edge(k,j) = File(f).Edge(k,j);
           Search.File(f).BasePhosphate(j,k) = File(f).BasePhosphate(j,k);
           Search.File(f).BasePhosphate(k,j) = File(f).BasePhosphate(k,j);
+          Search.File(f).BaseRibose(j,k) = File(f).BaseRibose(j,k);
+          Search.File(f).BaseRibose(k,j) = File(f).BaseRibose(k,j);
           Search.File(f).Range(j,k) = File(f).Range(j,k);
           Search.File(f).Range(k,j) = File(f).Range(k,j);
           Search.File(f).Covalent(j,k) = File(f).Covalent(j,k);
@@ -68,9 +74,32 @@ else
           Search.File(f).Crossing(k,j) = File(f).Crossing(k,j);
           Search.File(f).Backbone(j,k) = File(f).Backbone(j,k);
           Search.File(f).Backbone(k,j) = File(f).Backbone(k,j);
+          Search.File(f).Coplanar(j,k) = File(f).Coplanar(j,k);
+          Search.File(f).Coplanar(k,j) = File(f).Coplanar(k,j);
         end
       end
-  
+
+      % include nearby amino acids, for xDisplayCandidates
+
+      if isfield(File(f),'AA'),                
+
+% File(f).Filename
+
+        c = cat(1,File(f).NT(Indices).Center);      % nucleotide centers
+        if length(File(f).AA) > 1,
+          a = cat(1,File(f).AA.Center);               % amino acid centers
+          D = zDistance(c,a);                         % NT-AA distances
+          [i,j,k] = find(D);                          % 
+          w = find(k < 8);                            % within 8 Angstroms
+          u = unique(j(w));                           % indices of amino acids
+          Search.File(f).AA(u) = File(f).AA(u);       % add these AAs
+        end
+      end
+
+      if isfield(File(f),'Het'),
+        Search.File(f).Het = [];
+      end
+
       % include intervening nucleotides, if only a few, for alignments
   
       for n = 1:(N-1),                               % loop through nucleotides
@@ -87,7 +116,9 @@ else
        end
       end
     end
+
   elseif ~isfield(Search,'CandidateFilenames'),
+
     List = {};
     fprintf('Attempting to convert filenames and lists to current format\n');
     for j=1:length(Search.Filenames),

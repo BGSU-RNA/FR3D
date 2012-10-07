@@ -56,13 +56,13 @@ pcolor(real(DD))
 shading flat
 axis ij
 view(2)
-%colormap('default');
-%map = colormap;
-%map = map((end-8):-1:8,:);
-%map = map((end-8):-1:end,:);
-%colormap(map);
-%caxis([0 16]);
-%colorbar('location','eastoutside');
+% colormap('default');
+% map = colormap;
+% map = map((end-8):-1:8,:);
+% map = map((end-8):-1:end,:);
+% colormap(map);
+% caxis([0 16]);
+% colorbar('location','eastoutside');
 
 if Table > 0,
   for i = 1:s,
@@ -79,7 +79,7 @@ end
 
 if length(W) > 1,
   for i = 1:t,
-    SSLab{i} = Lab{i}(1:W(2));
+    SSLab{i} = Lab{i}(1:min(length(Lab{i}),W(2)));
   end
 end
 
@@ -88,7 +88,7 @@ if (length(Lab) < 20) || (NoLabel == 1),
 elseif length(Lab) < 50,
   FS = 8;
 elseif length(Lab) < 80,
-  FS = 4;
+  FS = 3;
 elseif length(Lab) < 100,
   FS = 3;
 elseif length(Lab) < 300,
@@ -104,15 +104,24 @@ FS = 8;
 if length(W) > 1,
   set(gca,'XTick',(1:s)+0.5)
   set(gca,'XTickLabel',SSLab,'FontSize',FS)
+%  xticklabel_rotate
 else
   XFS = min(6,FS);
   for i = 1:t,
-    text(i+0.5,t+1,SLab{i},'Rotation',90,'HorizontalAlignment','right','FontSize',XFS);
+%    text(i+0.5,t+1,SLab{i},'Rotation',90,'HorizontalAlignment','right','FontSize',XFS);
   end
   set(gca,'XTickLabel',[])
 end
 
 set(gca,'YTick',(1:s)+0.5)
-set(gca,'YTickLabel',SLab,'FontSize',FS)
+set(gca,'YTickLabel',SLab,'FontSize',FS,'FontName','FixedWidth')
 
 %set(gca,'OuterPosition',[0.1 0.1 1.1 1.1]); % doesn't help with pdf file!
+
+% saveas(gcf,'Distance.pdf','pdf');
+
+%>> colormap('gray')
+%>> title('')
+%>> set(gca,'FontSize',3)
+%>> set(gcf,'renderer','painters')
+%>> saveas(gcf,'6 nucleotide hairpins NR set.pdf')

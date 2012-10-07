@@ -9,14 +9,42 @@ end
 
 for f = 1:length(File),
 
-File(f).Crossing = sparse(zeros(length(File.NT)));
-File(f).Range    = sparse(zeros(length(File.NT)));
+% These lines remedy a problem that used to happen, but should be fixed now
+
+N = length(File.NT);
+
+[ss,tt] = size(File(f).BasePhosphate);
+if ss < N,
+  File(f).BasePhosphate(N,N) = 0;
+  fprintf('zInteractionRange: Wrong size BasePhosphate\n');
+elseif tt < N,
+  File(f).BasePhosphate(N,N) = 0;
+  fprintf('zInteractionRange: Wrong size BasePhosphate\n');
+end
+
+[ss,tt] = size(File(f).BaseRibose);
+if ss < N,
+  File(f).BaseRibose(N,N) = 0;
+  fprintf('zInteractionRange: Wrong size BaseRibose\n');
+elseif tt < N,
+  File(f).BaseRibose(N,N) = 0;
+  fprintf('zInteractionRange: Wrong size BaseRibose\n');
+end
+
+
+
+File(f).Crossing = sparse([],[],[],length(File.NT),length(File.NT));
+File(f).Range    = sparse([],[],[],length(File.NT),length(File.NT));
 
 if length(File(f).NT) > 1,
 
 E = fix(abs(File(f).Edge)); % matrix of pairwise interactions w/o BPh
 
-C = fix(abs(File(f).Edge))+0.001*(fix(abs(File(f).BasePhosphate+File(f).BasePhosphate')));                  % matrix of interactions, including base-phosphate
+% ----------- make a matrix of interactions, including base-phosphate and BR
+C = fix(abs(File(f).Edge));
+C = C+0.001*(fix(abs(File(f).BasePhosphate+File(f).BasePhosphate')));
+C = C+0.001*(fix(abs(File(f).BaseRibose+File(f).BaseRibose')));
+
 
 for i = 1:length(C(:,1)),
   C(i,i) = 0;               % remove base-phosphate self interactions

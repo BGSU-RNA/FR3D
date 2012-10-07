@@ -49,20 +49,12 @@ else
     n   = n + 1;
   end
 
-%  if (n==1),
-%    Disc = -sqrt(S)/Model.NumNT - 100;       % distance knocked out candidate
-%  elseif S <= Model.LDiscCutoff,
-%    Disc = sqrt(S)/Model.NumNT;              % acceptable candidate
-%  else
-%    Disc = -sqrt(S)/Model.NumNT - n*100;     % angle n-1 knocked out candidate
-%  end
-
   if (n > 1) & (S <= Model.LDiscCutoff),
     Disc = S;
   else
-    Disc = -1;
+    Disc = -1;                                % signal large discrepancy
   end
 
-  % add in contributions to the discrepancy from sugar locations
-
 end
+
+Disc = real(Disc);                            % sometimes not real, even 

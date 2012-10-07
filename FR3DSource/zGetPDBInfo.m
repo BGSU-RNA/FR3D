@@ -4,9 +4,11 @@
 % It uses PDBInfo.mat, which needs to be updated whenver new PDB data is
 % downloaded from NDB/PDB
 
-function [File] = zGetPDBInfo(File)
+function [File] = zGetPDBInfo(File,n,t)
 
-load(['FR3DSource' filesep 'PDBInfo.mat'],'n','t','-mat');
+if nargin < 2,
+  load(['FR3DSource' filesep 'PDBInfo.mat'],'n','t','-mat');
+end
 
 PDBNames = lower(t(:,1));              % convert PDB filenames to lowercase
 
@@ -25,10 +27,12 @@ if ~isempty(i),
 
   if ((n(i(1),2) ~= length(File.NT)) || isempty(t{i(1),9}) || n(i(1),3) == 0) && (length(File.NT) > 0) ,
     E  = abs(triu(File.Edge));
-    n(i(1),3) = full(sum(sum((E > 0) .* (E < 16)))); % number of pairs
+    P = zSparseRange(E,0,16);
+    n(i(1),3) = nnz(P); % number of pairs
     n(i(1),2) = length(File.NT);
     t{i(1),9} = cat(2,File.NT.Base);
-    save(['FR3DSource' filesep 'PDBInfo.mat'],'n','t'); % Matlab version 7
+%    save(['FR3DSource' filesep 'PDBInfo.mat'],'n','t'); % Matlab version 7
+%    don't push data back to PDBInfo.mat; rely on zUpdatePDBDatabase to do that
   end
 
 else

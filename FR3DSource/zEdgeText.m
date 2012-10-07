@@ -33,7 +33,8 @@ for i=1:length(e),
     case   11,    E = [E 'cSs'];
     case   12,    E = [E 'tSs'];
     case   13,    E = [E 'bif'];
-    case   14,    E = [E 'Rib'];
+    case   14,    E = [E 'wat'];
+    case   15,    E = [E 'rib'];
     case   -1,    E = [E 'cwW'];
     case   -2,    E = [E 'twW'];
     case   -3,    E = [E 'cHW'];
@@ -47,13 +48,16 @@ for i=1:length(e),
     case  -11,    E = [E 'csS'];
     case  -12,    E = [E 'tsS'];
     case  -13,    E = [E 'bif'];
-    case  -14,    E = [E 'Rib'];
+    case  -14,    E = [E 'wat'];
+    case  -15,    E = [E 'rib'];
     case   21,    E = [E 's35'];
     case  -21,    E = [E 's53'];
     case   22,    E = [E 's33'];
     case  -22,    E = [E 's33'];
     case   23,    E = [E 's55'];
     case  -23,    E = [E 's55'];
+    case   28,    E = [E 'perp'];
+    case  -28,    E = [E 'perp'];
     case  101,    E = [E 'ncWw'];
     case  102,    E = [E 'ntWw'];
     case  103,    E = [E 'ncWH'];
@@ -111,13 +115,13 @@ if nargin == 3,
   end
 end
 
-if any(fix(abs(e)) == [13 14 113 114]),
+if any(fix(abs(e)) == [13 14 28 113 114]),
   EE = E;
 end
 
 E = EE;
 
-if abs(e(i)) < 29,                     % pairing or stacking
+if abs(e(i)) < 29 || Detail > 1,                     % pairing or stacking
   if (fix(e(i)) == e(i)) || (Detail == 0),
     E = [E ' '];
   else

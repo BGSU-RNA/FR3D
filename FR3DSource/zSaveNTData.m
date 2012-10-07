@@ -1,6 +1,7 @@
 % zSaveNTData saves File in File.Filename.analyzed
+% Changed by Anton
 
-function [void] = zSaveNTData(Files,Verbose)
+function [] = zSaveNTData(Files,Verbose)
 
 if nargin < 2,
   Verbose = 1;
@@ -13,7 +14,7 @@ for f=1:length(Files),
   File.Modified = 0;                          % flag to know to save
   File.Distance = [];                         % clear; recompute on load
 
-  if ~(exist('PrecomputedData') == 7),        % if directory doesn't yet exist
+  if ~(exist('PrecomputedData','dir')),        % if directory doesn't yet exist
     mkdir('PrecomputedData');
   end
 
@@ -28,7 +29,15 @@ for f=1:length(Files),
      File.NT(n).Loc = [];
    end
 
-   save([pwd filesep 'PrecomputedData' filesep File.Filename '.mat'],'File');
+   [pathstr, name, ext] = fileparts(File.Filename); % Anton 5/30/2010
+   destination = [pwd filesep 'PrecomputedData' filesep pathstr]; % Anton 5/30/2010
+   if ~isempty(pathstr) && ~exist(destination,'dir') % Anton 5/30/2010
+       mkdir(destination);
+       path(path,destination);
+   end   
+   
+   save([destination filesep name '.mat'],'File','-v6');  % Anton 5/30/2010, Anton 7/21/2011
+%    save([pwd filesep 'PrecomputedData' filesep name '.mat'],'File'); %    Anton 5/30/2010
    if Verbose > 0,
      fprintf('Saved %s\n', [File.Filename '.mat']);
    end

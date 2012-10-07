@@ -63,17 +63,27 @@ for f=1:length(Filenames),
     if (exist(strcat(Filename,'.mat'),'file') > 0),
       load(strcat(Filename,'.mat'),'File','-mat');
       if Verbose > 0,
-        fprintf('Loaded %s\n', [Filename '.mat']);
+        fprintf('Loaded  %s\n', [Filename '.mat']);
       end
     elseif (exist(strcat(FILENAME,'.MAT'),'file') > 0),  % helps on a Mac
       load(strcat(FILENAME,'.MAT'),'File','-mat');
       if Verbose > 0,
         fprintf('Loaded  %s\n', [FILENAME '.MAT']);
       end
+    elseif (exist(strcat(FILENAME,'.mat'),'file') > 0),  % helps on a Mac
+      load(strcat(FILENAME,'.mat'),'File','-mat');
+      if Verbose > 0,
+        fprintf('Loaded  %s\n', [FILENAME '.mat']);
+      end
+    elseif (exist(strcat(filename,'.MAT'),'file') > 0),  % helps on a Mac
+      load(strcat(filename,'.MAT'),'File','-mat');
+      if Verbose > 0,
+        fprintf('Loaded  %s\n', [FILENAME '.mat']);
+      end
     elseif (exist(strcat(filename,'.mat'),'file') > 0),  % helps on a Mac
       load(strcat(filename,'.mat'),'File','-mat');
       if Verbose > 0,
-        fprintf('Loaded   %s\n', [filename '.MAT']);
+        fprintf('Loaded  %s\n', [filename '.MAT']);
       end
     else
       ReadFull = 1;
@@ -94,19 +104,27 @@ for f=1:length(Filenames),
     File.ClassVersion = 0;
   end
 
+  blank = sparse([],[],[],length(File.NT),length(File.NT));
+
   if ~isfield(File,'BasePhosphate'),
-    File.BasePhosphate = sparse(zeros(length(File.NT)));
+    ClassifyCode = 1;
+    File.BasePhosphate = blank;
   end
 
-  if isempty(File.BasePhosphate),
-    File.BasePhosphate = sparse(zeros(length(File.NT)));
+  if ~isfield(File,'BaseRibose'),
+    ClassifyCode = 1;
+  end
+
+  if ~isfield(File,'Coplanar'),
+    ClassifyCode = 1;
+    File.Coplanar = blank;
   end
 
   if ~isfield(File,'Covalent'),
     if length(File.NT) > 1,
       File = zBackboneContinuity(File);
     else
-      File.Covalent = sparse(zeros(length(File.NT)));
+      File.Covalent = blank;
     end
   end
 
@@ -126,6 +144,25 @@ for f=1:length(Filenames),
     File = rmfield(File,'Header');
   end
 
+  if length(File.NT) > 0,
+    if ~isfield(File.NT,'Beta'),
+      File.NT(1).Beta = [];            % Beta factors might not have been read
+    end
+  end
+
+  if ~isfield(File,'Info'),
+    File = zGetPDBInfo(File);          % get resolution and other info
+    SaveCode = 1;
+  end
+
+  if ~isfield(File,'AA'),
+    File.AA = [];
+  end
+
+  if ~isfield(File,'Het'),
+    File.Het = [];
+  end
+
   Overlap = 0;
 
   File.Distance = [];                        % only compute this if needed
@@ -135,40 +172,55 @@ for f=1:length(Filenames),
       File = zStoreO3(File);
     end
 
-    if (ReadCode == 1) | (ReadCode == 3) | (ReadCode == 4) | ... 
-      (ClassifyCode == 1) | (File.ClassVersion < CurrentVersion),
+    if (ReadCode == 1) || (ReadCode == 3) || (ReadCode == 4) || ... 
+      (ClassifyCode == 1) || (File.ClassVersion < CurrentVersion),
 
-      File.Edge = sparse(File.NumNT,File.NumNT);
-      File.Coplanar = sparse(File.NumNT,File.NumNT);
+      blank2 = sparse([],[],[],File.NumNT,File.NumNT);
+
+      File.Edge = blank2;
+      File.Coplanar = blank2;
 
       c = cat(1,File.NT(1:File.NumNT).Center); % nucleotide centers
-
       File.Distance = zMutualDistance(c,16); % compute distances < 16 Angstroms
+      File.Distance(1,1) = 10;                 % make sure one is non-zero
       d = sort(nonzeros(File.Distance));
 
       if isempty(d),
        % more than one nucleotide, but too far apart to pair
-       File.Range = sparse(File.NumNT,File.NumNT);
-       File.BasePhosphate = sparse(File.NumNT,File.NumNT);
+       File.Range = blank2;
+       File.BasePhosphate = blank2;
+       File.BaseRibose = blank2;
       else
        if d(min(10,length(d))) < 1,
-         fprintf('%s has overlapping nucleotides and should be avoided\n',File.Filename);
+         fprintf('%s has overlapping nucleotides and should be used with caution\n',File.Filename);
 
          Overlap = 1;
+         File.Range = blank2;
+         File.BasePhosphate = blank2;
+         File.BaseRibose = blank2;
+
        else
+
          t = cputime;
          File = zClassifyPairs(File,Verbose);
+
+         File = zEdgeMakesMultiplePairs(File,0);
+
+         if Verbose > 0,
+           fprintf(' Base-backbone interactions ...');
+         end
+
+         File = zPhosphateInteractions(File);
 
          if Verbose > 0,
            fprintf(' Base-phosphate interactions ...');
          end
 
-         File = zPhosphateInteractions(File);
-         File.ClassVersion = CurrentVersion;
+         File = zBaseRiboseInteractions(File);
          ClassifyCode = 1;
 
          if Verbose > 0,
-           fprintf(' Interaction range ... ');
+           fprintf(' Crossing number ... ');
          end
 
          File = zInteractionRange(File,Verbose);
@@ -176,12 +228,12 @@ for f=1:length(Filenames),
          if Verbose > 0,
            fprintf('\nClassification took %4.2f minutes\n', (cputime-t)/60);
          end
-       end
+        end
       end
     end
-  else
-    File.ClassVersion = CurrentVersion;
   end
+
+  File.ClassVersion = CurrentVersion;
 
   if length(File.NT) > 0,
    if ~isfield(File.NT(1),'Syn'),
@@ -198,6 +250,11 @@ for f=1:length(Filenames),
                                                  % next time PDB is read
   end
 
+  if ~isfield(File,'BaseRibose'),
+    File = zBaseRiboseInteractions(File);
+    SaveCode = 1;
+  end
+
   if ~isfield(File,'Backbone'),
     File = zBackboneConformation(File,Verbose);
     if File.NumNT > 1,
@@ -211,46 +268,44 @@ for f=1:length(Filenames),
     SaveCode = 1;
   end
 
-  if ~isfield(File,'Range') || ~isfield(File,'Crossing'),
+  if ~isfield(File,'Range') || ~isfield(File,'Crossing') || ClassifyCode > 0,
     File = zInteractionRange(File,Verbose);
     ClassifyCode = 1;
   end
 
-  if ~isfield(File,'Flank'),
+  if ~isfield(File,'Flank') || ClassifyCode > 0,
     File = xFlankingPairs(File);
   end
 
-  if ~isfield(File,'Info'),
-    File = zGetPDBInfo(File);          % get resolution and other info
+  if ~isfield(File,'Redundant') || ~isfield(File,'LongestChain') || ClassifyCode > 0,
+    File = zMarkRedundantNucleotides(File,Verbose);
     SaveCode = 1;
-  else
-    if isempty(File.Info.Descriptor),
-      File = zGetPDBInfo(File);          % look for file information
-      if ~isempty(File.Info.Descriptor),
-        SaveCode = 1;
-      end
-    end
+  end
+
+  if ~isfield(File,'BestChains'),
+    File.BestChains = zBestChains(File,1);
+    SaveCode = 1;
   end
 
   % ----------------- If it just read the .pdb file and no pairs, look at BUC
 
-  if (ReadPDB == 1) && (isempty(strfind(PDBFilename,'.pdb1'))),
-    E = abs(File.Edge);                       % all interactions
-    bp = full(sum(sum((E > 0) .* (E < 15))));       % number of basepairs
-    r  = bp / length(File.NT);                % ratio of bp to nt
-    if (r < 0.4),                             % very few basepairs found
+  if (ReadPDB == 1) && (isempty(strfind(PDBFilename,'.pdb1'))) && length(File.NT) > 0,
+    bp = nnz(zSparseRange(abs(triu(File.Edge)),0,16));
+                                                  % number of basepairs
+    r  = bp / length(File.NT);                    % ratio of bp to nt
+    if (r < 0.4),                                 % very few basepairs found
       if Verbose > 0,
-        fprintf('Few basepairs found (ratio %7.2f), reading the biological unit coordinates\n',r);
+        fprintf('Few basepairs found (%7.4f basepairs per nucleotide), reading the biological unit coordinates\n',r);
       end
       File1 = zGetNTData([PDBFilename '1'],4,1);   % read biological unit coords
       if length(File1.NT) > 0,
-        E1  = abs(File1.Edge);
-        bp1 = full(sum(sum((E > 0) .* (E < 15))));       % number of basepairs
-        r1  = bp / length(File1.NT);               % ratio of bp to nt
+        bp = nnz(zSparseRange(abs(triu(File1.Edge)),0,16));
+                                                  % number of basepairs
+        r1 = bp / length(File1.NT);               % ratio of bp to nt
         if Verbose > 0,
-          fprintf('Biological unit coordinates have ratio %7.2f\n',r1);
+          fprintf('Biological unit coordinates have %7.4f basepairs per nucleotide\n',r1);
         end
-        if r1 > r,
+        if r1 > r,                              % pdb1 has higher basepair ratio
           File = File1;                         % use biological unit coords
         end
       end
@@ -262,6 +317,7 @@ for f=1:length(Filenames),
   Saved = 0;
 
   if (ReadCode > 0) || (ClassifyCode > 0) || (SaveCode > 0),
+    File = zGetPDBInfo(File);          % look for file information
     zSaveNTData(File,Verbose);
     Saved = 1;
   end

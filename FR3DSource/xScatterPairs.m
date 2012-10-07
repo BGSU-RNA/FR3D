@@ -9,6 +9,14 @@ if nargin < 3,
   N2 = 2;
 end
 
+if nargin < 4,
+  ViewParam.Color  = 6;
+  ViewParam.FigNum = 7;
+  ViewParam.Normal = 0;
+  ViewParam.ClassLimits = 1;
+  ViewParam.Color = 1;
+end
+
 % --------------------------------------------- 
 % --------------------------------------------- Collect basic data
 
@@ -18,7 +26,11 @@ N     = t - 1;                                     % number of nucleotides
 File  = Search.File;
 CL    = zClassLimits;                              % read ClassLimits matrix
 
-ppp = 1:L;                                         % default ordering
+if isfield(ViewParam,'Order'),
+  ppp = ViewParam.Order;
+else
+  ppp = 1:L;                                         % default ordering
+end
 
 if exist('PairExemplars.mat','file') > 0,
   load('PairExemplars','Exemplar');
@@ -78,6 +90,14 @@ if Reclassify > 0,
 
     [p,s] = zClassifyPair(Ni,Nj,CL,Exemplar,1);
 
+    % ---------------------------------------------- distance to exemplars
+
+    if abs(p.Class) < 14,                          % basepair
+      [c,d,ff,gg,h] = zDistanceToExemplars(Exemplar,Ni,Nj);
+      p.Classes   = c(1:3);
+      p.Distances = d(1:3);
+    end
+
     p.NT1 = Ni;
     p.NT2 = Nj;
     p.Filename = File(f).Filename;
@@ -86,6 +106,8 @@ if Reclassify > 0,
     if isempty(p.Resol)
       p.Resol = NaN;
     end
+
+    p.CenterCenter = (Ni.Center-Nj.Center)*Ni.Rot; % vector shift, center to ce
 
     if ~isempty(p),
       Pair(pc) = p;                                % store this pair
@@ -108,7 +130,7 @@ if Reclassify > 0,
   Pair      = SavedPairs(N1,N2).Pair;
   modcode   = SavedPairs(N1,N2).modcode;
   Paircodes = SavedPairs(N1,N2).Paircodes;
-  
+
  end
 
 end
@@ -131,7 +153,12 @@ if Recolor > 0,
   end
 
   switch ViewParam.Color,
-    case  1, Color(k) = k;
+    case  1, 
+      if isfield(ViewParam,'Order'),
+        Color(ppp(k)) = k;
+      else
+        Color(k) = k;
+      end
     case {2, 3, 4}, Color(k) = p.Edge;
     case  5, Color(k) = p.Paircode;
     case  6, Color(k) = p.Ang;
@@ -143,6 +170,7 @@ if Recolor > 0,
     case 13, Color(k) = p.Displ(1);
     case 14, Color(k) = p.Displ(2);
     case 15, Color(k) = p.Displ(3);
+    case 16, Color(k) = p.Resol;
     otherwise, Color(k) = 1;
   end
 
@@ -165,7 +193,7 @@ switch ViewParam.Color,
   case 5, ColorAxis =  [1 16];
   case 6, ColorAxis =  [min(Color) max(Color)];      % color by angle
   case 7, ColorAxis =  [min(Color) max(Color)];
-  case 8, ColorAxis =  [-1 3];
+  case 8, ColorAxis =  [-1.1 1.1];                   % third comp of normal
   case 9, ColorAxis =  [0 4];
   case 10, ColorAxis = [-12 12];
   case 11, ColorAxis = [0 10];
@@ -173,7 +201,12 @@ switch ViewParam.Color,
   case 13, ColorAxis =  [min(Color) max(Color)];
   case 14, ColorAxis =  [min(Color) max(Color)];
   case 15, ColorAxis =  [min(Color) max(Color)];
+  case 16, ColorAxis = [2 4];
   otherwise, ColorAxis =  [0 10];
+end
+
+if ColorAxis(1) == ColorAxis(2),
+  ColorAxis(2) = ColorAxis(2) + 0.001;
 end
 
 %---------------------------------------------- Plot displacements
@@ -188,6 +221,8 @@ clf
 %set(gcf,'Renderer','OpenGL');     % fast rotation
 %set(gcf,'Renderer','zbuffer')
 %set(gcf,'Renderer','painters')
+
+clear c
 
 for k = 1:length(Pair),                              % Loop through pairs
   p      = Pair(k);
@@ -213,6 +248,9 @@ end
 
 % ------------------ Display class limits, if desired
 
+colorset = 'kbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbrkbr';
+colorset = 'kbrgcmkbrgcmkbrgcmkbrgcmkbrgcmkbrgcmkbrgcmkbrgcmkbrgcmkbrgcm';
+
 if isfield(ViewParam,'ClassLimits'),
  if ViewParam.ClassLimits == 1,                  % show all boxes
    B = CL(:,:,Paircodes(1));                     % use limits for this paircode
@@ -220,10 +258,10 @@ if isfield(ViewParam,'ClassLimits'),
    for row = 1:length(B(:,1)),
      hold on
      if (abs(B(row,1)) < 14) & (abs(B(row,1)) > 0),
-       zSquare([B(row,[2 4]) 0],[B(row,[3 5]) 0],'k');
+       zSquare([B(row,[2 4]) 0],[B(row,[3 5]) 0],colorset(row));
        tex = zEdgeText(B(row,1),1,Paircodes(1));
        tex = tex(1:4);
-       text(B(row,2)+0.1,B(row,4)+0.2,0,tex,'horizontalalignment','left','fontweight','bold','FontSize',8);
+       text(B(row,2)+0.1,B(row,4)+0.2,0,tex,'horizontalalignment','left','fontweight','bold','FontSize',8,'color',colorset(row));
      end
    end
  elseif ViewParam.ClassLimits == 2,              % just show one box
@@ -233,10 +271,10 @@ if isfield(ViewParam,'ClassLimits'),
    for row = 1:length(B(:,1)),
      hold on
      if any(fix(B(row,1)) == fix(Param.Category)),
-       zSquare([B(row,[2 4]) 0],[B(row,[3 5]) 0],'k');
+       zSquare([B(row,[2 4]) 0],[B(row,[3 5]) 0],colorset(row));
        tex = zEdgeText(B(row,1),1,Paircodes(1));
        tex = tex(1:4);
-       text(B(row,2)+0.1,B(row,4)+0.2,0,tex,'horizontalalignment','left','fontweight','bold','FontSize',8);
+       text(B(row,2)+0.1,B(row,4)+0.2,0,tex,'horizontalalignment','left','fontweight','bold','FontSize',8,'color',colorset(row));
      end
    end
  end
@@ -245,6 +283,7 @@ end
 zoom on
 
 caxis(ColorAxis);
+zColormap
 view(2)
 axis equal
 
@@ -255,6 +294,42 @@ title(Title);
 xlabel('Perpendicular to glycosidic bond');
 ylabel('Parallel to glycosidic bond');
 zlabel('Vertical with respect to first base');
+
+% ------------------------------------- Plot base centers -------------
+
+if exist('centercenter.txt','file') > 0,
+
+figure(44)
+clf
+
+%set(gcf,'Renderer','OpenGL');     % fast rotation
+%set(gcf,'Renderer','zbuffer')
+%set(gcf,'Renderer','painters')
+
+for k = 1:length(Pair),                              % Loop through pairs
+  p      = Pair(k);
+  c(k)   = Color(k);
+  e(k,:) = -p.CenterCenter;                           % center-center vector
+
+  if ViewParam.Normal == 1,
+    v = p.Normal/3;                                      % add normal vector
+    plot3([e(k,1) e(k,1)+v(1)], [e(k,2) e(k,2)+v(2)], [e(k,3) e(k,3)+v(3)], 'b');
+    hold on
+  end
+end
+
+scatter3(e(:,1),e(:,2),e(:,3),18*ones(size(c)),c,'filled')
+
+if max(modcode) == min(modcode),                 % all have same first base
+  zPlotStandardBase(modcode,0,1);                % plot center at the origin
+  Lett = 'ACGU';  
+  Title =[Lett(modcode) ' base center at the origin, center of second base shown by dots'];
+else
+  Title = ['center of second base shown by dots'];
+end
+view(2)
+axis equal
+end
 
 %----------------------------------------------------- Plot angle and normal
 figure(ViewParam.FigNum + 1)
@@ -282,6 +357,7 @@ ylabel('Vertical component of normal');
 zlabel('Gap');
 title('');
 caxis(ColorAxis);
+zColormap
 grid on
 
 view(2)
@@ -299,13 +375,13 @@ if isfield(ViewParam,'ClassLimits'),
         tex = zEdgeText(B(row,1),1,Paircodes(1));
         tex = tex(1:4);
         if (B(row,10) < B(row,11)),
-          zSquare([B(row,[10 8]) 0],[B(row,[11 9]) 0],'k');
-          text(B(row,10)+4,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8);
+          zSquare([B(row,[10 8]) 0],[B(row,[11 9]) 0],colorset(row));
+          text(B(row,10)+4,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8,'color',colorset(row));
         else
-          zSquare([B(row,[10 8]) 0],[270 B(row,9) 0],'k');
-          text(B(row,10)+4,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8);
+          zSquare([B(row,[10 8]) 0],[270 B(row,9) 0],colorset(row));
+          text(B(row,10)+4,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8,'color',colorset(row));
           zSquare([-90 B(row,8) 0],[B(row,[11 9]) 0],'k');
-          text(-86,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8);
+          text(-86,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8,'color',colorset(row));
         end
       end
     end
@@ -320,13 +396,13 @@ if isfield(ViewParam,'ClassLimits'),
         tex = zEdgeText(B(row,1),1,Paircodes(1));
         tex = tex(1:4);
         if (B(row,10) < B(row,11)),
-          zSquare([B(row,[10 8]) 0],[B(row,[11 9]) 0],'k');
-          text(B(row,10)+4,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8);
+          zSquare([B(row,[10 8]) 0],[B(row,[11 9]) 0],colorset(row));
+          text(B(row,10)+4,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8,'color',colorset(row));
         else
-          zSquare([B(row,[10 8]) 0],[270 B(row,9) 0],'k');
-          text(B(row,10)+4,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8);
+          zSquare([B(row,[10 8]) 0],[270 B(row,9) 0],colorset(row));
+          text(B(row,10)+4,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8,'color',colorset(row));
           zSquare([-90 B(row,8) 0],[B(row,[11 9]) 0],'k');
-          text(-86,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8);
+          text(-86,B(row,8)+0.08,B(row,11),tex,'horizontalalignment','left','fontweight','bold','FontSize',8,'color',colorset(row));
         end
       end
     end
@@ -358,11 +434,13 @@ if ViewParam.Color > 1,
     case 13, title('Histogram of perpendicual displacement'); % Color(k) = p.Displ(1);
     case 14, title('Histogram of parallel displacement'); % Color(k) = p.Displ(2);
     case 15, title('Histogram of vertical displacement'); % Color(k) = p.Displ(3);
+    case 16, title('Histogram of resolution');
   end
 end
 
 
 end
+
 % ---------------------------------------------------- Display the menu
 
   k=menu('Scatterplot controls',...
@@ -380,10 +458,11 @@ end
          'Color by position in list',...              % 12
          'Color by gap',...                           % 13
          'Color by third component of normal',...     % 14
-         'Toggle normal vector',...                   % 15
-         'Toggle category limits',...                 % 16
-         'List pair parameters',...                   % 17
-         'Quit');                                     % 18
+         'Color by resolution',...                    % 15
+         'Toggle normal vector',...                   % 16
+         'Toggle category limits',...                 % 17
+         'List pair parameters',...                   % 18
+         'Quit');                                     % 19
 
   switch k,
   case 1, N1 = N1 + 1;
@@ -436,13 +515,14 @@ end
   case 12, ViewParam.Color = 1;
   case 13, ViewParam.Color = 7;
   case 14, ViewParam.Color = 8;
-  case 15, ViewParam.Normal = 1 - ViewParam.Normal;
+  case 15, ViewParam.Color = 16;         % color by resolution
+  case 16, ViewParam.Normal = 1 - ViewParam.Normal;
            Recolor = 0;
-  case 16, ViewParam.ClassLimits = 1 - ViewParam.ClassLimits;
+  case 17, ViewParam.ClassLimits = 1 - ViewParam.ClassLimits;
            Recolor = 0;
-  case 17, xListPairs(Pair,ViewParam);
+  case 18, xListPairs(Pair,ViewParam);
            Replot = 0;
-  case 18, Stop = 1;
+  case 19, Stop = 1;
   end
 
   if (k >= 1) && (k <= 4) && (N == 2),     % switch order
@@ -451,7 +531,7 @@ end
     N2 = N3;
   end
 
-  if k < 17,
+  if k < 18,
     Replot  = 1;
   end
 

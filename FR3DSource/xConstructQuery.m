@@ -136,12 +136,25 @@ if Query.Geometric == 1,                    % model comes from a file
 
   % --------- basic parameters for the model
 
-  if isfield(Query,'ChainList'),
-    Query.Indices  = zIndexLookup(File,Query.NTList,Query.ChainList);
-  else
-    Query.Indices  = zIndexLookup(File,Query.NTList);
-  end
 
+  % Modified by Anton on 5/18/2011 
+  % If the Indices have been set up manually, then use it.
+  % Neede when the query has nts from multiple models and zIndexLookUp
+  % fails.
+    if isfield(Query,'IndicesManual')             %Anton 5/18/2011
+        Query.Indices = Query.IndicesManual;      %Anton 5/18/2011
+        Query = rmfield(Query, 'IndicesManual');  %Anton 5/18/2011
+    else                                          %Anton 5/18/2011
+
+          if isfield(Query,'ChainList'),
+            Query.Indices  = zIndexLookup(File,Query.NTList,Query.ChainList);
+          else
+            Query.Indices  = zIndexLookup(File,Query.NTList);
+          end
+                       
+    end  %Anton 5/18/2011
+
+    
   for i=1:Query.NumNT,
     Query.NT(i) = File.NT(Query.Indices(i));
   end
@@ -214,6 +227,8 @@ if isfield(Query,'Edges'),
   Query.ExPairs{Query.NumNT,Query.NumNT} = 0;
   Query.BasePhos{Query.NumNT,Query.NumNT} = 0;
   Query.ExcludeBasePhos{Query.NumNT,Query.NumNT} = 0;
+  Query.BaseRibose{Query.NumNT,Query.NumNT} = 0;
+  Query.ExcludeBaseRibose{Query.NumNT,Query.NumNT} = 0;
   Query.Flank{Query.NumNT,Query.NumNT} = [];
   Query.Range{Query.NumNT,Query.NumNT} = [];
   Query.Coplanar{Query.NumNT,Query.NumNT} = [];
@@ -223,7 +238,7 @@ if isfield(Query,'Edges'),
   for i=1:Query.NumNT,
     for j=(i+1):Query.NumNT,
       if ~isempty(Query.Edges{j,i}),
-        [ReqEdge,ExEdge,OKPairs,ExPairs,BP1,BP2,EBP1,EBP2,Flank,Range,Coplanar,ReqBB,ExBB] = xGetEdgeNums(Query.Edges{j,i});
+        [ReqEdge,ExEdge,OKPairs,ExPairs,BP1,BP2,EBP1,EBP2,BR1,BR2,EBR1,EBR2,Flank,Range,Coplanar,ReqBB,ExBB] = xGetEdgeNums(Query.Edges{j,i});
         Query.EdgeNums{j,i}     =  ReqEdge;
         Query.EdgeNums{i,j}     = -ReqEdge;
         Query.ExcludeEdges{j,i} =  ExEdge;
@@ -236,6 +251,10 @@ if isfield(Query,'Edges'),
         Query.BasePhos{i,j}     = BP2;
         Query.ExcludeBasePhos{j,i} = EBP1;
         Query.ExcludeBasePhos{i,j} = EBP2;
+        Query.BaseRibose{j,i}     = BR1;
+        Query.BaseRibose{i,j}     = BR2;
+        Query.ExcludeBaseRibose{j,i} = EBR1;
+        Query.ExcludeBaseRibose{i,j} = EBR2;
 	Query.Flank{i,j}           = Flank;
 	Query.Range{i,j}           = Range;
         Query.Coplanar{i,j}        = Coplanar;
@@ -244,7 +263,7 @@ if isfield(Query,'Edges'),
         Query.OKBB{i,j}      = ReqBB;
         Query.ExBB{i,j}      = ExBB;
       elseif ~isempty(Query.Edges{i,j}),
-        [ReqEdge,ExEdge,OKPairs,ExPairs,BP1,BP2,EBP1,EBP2,Flank,Range,Coplanar,ReqBB,ExBB] = xGetEdgeNums(Query.Edges{i,j});
+        [ReqEdge,ExEdge,OKPairs,ExPairs,BP1,BP2,EBP1,EBP2,BR1,BR2,EBR1,EBR2,Flank,Range,Coplanar,ReqBB,ExBB] = xGetEdgeNums(Query.Edges{i,j});
         Query.EdgeNums{j,i}     = -ReqEdge;
         Query.EdgeNums{i,j}     =  ReqEdge;
         Query.ExcludeEdges{j,i} = -ExEdge;
@@ -257,6 +276,10 @@ if isfield(Query,'Edges'),
         Query.BasePhos{j,i}     = BP2;
         Query.ExcludeBasePhos{i,j} = EBP1;
         Query.ExcludeBasePhos{j,i} = EBP2;
+        Query.BaseRibose{i,j}     = BR1;
+        Query.BaseRibose{j,i}     = BR2;
+        Query.ExcludeBaseRibose{i,j} = EBR1;
+        Query.ExcludeBaseRibose{j,i} = EBR2;
         Query.Flank{j,i}           = Flank;
         Query.Range{j,i}           = Range;
         Query.Coplanar{j,i}        = Coplanar;

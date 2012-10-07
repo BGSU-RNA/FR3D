@@ -1,6 +1,6 @@
 % xGetEdgeNums parses the entries in the GUI concerning base-base interactions
 
-function [ReqEdge,ExEdge,OKPairs,ExPairs,BP1,BP2,EBP1,EBP2,Flank,Range,Coplanar,ReqBB,ExBB] = xGetEdgeNums(str)
+function [ReqEdge,ExEdge,OKPairs,ExPairs,BP1,BP2,EBP1,EBP2,BR1,BR2,EBR1,EBR2,Flank,Range,Coplanar,ReqBB,ExBB] = xGetEdgeNums(str)
 
 ReqEdge = [];
 ExEdge  = [];
@@ -10,9 +10,12 @@ BP1      = [];
 BP2      = [];
 EBP1     = [];
 EBP2     = [];
+BR1      = [];
+BR2      = [];
+EBR1     = [];
+EBR2     = [];
 Flank    = [];
 Range    = [];
-RRange   = [];
 Coplanar = 0;
 NearCoplanar = 0;
 ReqBB    = [];
@@ -141,13 +144,22 @@ BPequiv{39} = [8];
 EdgeStr{40} = 'thH';
 BPequiv{40} = [-8];
 
+EdgeStr{41} = 'perp';
+BPequiv{41} = [28 -28];
+
+EdgeStr{42} = 'perpendicular';
+BPequiv{42} = [28 -28];
+
+EdgeStr{43} = 'wat';
+BPequiv{43} = [14 -14];
+
 %BPCat = [2 6 8 0 6 7 8 9 0 1 3 4 5 0 5 8 0];  % updated 8-7-2008
 %         1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 
 
 % Convert external category names for BP interactions to internal codes
 
 BPStr{1}    = 'BPh';
-basephoscode{1}  = 1:17;
+basephoscode{1}  = 1:19;
 
 BPStr{2}    = '1BPh';
 basephoscode{2}  = [10];
@@ -192,7 +204,7 @@ BPStr{15}    = '8bBPh';
 basephoscode{15}  = [18];
 
 BPStr{21}    = 'PhB';
-basephoscode{21}  = 1:17;
+basephoscode{21}  = 1:19;
 
 BPStr{22}    = '1PhB';
 basephoscode{22}  = [10];
@@ -238,6 +250,100 @@ basephoscode{35}  = [18];
 
 BPequiv{100} = [];
 
+% Convert external category names for BR interactions to internal codes
+
+BRStr{1}    = 'BR';
+baseribosecode{1}  = 1:19;
+
+BRStr{2}    = '1BR';
+baseribosecode{2}  = [10];
+
+BRStr{3}    = '2BR';
+baseribosecode{3}  = [1];
+
+BRStr{4}    = '3BR';
+baseribosecode{4}  = [11];
+
+BRStr{5}    = '4BR';
+baseribosecode{5}  = [12 19];
+
+BRStr{6}    = '5BR';
+baseribosecode{6}  = [13 15];
+
+BRStr{7}    = '6BR';
+baseribosecode{7}  = [2 5];
+
+BRStr{8}    = '7BR';
+baseribosecode{8}  = [3 6 18];
+
+BRStr{9}    = '8BR';
+baseribosecode{9}  = [7];
+
+BRStr{10}    = '9BR';
+baseribosecode{10}  = [8 16];
+
+BRStr{11}    = '0BR';
+baseribosecode{11}  = [4 9 14 17];
+
+BRStr{12}    = '4bBP';
+baseribosecode{12}  = [19];
+
+BRStr{13}    = '8bBP';
+baseribosecode{13}  = [18];
+
+BRStr{14}    = '4bBR';
+baseribosecode{14}  = [19];
+
+BRStr{15}    = '8bBR';
+baseribosecode{15}  = [18];
+
+BRStr{21}    = 'RB';
+baseribosecode{21}  = 1:19;
+
+BRStr{22}    = '1RB';
+baseribosecode{22}  = [10];
+
+BRStr{23}    = '2RB';
+baseribosecode{23}  = [1];
+
+BRStr{24}    = '3RB';
+baseribosecode{24}  = [11];
+
+BRStr{25}    = '4RB';
+baseribosecode{25}  = [12];
+
+BRStr{26}    = '5RB';
+baseribosecode{26}  = [13 15];
+
+BRStr{27}    = '6RB';
+baseribosecode{27}  = [2 5];
+
+BRStr{28}    = '7RB';
+baseribosecode{28}  = [3 6 18];
+
+BRStr{29}    = '8RB';
+baseribosecode{29}  = [7];
+
+BRStr{30}    = '9RB';
+baseribosecode{30}  = [8 16];
+
+BRStr{31}    = '0RB';
+baseribosecode{31}  = [4 9 14 17];
+
+BRStr{32}    = '4bRB';
+baseribosecode{32}  = [19];
+
+BRStr{33}    = '8bRB';
+baseribosecode{33}  = [18];
+
+BRStr{34}    = '4bRB';
+baseribosecode{34}  = [19];
+
+BRStr{35}    = '8bRB';
+baseribosecode{35}  = [18];
+
+BPequiv{100} = [];
+
 zBackboneCodes;
 BBStr = Codes;
 
@@ -275,6 +381,7 @@ end
 
 for i=1:length(lim)-1                    % loop through tokens
   Token = str(lim(i)+1:lim(i+1)-1);     % extract next token
+
   if Token(1) == '~',                   % this token, opposite of usual sense
     Token = Token(2:length(Token));
     Reverse = 1;
@@ -293,14 +400,33 @@ for i=1:length(lim)-1                    % loop through tokens
   PairCode = [];                           % default; nothing
   newBP1   = [];
   newBP2   = [];
+  newBR1   = [];
+  newBR2   = [];
   CP       = 0;
   nCP      = 0;
+  BBCode   = [];
 
-  if isempty(EdgeNum)                      % Token IS a string
+  if ~isempty(EdgeNum)                      % Token is a number
+
+    if any (fix(abs(EdgeNum)) == [1 2 7 8]),
+      EdgeNum = [EdgeNum -EdgeNum];
+    end
+
+    if Near > 0,
+      NearEdgeNum = [];
+      for j = 1:length(EdgeNum),
+        e = EdgeNum(j);
+        NearEdgeNum = [NearEdgeNum sign(e) * (100 + abs(e))];
+      end
+      EdgeNum = NearEdgeNum;
+    end
+
+  else
     edg  = find(strcmp(EdgeStr,Token));    % case sensitive
     edgi = find(strcmpi(EdgeStr,Token));   % case insensitive
     pair = find(strcmpi(Pairs,Token));     % case insensitive
     basephos = find(strcmpi(BPStr,Token)); % case insensitive
+    baseribose = find(strcmpi(BRStr,Token)); % case insensitive
     bb   = find(strcmpi(BBStr,Token));
 
     EdgeCode = 99;                         % default; nothing
@@ -317,37 +443,41 @@ for i=1:length(lim)-1                    % loop through tokens
       else
         newBP2 = basephoscode{basephos(1)};          
       end
+    elseif ~isempty(baseribose),
+      if baseribose(1) < 20,
+        newBR1 = baseribosecode{baseribose(1)};
+      else
+        newBR2 = baseribosecode{baseribose(1)};          
+      end
     elseif ~isempty(bb),
       BBCode = bb(1);
     end
 
     newRange = [];
 
-    if strcmpi(Token,'flank') || strcmpi(Token,'f'),
+    if strcmpi(Token,'flank') || strcmpi(Token,'f') || strcmpi(Token,'flankss') || strcmpi(Token,'borderss'),
       Flank = 1 - Reverse;
     elseif strcmpi(Token,'coplanar') || strcmpi(Token,'cp'),
       CP = 1 - 2*Reverse;
     elseif strcmpi(Token,'local') || strcmpi(Token,'L'),
-      newRange = [1 10];
-      newRRange = [11 Inf];
+      newRange = [0 3];
     elseif strcmpi(Token,'ested') || strcmpi(Token,'n'),
       newRange = [0 0];
-      newRRange = [1 Inf];
     elseif strcmpi(Token,'long-range') || strcmpi(Token,'LR') || strcmpi(Token,'D') || strcmpi(Token,'Distant'),
-      newRange = [11 Inf];
-      newRRange = [0 10];
+      newRange = [4 Inf];
+    elseif ~isempty(strfind(lower(Token),'crossing')),
+      j = strfind(Token,'_');
+      newRange(1) = str2num(Token((j(1)+1):(j(2)-1)));
+      newRange(2) = str2num(Token((j(2)+1):end));
     end
 
     if isempty(Range),
       if ~isempty(newRange),
         Range = newRange;
-        RRange = newRRange;
       end
     elseif ~isempty(newRange),
       Range(1) = min(Range(1),newRange(1));     % expand range
       Range(2) = max(Range(2),newRange(2));
-      RRange(1) = max(RRange(1),newRRange(1));  % narrow RRange
-      RRange(2) = min(RRange(2),newRRange(2));
     end
 
     EdgeNum = BPequiv{EdgeCode};
@@ -362,6 +492,8 @@ for i=1:length(lim)-1                    % loop through tokens
 
       newBP1 = newBP1 + 100;
       newBP2 = newBP2 + 100;
+      newBR1 = newBR1 + 100;
+      newBR2 = newBR2 + 100;
 
       if (CP ~= 0),
         nCP = CP;
@@ -375,14 +507,17 @@ for i=1:length(lim)-1                    % loop through tokens
     OKPairs = [OKPairs PairCode];
     BP1     = [BP1 newBP1];
     BP2     = [BP2 newBP2];
-    ReqBB   = [ReqBB bb];
+    BR1     = [BR1 newBR1];
+    BR2     = [BR2 newBR2];
+    ReqBB   = [ReqBB BBCode];
   else
     ExEdge  = [ExEdge EdgeNum];
     ExPairs = [ExPairs PairCode];
     EBP1    = [EBP1 newBP1];
     EBP2    = [EBP2 newBP2];
-    Range   = RRange;
-    ExBB    = [ExBB bb];
+    EBR1    = [EBR1 newBR1];
+    EBR2    = [EBR2 newBR2];
+    ExBB    = [ExBB BBCode];
   end
 
   if (CP ~= 0),

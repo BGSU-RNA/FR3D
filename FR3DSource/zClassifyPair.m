@@ -1,6 +1,7 @@
 % zClassifyPair(N1,N2) calculates the rotation matrix, axis, angle, and shift
 % between bases in File that are close enough to possibly be interacting, then
-% classifies the interaction
+% classifies the interaction.  Force = 1 makes it consider the pair only
+% one way.
 
 function [Pair,s,coplanar] = zClassifyPair(N1,N2,CL,Exemplar,Force,Verbose)
 
@@ -59,17 +60,22 @@ end
 
     coplanar = Pair.Coplanar;
 
-    if (abs(Pair.Class) >= 30) && (M1.Code == M2.Code) && (Force == 0),  % re-analyze AA CC ...
+    % if AA, CC, GG, or UU and no interaction or a near interaction, recheck
+
+    if (abs(Pair.Class) >= 30) && (M1.Code == M2.Code) && (Force == 0),  
       M2 = N1;                               % reverse roles of nucleotides
       M1 = N2;
       s  = -1;
       sh2 = (M2.Fit(1,:)-M1.Fit(1,:)) * M1.Rot;   % vector shift from 1 to 2
-      Pair2 = zAnalyzePair(M1,M2,CL,Exemplar,sh2,Verbose);%put other base at origin
-      if fix(abs(Pair2.Class)) ~= 30,        % some known interaction, or near
+      Pair2 = zAnalyzePair(M1,M2,CL,Exemplar,sh2,Verbose);%other base at origin
+
+      if fix(abs(Pair2.Class)) < 30,         % some known interaction
+        Pair = Pair2;                        % matched with M2 at origin
+      elseif Pair2.Distances(1) < Pair.Distances(1), % second has better near
         Pair = Pair2;                        % matched with M2 at origin
       else                                   % other interaction, like stacking
-        Pair.Class = Pair2.Class;            % original order, use 2nd class
-        s = 1;
+%        Pair.Class = Pair2.Class;            % original order, use 2nd class
+        s = 1;                               % use original order
       end
     end
 

@@ -8,6 +8,11 @@ if isfield(File,'Pair'),
   File = rmfield(File,'Pair');                  % remove previous pair info
 end
 
+if isempty(File.Distance),
+  c = cat(1,File.NT(1:File.NumNT).Center); % nucleotide centers
+  File.Distance = zMutualDistance(c,16); % compute distances < 16 Angstroms
+end
+
 if nargin < 2,
   Verbose = 1;
 end
@@ -27,8 +32,21 @@ end
 % -------- First screening of base pairs ------------------------------------ 
 
 DistCutoff = 10.5;                              % max distance for interaction
-[i,j] = find((File.Distance < DistCutoff).*(File.Distance > 0)); 
-                                                % screen by C-C distance
+
+[i,j,v] = find(File.Distance);                  % screen by C-C distance
+k = find(v < DistCutoff);
+i = i(k);
+j = j(k);
+v = v(k);
+
+% fprintf('zClassifyPairs:  Minimum distance between centers = %7.4f\n',min(v));
+
+k = find(v > 2);                                % 1QCU has overlapping NTs
+                                                % 2.75 occurs sometimes
+i = i(k);
+j = j(k);
+v = v(k);
+
 k = find(i<j);                                  % look at each pair only once
 i = i(k);                                       % reduce list of indices
 j = j(k);                                       % reduce list of indices
@@ -69,7 +87,7 @@ for k = 1:length(i),                            % loop through possible pairs
 
     % --------------------------- code class to distinguish AA, CC, ... cases
 
-    if (Ni.Code == Nj.Code) & (abs(Pair.Class) < 15),
+    if (Ni.Code == Nj.Code) & (abs(Pair.Class) < 16),
       if i(k) > j(k),
         Pair.Class = -Pair.Class;                  
         % negative indicates that the lower-indexed base uses the dominant edge

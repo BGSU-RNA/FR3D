@@ -7,9 +7,6 @@ pc = 4*(NT2.Code-1) + NT1.Code;     % AA is 1, CA is 2, etc.
 
 k = 1;
 
-F2.NT(1) = NT1;
-F2.NT(2) = NT2;
-
 for j = 1:length(Exemplar(:,pc)),
   E = Exemplar(j,pc);
   if ~isempty(Exemplar(j,pc).Class),
