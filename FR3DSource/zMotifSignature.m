@@ -136,6 +136,13 @@ Sig = SS;
 
 fprintf('zMotifSignature: Signature: %s\n', SS);
 
+% don't proceed if zPhoneme is not on the path
+% zPhoneme is not part of the official FR3D.
+if ~exist('zPhoneme', 'file')
+    AllPhoneme = {};
+    return;
+end
+
 % ----------------------------------------- clean up signature
 
 while Sig(1) == '-' && length(Sig) > 1,
