@@ -32,10 +32,10 @@ but it is not well-tested.
 
         git clone https://github.com/BGSU-RNA/FR3D.git
 
-2. Set the path in Matlab:
+2. Launch Matlab and set path:
 
         cd /path/to/your/local/FR3D
-        addpath(genpath('/path/to/your/local/FR3D'))
+        setup_path
 
 3. To run FR3D GUI in Matlab type:
 
