@@ -42,9 +42,12 @@ end
 % ----------------------------------------- Read PDB lists, if any
 
 FullList = [];
-
-for j=1:length(Filenames),
-    FullList = [FullList; zReadPDBList(Filenames{j},1)];
+for j=1:length(Filenames)
+    if isempty(FullList)
+        FullList = [zReadPDBList(Filenames{j},1)];
+    else
+        FullList = [FullList; zReadPDBList(Filenames{j},1)];
+    end
 end
 
 % ----------------------------------------- Skip some files
