@@ -285,10 +285,10 @@ end
 % when it is not used.
 
 if isfield(Query,'OKCodes'),
-  if (min(Query.OKCodes{p}) == 0) | (min(Query.OKCodes{q}) == 0),
-    if (min(Query.OKCodes{p}) == 1) & (min(Query.OKCodes{q}) == 0),
+  if (min(Query.OKCodes{p}) == 0) || (min(Query.OKCodes{q}) == 0),
+    if (min(Query.OKCodes{p}) == 1) && (min(Query.OKCodes{q}) == 0),
       k = find(Query.OKCodes{q}(Codes(j)));
-    elseif (min(Query.OKCodes{p}) == 0) & (min(Query.OKCodes{q}) == 1),
+    elseif (min(Query.OKCodes{p}) == 0) && (min(Query.OKCodes{q}) == 1),
       k = find(Query.OKCodes{p}(Codes(i)));
     else
       k = find(Query.OKCodes{p}(Codes(i)) .* Query.OKCodes{q}(Codes(j)));

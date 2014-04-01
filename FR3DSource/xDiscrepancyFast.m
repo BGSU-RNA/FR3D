@@ -43,13 +43,13 @@ else
   S = Model.LocWeight * sum(((MCC - CC*R').^2)')';  % distances between centers
   n = 1;                                    % nucleotide number for angles
   
-  while (S <= Model.LDiscCutoff) & (n <= L),
+  while (S <= Model.LDiscCutoff) && (n <= L),
     ang = zAngleOfRotation(R*Cand(n).Rot*(Model.NT(n).Rot)');
     S   = S + (ang^2)*Model.AngleWeight(n)^2;
     n   = n + 1;
   end
 
-  if (n > 1) & (S <= Model.LDiscCutoff),
+  if (n > 1) && (S <= Model.LDiscCutoff),
     Disc = S;
   else
     Disc = -1;                                % signal large discrepancy

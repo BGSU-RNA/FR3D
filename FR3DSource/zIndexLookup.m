@@ -92,7 +92,12 @@ if strcmp(class(File),'char'),
   File = zGetNTData(Filename,0);
 end
 
-Numbers = cat(1,{File.NT(:).Number});
+Numbers = {};
+for k = 1:length(File.NT),
+  Numbers{k} = File.NT(k).Number;
+end
+
+%Numbers = cat(1,{File.NT(:).Number});     % won't work in Octave
 
 allchains = [];
 
@@ -215,9 +220,9 @@ function [ind] = LookUpOne(File,Numbers,N,Chain,Verbose)
       if Verbose > 0,
         fprintf('Could not find nucleotide %s in %s\n',N,File.Filename);
       end
-    elseif length(p) == 1 & length(Chain) == 0, % one match, no chain specified
+    elseif length(p) == 1 && length(Chain) == 0, % one match, no chain specified
       ind = [ind p];
-    elseif length(p) > 1 & length(Chain) == 0,% two matches, no chain specified
+    elseif length(p) > 1 && length(Chain) == 0,% two matches, no chain specified
       ind = [ind p];
       if Verbose > 0,
         fprintf('Multiple matches found for %s in %s, consider specifying a chain\n', N, File.Filename);

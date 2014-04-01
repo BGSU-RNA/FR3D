@@ -12,7 +12,7 @@ for i = 2:length(Candidates(:,1)),     %
   AddCand = 1;                         % default is to add this one
   if Discrepancy(i) >= 0,           % if discrepancy is below GuarCutoff
     j = 1;                               % first kept candidate
-    while (j <= NumOK) & (AddCand == 1), % go through kept candidates
+    while (j <= NumOK) && (AddCand == 1), % go through kept candidates
       if Candidates(i,N+1) == Candidates(OK(j),N+1),  % same file
         Both = intersect(Candidates(i,1:N), Candidates(OK(j),1:N)); %overlap
         if length(Both) > N/2,         % lots of overlap here

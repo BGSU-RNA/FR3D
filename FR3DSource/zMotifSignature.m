@@ -1,6 +1,12 @@
-% zMotifSignatures(Motif,Strands,Rotation,Type) determines a motif signature for the motif whose FR3D query information is encoded in Motif.  Strands is the number of strands in the motif, Rotation tells which strand to start with, Type is 0 for basepairs only, 1 for basepairs and near pairs, 2 for pairs and stacks
+% zMotifSignatures(Motif,Strands,Rotation,Type) determines a motif signature for the motif whose FR3D query information is encoded in Motif.  Strands is the number of strands in the motif, Rotation tells which strand to start with, Type is 0 for basepairs only, 1 for basepairs and near pairs, 2 for pairs and stacks, 3 for pairs and base-backbone
 
-function [Sig,AllSig,AllPhoneme] = zMotifSignature(Edge,Strands,Rotation,Type)
+function [Sig,AllSig,AllPhoneme] = zMotifSignature(Edge,Strands,Rotation,Type,Param)
+
+if nargin < 5,
+  Verbose = 0;
+else
+  Verbose = Param(1);
+end
 
 if nargin < 4,
   Type = 0;                                       % basepairs only
@@ -65,7 +71,9 @@ elseif Strands == 2,
 
 end
 
-fprintf('zMotifSignature: Rotation = %d, S = %d\n', Rotation, S);
+if Verbose > 0,
+  fprintf('zMotifSignature: Rotation = %d, S = %d\n', Rotation, S);
+end
 
 SS = '';                                      % initialize signature
 MRC = N;                                      % maximum remaining column
@@ -134,7 +142,9 @@ end
 
 Sig = SS;
 
-fprintf('zMotifSignature: Signature: %s\n', SS);
+if Verbose > 0,
+  fprintf('zMotifSignature: Signature: %s\n', SS);
+end
 
 % don't proceed if zPhoneme is not on the path
 % zPhoneme is not part of the official FR3D.
@@ -161,7 +171,9 @@ end
 Pho = strrep(Pho,'-','');
 Pho = lower(Pho);
 
-fprintf('zMotifSignature: Phonetic:  %s\n', Pho);
+if Verbose > 0,
+  fprintf('zMotifSignature: Phonetic:  %s\n', Pho);
+end
 
 AllSig{Rotation} = Sig;
 AllPhoneme{Rotation} = Pho;

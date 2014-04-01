@@ -50,12 +50,13 @@ else
   
       Search.CandidateFilenames{f} = File(f).Filename;
       Search.File(f).Filename      = File(f).Filename;
+      Search.File(f).PDBFilename   = File(f).PDBFilename;
       Search.File(f).NumNT         = File(f).NumNT; % max number, some empty
       Search.File(f).Info          = File(f).Info;
 
       Indices = Cand(i,1:N);               % indices of nucleotides
 
-      Indices = xNeighborhood(File(f),Indices,4);  % largest neighborhood
+      Indices = [Indices xNeighborhood(File(f),Indices,[1 0 0 1 1 1 1 16])];  % largest neighborhood
 
       for j = Indices,
         Search.File(f).NT(j) = File(f).NT(j);
@@ -96,14 +97,14 @@ else
         end
       end
 
-      if isfield(File(f),'Het'),
-        Search.File(f).Het = [];
+      if ~isfield(Search.File(f),'AA');
+        Search.File(f).AA = [];
       end
 
       % include intervening nucleotides, if only a few, for alignments
   
       for n = 1:(N-1),                               % loop through nucleotides
-       if (MaxDiff(n) < Inf) | (maxinsert(n) < 5),   % if only few insertions
+       if (MaxDiff(n) < Inf) || (maxinsert(n) < 5),   % if only few insertions
         if double(Indices(n+1)) - double(Indices(n)) > 1,   % increasing order
           for i = (Indices(n)+1):(Indices(n+1)-1),
             Search.File(f).NT(i) = File(f).NT(i);

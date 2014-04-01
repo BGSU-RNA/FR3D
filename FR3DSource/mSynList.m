@@ -5,11 +5,6 @@
 %(instead of the conventional definition for SYN which is -90<CHI<+90 degrees)
 %Pay attention that CHI can take values between -180 and +180
 
-%To run this function, do the following
-% Filenames='rr0033_5S';
-% [File,SIndex]=zAddNTData(Filenames,0);
-% [synlist chi_degree]= mSynList(File);
-
 function [synlist, chi_degree]= mSynList(File)
 
 %Declare the main variables:
@@ -20,9 +15,9 @@ for i=1:length(File.NT)
   if File.NT(i).Code <= 4,
     %First define the vectors: O4P_C1P; GN_C1P; C1P_GN; C4orC2_GN;
     O4P_C1P     = File.NT(i).Sugar(1,:) - File.NT(i).Sugar(7,:);
-    GN_C1P      = File.NT(i).Sugar(1,:) - File.NT(i).Loc(1,:);
+    GN_C1P      = File.NT(i).Sugar(1,:) - File.NT(i).Fit(1,:);
     C1P_GN      = - GN_C1P;
-    C4orC2_GN   = File.NT(i).Loc(1,:)   - File.NT(i).Loc(2,:);
+    C4orC2_GN   = File.NT(i).Fit(1,:)   - File.NT(i).Fit(2,:);
     
     %%%%%chi angle definition: O4*_C1*_N1_C2 (for pyrimidines) or O4*_C1*_N9_C4 (for purines):
     perp_to_sugar       = cross(O4P_C1P,GN_C1P);
@@ -42,7 +37,9 @@ for i=1:length(File.NT)
     else
         sin_chi = -norm(cross_cross_chi);
     end
-    chi_degree(i) = -180*atan2(sin_chi,cos_chi)/pi; %glycosidic bond angle
+    % sign of chi_degree changed to match Bevilaqua 2011 paper on syn and anti
+    % this definition matches the IUPAC definition from http://www.chem.qmul.ac.uk/iupac/misc/pnuc2.html#230
+    chi_degree(i) = 180*atan2(sin_chi,cos_chi)/pi; %glycosidic bond angle
     
     % Giving nomenclature according to chi values: anti (most common), or syn
     if (chi_degree(i) >= 0) & (chi_degree(i) <= 90)%This is the new definition for functional syn
@@ -55,3 +52,5 @@ for i=1:length(File.NT)
     chi_degree(i) = NaN;
   end
 end
+
+

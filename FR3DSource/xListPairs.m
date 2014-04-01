@@ -60,12 +60,14 @@ for k=1:length(Pair)
         case 11, Text{k+1} = [Text{k+1} sprintf('%8.2f',p.C1pC1p)];
         case 12, Text{k+1} = [Text{k+1} sprintf('%7.2f',p.Gap)];
         case 13, Text{k+1} = [Text{k+1} sprintf('%8.2f',p.MinDist)];
-        case 14, Text{k+1} = [Text{k+1} sprintf('%8.2f',p.Class)];
+%        case 14, Text{k+1} = [Text{k+1} sprintf('%8.2f',p.Class)];
+        case 14, Text{k+1} = [Text{k+1} sprintf('%8s',zEdgeText(p.Class))];
         case 16, 
           if p.Distances(1) > 999,
             Text{k+1} = [Text{k+1} '  None'];
           else
-            Text{k+1} = [Text{k+1} sprintf('%7.2f',p.Classes(1))];
+%            Text{k+1} = [Text{k+1} sprintf('%7.2f',p.Classes(1))];
+            Text{k+1} = [Text{k+1} sprintf('%7s',zEdgeText(p.Classes(1)))];
           end
         case 17, 
           if p.Distances(1) > 999,

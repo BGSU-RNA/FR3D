@@ -113,6 +113,8 @@ for f=1:length(File),
 
   NN = min(9,Model.NumNT);                    % start with at most 9
 
+  ttzt = cputime;
+
   [List,SS] = xFindPolyhedra(Model,NN,PS(1:NN,1:NN));
 
   %-----------------------------------------------------------------------
@@ -131,6 +133,10 @@ for f=1:length(File),
 
   %-------------------------------------------------------------------------
 
+%  if ~isempty(strfind(pwd,'zirbel')),
+%    xWritePairsAndCandidatesDatabase(File(f).Filename,Model,PS,List,Perm,cputime-ttzt);
+%  end
+
   if ~isempty(List),
     List(:,Perm) = List(:,1:Model.NumNT);     % re-order nucleotides
   end
@@ -140,10 +146,11 @@ for f=1:length(File),
     Found = [Found; [List uint16(f*ones(s,1))]];
     if Verbose > 0,
       fprintf('Found %7d possibilities from %10s in %8.3f seconds\n', s, File(f).Filename, cputime-filestarttime);
+      zFlushOutput
     end
   end
 
-  drawnow
+  zFlushOutput
 
  end % if File(f).NumNT > 0
 end  % end of for loop length(File)
@@ -154,6 +161,6 @@ if (length(File) > 1) && (Verbose > 0),
   fprintf('Found %7d possible candidates in %8.3f seconds\n', s, (cputime-starttime));
 end
 
-drawnow
+zFlushOutput
 
 PS(Perm,Perm) = PS;             % undo the permutations

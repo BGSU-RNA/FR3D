@@ -6,29 +6,32 @@
 
 function [Candidates,Discrepancy] = xExcludeRedundantCandidates(File,Candidates,Discrepancy)
 
-N  = length(Candidates(1,:)) - 1;  % number of nucleotides
-OK = ones(size(Candidates(:,1))); % rows of Candidates which are kept
+if ~isempty(Candidates),
+  N  = length(Candidates(1,:)) - 1;  % number of nucleotides
+  OK = ones(size(Candidates(:,1))); % rows of Candidates which are kept
 
-Filenums = unique(Candidates(:,N+1));  % file numbers which occur
+  Filenums = unique(Candidates(:,N+1));  % file numbers which occur
 
-for i = 1:length(Filenums),
-  f = Filenums(i);
-  c = find(Candidates(:,N+1) == f);    % candidates from the same file
-  S = sparse(zeros(length(c),length(c)));
+  for i = 1:length(Filenums),
+    f = Filenums(i);
+    c = find(Candidates(:,N+1) == f);    % candidates from the same file
+    S = sparse(zeros(length(c),length(c)));
 
-  for n = 1:N,
-    S = S + File(f).Redundant(Candidates(c,n),Candidates(c,n));
+    for n = 1:N,
+      S = S + File(f).Redundant(Candidates(c,n),Candidates(c,n));
+    end
+
+    for cc = 1:length(c),
+      d = find(S(cc,:) > N/2);
+      OK(c(d)) = zeros(1,length(d));
+      S(d,:) = zeros(length(d),length(c));
+    end
   end
 
-  for cc = 1:length(c),
-    d = find(S(cc,:) > N/2);
-    OK(c(d)) = zeros(1,length(d));
-    S(d,:) = zeros(length(d),length(c));
+  Candidates  = Candidates(find(OK),:);
+
+  if nargin > 2,
+    Discrepancy = Discrepancy(find(OK));
   end
-end
 
-Candidates  = Candidates(find(OK),:);
-
-if nargin > 2,
-  Discrepancy = Discrepancy(find(OK));
 end

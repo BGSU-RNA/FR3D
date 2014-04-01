@@ -4,9 +4,10 @@
 % The parameter Index is a non-redundant list of indices of File
 % corresponding to names in Filenames.
 
-% ReadCode = 0,1,2 : load .mat files
-% ReadCode = 3     : load, but do not append to File (for reclassification)
-% ReadCode = 4     : read .pdb file and reclassify
+% ReadCode = 0 : load .mat files
+% ReadCode = 1 : load .mat files and reclassify
+% ReadCode = 3 : load, but do not append to File (for reclassification)
+% ReadCode = 4 : read .pdb file and reclassify
 
 % F = zAddNTData('AllFiles_list',3,[],1);
 % F = zAddNTData('AllFiles_list',3,[],1,'back');
@@ -41,13 +42,10 @@ end
 
 % ----------------------------------------- Read PDB lists, if any
 
-FullList = [];
-for j=1:length(Filenames)
-    if isempty(FullList)
-        FullList = [zReadPDBList(Filenames{j},1)];
-    else
-        FullList = [FullList; zReadPDBList(Filenames{j},1)];
-    end
+FullList = {};
+
+for j=1:length(Filenames),
+  FullList = [FullList; zReadPDBList(Filenames{j},1)];
 end
 
 % ----------------------------------------- Skip some files
@@ -75,6 +73,7 @@ if length(FullList) > 0,
             i = strmatch(lower(FullList{f}), LoadedFiles, 'exact');
             if isempty(i),                                  % if PDB not loaded,
                 NewF = zGetNTData(FullList{f},ReadCode,Verbose); %   load it
+                
                 if ReadCode ~= 3,
                     if F == 0,
                         clear File
@@ -84,6 +83,7 @@ if length(FullList) > 0,
                             File(F+1) = NewF;
                         catch
                             fprintf('This file differs from the others and could not be added to the rest (file %d):\n',f)
+                            File
                             NewF
                         end
                     end
@@ -93,7 +93,7 @@ if length(FullList) > 0,
                 k = length(LoadedFiles);
                 LoadedFiles{k+1} = FullList{f};
                 Index(f) = F;                           %   point to it
-            else                                      % but if PDB has been loaded
+            else                                        % but if PDB has been loaded
                 Index(f) = i(1);                        %   point to first instance
                 if length(File(i(1)).NT) == 0,
                     NewF = zGetNTData(File(Index(f)).Filename,ReadCode,Verbose);

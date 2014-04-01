@@ -8,7 +8,8 @@ if nargin < 4,
 end
 
 if Verbose > 0,
-  fprintf('Calculating discrepancy\n');
+  fprintf('Calculating discrepancies between candidates and query\n');
+  zFlushOutput;
 end
 
 N = Model.NumNT;
@@ -23,6 +24,7 @@ tic
 
 if Verbose > 0,
   fprintf('Seconds remaining:');
+  zFlushOutput;
 end
 
 
@@ -37,12 +39,13 @@ for i=1:s,
 
   if (mod(i,round(s/10)) == 0) && (Verbose > 0)
     fprintf(' %d', fix((s-i)*toc/i)); 
-    drawnow
+    zFlushOutput;
   end
 end
 
 if Verbose > 0,
   fprintf('\n');
+  zFlushOutput;
 end
 
 Candidates  = Candidates(1:count,:);
@@ -54,6 +57,7 @@ Discrepancy = Discrepancy(i);
 
 if Verbose > 1,
   fprintf('Calculating discrepancy took        %8.3f seconds\n',toc);
+  zFlushOutput;
 end
 
 drawnow

@@ -25,11 +25,16 @@ VP.FontSize  = 10;               % will use Matlab's default unless overridden
 VP.Rotation  = eye(3);
 VP.Shift     = zeros(1,3);
 VP.LabelBases = 10;              % font size; use 0 to not label bases at all
-VP.GlycoAtomSize = 28;           % size to mark the glycosidic atom
+if exist('OCTAVE_VERSION') == 5, % running on GNU Octave
+	VP.GlycoAtomSize = 4;
+else
+	VP.GlycoAtomSize = 28;           % size to mark the glycosidic atom
+end
 VP.WritePDB      = 0;
 VP.Animate   = 0;
 VP.AnimationFilename = '';
 VP.ShowBeta  = 0;                % show beta factor for each atom
+VP.LabelAtoms = 0;
 
 if nargin == 1,
   ViewParam = VP;
@@ -63,6 +68,10 @@ end
 
 if isfield(ViewParam,'LineThickness'),
   VP.LineThickness = ViewParam.LineThickness;
+end
+
+if isfield(ViewParam,'SugarLineThickness'),
+  VP.SugarLineThickness = ViewParam.SugarLineThickness;
 end
 
 if isfield(ViewParam,'Color'),
@@ -114,12 +123,28 @@ if isfield(ViewParam,'AnimationFilename'),
   VP.AnimationFilename = ViewParam.AnimationFilename;
 end
 
+if isfield(ViewParam,'LineThicknesses'),
+  VP.LineThicknesses = ViewParam.LineThicknesses;
+end
+
 if isfield(ViewParam,'Colors'),
   VP.Colors = ViewParam.Colors;
 end
 
+if isfield(ViewParam,'NumberColors'),
+  VP.NumberColors = ViewParam.NumberColors;
+end
+
 if isfield(ViewParam,'ShowBeta'),
   VP.ShowBeta = ViewParam.ShowBeta;
+end
+
+if isfield(ViewParam,'LabelAtoms'),
+  VP.ShowBeta = ViewParam.LabelAtoms;
+end
+
+if isfield(ViewParam,'NucleotideBrightness'),
+  VP.NucleotideBrightness = ViewParam.NucleotideBrightness;
 end
 
 % if File is a text string (filename), load the file and display
@@ -161,6 +186,19 @@ end
 
 for j=1:length(Indices),                 % Loop through all nucleotides
   k = Indices(j);                        % index of current nucleotide
+  if isfield(VP,'NucleotideBrightness'),
+    VP.Brightness = VP.NucleotideBrightness(j);
+  end
+  if isfield(VP,'Colors'),
+    VP.Color = VP.Colors(j,:);
+  end
+  if isfield(VP,'NumberColors'),
+    VP.NumberColor = VP.NumberColors(j,:);
+  end
+  if isfield(VP,'LineThicknesses'),
+    VP.LineThickness = VP.LineThicknesses(j);
+  end
+
   zPlotOneNTRotated(File.NT(k),VP,R,S);
 end
 
@@ -189,8 +227,6 @@ if VP.Grid == 1,
 else
   grid off
 end
-
-rotate3d on
 
 if VP.WritePDB == 1,
   if VP.AtOrigin > 0,
@@ -262,6 +298,10 @@ if VP.Animate == 1,
       if isfield(VP,'Colors'),
         VP.Color = VP.Colors(k,:);
       end
+      if isfield(VP,'LineThicknesses'),
+        VP.LineThickness = VP.LineThicknesses(j);
+      end
+
       zPlotOneNTRotated(File.NT(k),VP,R,S);
     end
   

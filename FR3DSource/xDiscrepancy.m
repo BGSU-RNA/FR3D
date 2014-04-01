@@ -6,7 +6,7 @@
 
 % Model and Cand are two lists of indices or nucleotide numbers
 
-function [Disc,R,MM,CM,A] = xDiscrepancy(File1,Model,File2,Cand,LocationWeight,AngleWeight)
+function [Disc,R,MM,CM,A,Dc] = xDiscrepancy(File1,Model,File2,Cand,LocationWeight,AngleWeight)
 
 % if File1 is a text string (filename), load the file
 
@@ -85,6 +85,7 @@ if (L == 2) && (length(LocationWeight == L)),     % two-nucleotide motif
   v    = AngleWeight(1);
 
   Disc = (sqrt(t1*t1' + (v^2)*ang1^2) + sqrt(t2*t2' + (v^2)*ang2^2))/4;
+  Dc = Disc;
 
   R = eye(2);                               % not really how to rotate them
 
@@ -105,6 +106,7 @@ elseif (length(LocationWeight) == L), % more than two nucleotides, use bases
   R = zBestRotation(CC, diag(LocationWeight)*MCC);      % candidate onto model
   
   S = LocationWeight * sum(((MCC - CC*R').^2)')';  % distances between centers
+  Sc= S;                                    % corrected for base flips
 
   n = 1;                                    % nucleotide number for angles
   v = 4 * AngleWeight.^2;                   % precompute a little
@@ -113,10 +115,12 @@ elseif (length(LocationWeight) == L), % more than two nucleotides, use bases
     angbytwo = acos(min(1,sqrt(trace(R*Cand(n).Rot*(Model(n).Rot)')+1)/2));
     A(n) = angbytwo;
     S   = S + (angbytwo^2)*v(n);
+    Sc  = Sc + (min(angbytwo,1.570796326794897-angbytwo)^2)*v(n);
     n   = n + 1;
   end
 
   Disc = real(sqrt(S)/L);                   % sometimes not real.  Why???
+  Dc   = real(sqrt(Sc)/L);
 
   MM = ModelWeightedCenter;
   CM = CMean;
@@ -152,6 +156,7 @@ else                              % account for phosphorus location as well
   end
 
   Disc = real(sqrt(S)/L);
+  Dc   = Disc;
 
   MM = ModelWeightedCenter;
   CM = CMean;

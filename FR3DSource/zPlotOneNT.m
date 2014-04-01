@@ -4,6 +4,8 @@ X  = NT.Fit;
 
 if isfield(ViewParam,'GlycoAtomSize'),
   GlycoAtomSize = ViewParam.GlycoAtomSize;
+elseif exist('OCTAVE_VERSION') == 5,
+	GlycoAtomSize = 4;
 else
   GlycoAtomSize = 28;
 end
@@ -29,10 +31,22 @@ else
   LT = 2.0;                              % doesn't work for some reason!
 end
 
+SLT = LT;                                % line thickness for sugars
+
+if isfield(ViewParam,'SugarLineThickness'),
+  SLT = ViewParam.SugarLineThickness;
+end
+
 if isfield(ViewParam,'LabelBases'),
   LB = ViewParam.LabelBases;
 else
   LB = 0;
+end
+
+if isfield(ViewParam,'LabelAtoms'),
+  LabelAtoms = ViewParam.LabelAtoms;
+else
+  LabelAtoms = 0;
 end
 
 if isfield(ViewParam,'Label'), 
@@ -74,6 +88,21 @@ if isfield(ViewParam,'Color'),
   if length(ViewParam.Color) == 3,
     col = ViewParam.Color;
   end
+end
+
+if isfield(ViewParam,'NumberColor'),
+  if length(ViewParam.NumberColor) == 3,
+    numcol = ViewParam.NumberColor;
+  end
+elseif isfield(ViewParam,'Color'),
+  numcol = col;
+else
+  numcol = [0 0 0];
+end
+
+
+if isfield(ViewParam,'Brightness'),
+  col = col * ViewParam.Brightness;
 end
 
 if strcmp(LS,'-.'),
@@ -199,21 +228,21 @@ if Sugar == 1,
  if length(NT.Sugar(:,1)) == 13,   % for some reason, some have 9
 
   k = [14 1 7 6 8 9 10 12]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   hold on
   k = [11 10]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   k = [6 4 5]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   k = [4 2 3]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   k = [2 1]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
 
   % connect backbone, if distance is small enough
   if norm(Z(13,1)-Z(10,1)) < 6,       % O3' from previous nucleotide is known
     k = [10 13];
-    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   end  
 
   if LSugar > 0,
@@ -225,16 +254,16 @@ if Sugar == 1,
  elseif length(NT.Sugar(:,1)) == 12,   % for some reason, some have 9
 
   k = [13 1 7 6 8 9 10 12]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   hold on
   k = [11 10]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   k = [6 4 5]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   k = [4 2 3]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   k = [2 1]; 
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',LT,'LineStyle',LS);
+  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
 
   if LSugar > 0,
     A = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
@@ -246,8 +275,20 @@ if Sugar == 1,
 end
 
 if LB > 0,
-  text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,Label,'fontweight','bold','FontSize',LB);
+  if isfield(ViewParam,'NumberColor') || isfield(ViewParam,'Color'),
+    text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,Label,'fontweight','bold','FontSize',LB,'Color',numcol);
+  else
+    text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,Label,'fontweight','bold','FontSize',LB);
+  end
 %  text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,Label,'fontweight','bold','FontSize',LB);
+end
+
+if LabelAtoms > 0,
+  zStandardBases
+  for j = 1:length(X(:,1)),
+    text(X(j,1),X(j,2),X(j,3),AtomNames{j,NT.Code});
+%    text(X(j,1),X(j,2),X(j,3),num2str(j));
+  end
 end
 
 if ShowBeta > 0 && isfield(NT,'Beta'),

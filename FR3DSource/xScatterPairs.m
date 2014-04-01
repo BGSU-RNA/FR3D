@@ -15,6 +15,13 @@ if nargin < 4,
   ViewParam.Normal = 0;
   ViewParam.ClassLimits = 1;
   ViewParam.Color = 1;
+  ViewParam.Octave = 0;
+end
+
+if exist('OCTAVE_VERSION') == 5,
+  dotsize = 4;
+else
+  dotsize = 18;
 end
 
 % --------------------------------------------- 
@@ -236,7 +243,7 @@ for k = 1:length(Pair),                              % Loop through pairs
   end
 end
 
-scatter3(e(:,1),e(:,2),e(:,3),18*ones(size(c)),c,'filled')
+scatter3(e(:,1),e(:,2),e(:,3),dotsize*ones(size(c)),c,'filled')
 
 if max(modcode) == min(modcode),             % all have same first base
   zPlotStandardBase(modcode);                % plot base at the origin
@@ -280,7 +287,9 @@ if isfield(ViewParam,'ClassLimits'),
  end
 end
 
-zoom on
+try
+  zoom on
+end
 
 caxis(ColorAxis);
 zColormap
@@ -318,7 +327,7 @@ for k = 1:length(Pair),                              % Loop through pairs
   end
 end
 
-scatter3(e(:,1),e(:,2),e(:,3),18*ones(size(c)),c,'filled')
+scatter3(e(:,1),e(:,2),e(:,3),dotsize*ones(size(c)),c,'filled')
 
 if max(modcode) == min(modcode),                 % all have same first base
   zPlotStandardBase(modcode,0,1);                % plot center at the origin
@@ -348,7 +357,7 @@ for k = 1:length(Pair),                               % Loop through pairs
 
   c = Color(k);
 
-  scatter3(mod(p.Ang+cut,360)-cut,p.Normal(3),p.Gap,18,c,'filled')
+  scatter3(mod(p.Ang+cut,360)-cut,p.Normal(3),p.Gap,dotsize,c,'filled')
   hold on
 end
 
@@ -411,7 +420,9 @@ if isfield(ViewParam,'ClassLimits'),
   end
 end
 
-zoom on
+try
+  zoom on
+end
 
 %----------------------------------------------------- Plot angle and normal
 
@@ -442,9 +453,7 @@ end
 end
 
 % ---------------------------------------------------- Display the menu
-
-  k=menu('Scatterplot controls',...
-         'Increment first nucleotide',...             % 1
+  Buttons = {'Increment first nucleotide',...             % 1
          'Decrement first nucleotide',...             % 2
          'Increment second nucleotide',...            % 3
          'Decrement second nucleotide',...            % 4
@@ -462,7 +471,13 @@ end
          'Toggle normal vector',...                   % 16
          'Toggle category limits',...                 % 17
          'List pair parameters',...                   % 18
-         'Quit');                                     % 19
+         'Return to candidate display'};
+
+  if ViewParam.Octave == 0,
+    k=menu('Scatterplot controls',Buttons);
+  else
+    k = oMenu('Scatterplot controls',Buttons);
+  end
 
   switch k,
   case 1, N1 = N1 + 1;

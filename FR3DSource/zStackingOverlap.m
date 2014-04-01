@@ -37,7 +37,13 @@ Y = (N2.Fit   - ones(L,1)*S) * R; % rotated into position
 
 warning off
 
-d = tsearch(X(:,1),X(:,2),t,Y(:,1),Y(:,2));
+if exist('DelaunayTri') == 2,
+  Y = Y(:,1:2);
+  t = DelaunayTri(X);
+  d = pointLocation(t,Y);
+else
+  d = tsearch(X(:,1),X(:,2),t,Y(:,1),Y(:,2)); % old method, no longer in Matlab
+end
 
 warning on
 

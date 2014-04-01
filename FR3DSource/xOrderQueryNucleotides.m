@@ -1,6 +1,6 @@
 %  zOrderQueryNucleotides finds a reasonably good order to put the query nucleotides to speed up xFindPolyhedra
 
-function [Perm] = xFindPermutation(NNZ);
+function [Perm] = xOrderQueryNucleotides(NNZ);
 
 [m,n] = size(NNZ);
 

@@ -141,8 +141,6 @@ end
   
 % -------------------------------------- list candidates
 
-Config = {'A' , 'S'};
-
 for i=1:min(s,NumToOutput),
 
   f = double(Candidates(i,N+1));               % file number for this candidate
@@ -187,7 +185,11 @@ for i=1:min(s,NumToOutput),
     Text{i+t} = [Text{i+t} sprintf(' ')];
     
     for k=1:length(Indices),
-      Text{i+t} = [Text{i+t} sprintf('%c', Config{File(f).NT(Indices(k)).Syn+1})];
+      if isfield(File(f).NT(1),'glycosidicbondorientation'),
+        Text{i+t} = [Text{i+t} sprintf('%c', File(f).NT(Indices(k)).glycosidicbondorientation(1))];
+      else
+        Text{i+t} = [Text{i+t} '-'];
+      end
     end
     
     for k=1:length(Indices),
@@ -301,4 +303,10 @@ elseif any(WheretoOutput == [1 7]),
   for i=1:length(Text),
     fprintf('%s\n',Text{i});
   end
+end
+
+if ~isempty(strfind(pwd,'zirbel')) && exist('xListCandidatesByID') == 2 && 0 > 1,
+	try
+	  xListCandidatesByID(Search);
+	end
 end

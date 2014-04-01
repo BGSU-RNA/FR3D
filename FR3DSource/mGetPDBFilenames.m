@@ -17,6 +17,9 @@ for i=1:length(c)-1,
   a = [a; dir([p(c(i)+1:c(i+1)-1) filesep '*.pdb'])];
 end
 
+s = [];
+snolist = []; 
+
 if ~isempty(a)
     for i=1:length(a)
       temp{i} = regexprep(a(i).name,'.mat|.MAT|.PDB1|.pdb1|.PDB2|.pdb2|.PDB3|.pdb3|.PDB4|.pdb4|.PDB5|.pdb5|.PDB6|.pdb6|.PDB7|.pdb7|.PDB8|.pdb8','');   % strip extensions and spaces

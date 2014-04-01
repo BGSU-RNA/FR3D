@@ -56,9 +56,11 @@ for i=1:length(Indices),
       fprintf('%6s', zEdgeText(File.Edge(Indices(i),Indices(j)),1,File.NT(Indices(i)).Code,File.NT(Indices(j)).Code));
     elseif j == i,
       fprintf('%6s', [File.NT(Indices(i)).Base Config{File.NT(Indices(i)).Syn+1}]);
-    else
+    elseif isfield(File,'Crossing'),
       fprintf('%6d', full(File.Crossing(Indices(i),Indices(j))));% display interaction range
 %     fprintf('%6d', abs(Indices(i)-Indices(j)));
+    else
+      fprintf('      ');
     end
   end
   fprintf('\n');

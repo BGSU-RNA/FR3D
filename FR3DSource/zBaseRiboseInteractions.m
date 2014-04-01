@@ -4,7 +4,7 @@
 % zRiboseInteractions checks all nearby pairs of bases for base-ribose
 % interactions, and stores them in a sparse matrix field BaseRibose
 
-function [File,D] = zRiboseInteractions(File,Verbose,Self)
+function [File,D] = zBaseRiboseInteractions(File,Verbose,Self)
 
 if nargin < 2,
   Verbose = 0;
@@ -16,42 +16,24 @@ end
 
 t = cputime;
 
+if Verbose == 1,
+  titles = {'BR with basepairing partner','BR with non-basepairing partner','Self BR'};
+  for v = 1:3,
+    figure(v);
+    clf
+    subplot(2,2,1);
+    title(titles{v});
+    subplot(2,2,2);
+    title('O2* is red, O4* is blue');
+    for v = 1:4,
+      subplot(2,2,v);
+      zPlotStandardBase(v);
+      hold on
+    end
+  end
+end
+
 % ------------------------------  Meanings of the classification codes:
-
-
-% ------------------------------ temporary cutoffs! 
-
-CarbonDist    = 4.0;                           % max massive - oxygen distance
-nCarbonDist   = 5;                           % near category
-
-NitrogenDist  = 3.5;                           % max massive - oxygen distance
-nNitrogenDist = 5.0;                           % near category
-
-AL = 130;                                      % angle limit for BPh
-nAL = 90;                                     % angle limit for nBPh
-
-DL([4 6 11]) = NitrogenDist;
-DL([7 8 9])  = CarbonDist;
-
-nDL([4 6 11]) = nNitrogenDist;
-nDL([7 8 9])  = nCarbonDist;
-
-% ------------------------------ temporary cutoffs! 
-
-CarbonDist    = 4.0;                           % max massive - oxygen distance
-nCarbonDist   = 5;                           % near category
-
-NitrogenDist  = 3.5;                           % max massive - oxygen distance
-nNitrogenDist = 5.0;                           % near category
-
-AL = 130;                                      % angle limit for BPh
-nAL = 90;                                     % angle limit for nBPh
-
-DL([4 6 11]) = NitrogenDist;
-DL([7 8 9])  = CarbonDist;
-
-nDL([4 6 11]) = nNitrogenDist;
-nDL([7 8 9])  = nCarbonDist;
 
 % ------------------------------ specify cutoffs for classification
 
@@ -78,8 +60,8 @@ T = [];                          % data on which hydrogen with which oxygen(s)
 zStandardBases
 Sugar = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P','O3 of next'};
 
-p   = [3 5 7];                           % rows of the ribose oxygens
-pn  = {'O2*','O3*','O4*'};                % names of ribose oxygens
+p   = [3 7];                           % rows of the ribose oxygens
+pn  = {'O2*','O4*'};                % names of ribose oxygens
 
 % ------------------------------ loop through files and classify
 
@@ -112,8 +94,6 @@ for f = 1:length(File),
   j = j(k);
   v = v(k);
 
-
-
   if Self > 0,
     i = [i; (1:length(File(f).NT))'];             % allow self interactions
     j = [j; (1:length(File(f).NT))'];             % allow self interactions
@@ -132,7 +112,6 @@ for f = 1:length(File),
    DT = [];                                     % accumulate data here
 
    ph = (N2.Sugar(10,:)-N1.Fit(1,:)) * N1.Rot;  % phosphorus displacement
-   if abs(ph(3)) < 4.5,                         % phosphorus close to plane
 
     switch N1.Code
       case 1,                         % Base A
@@ -158,7 +137,7 @@ for f = 1:length(File),
     end
 
     dis = zDistance(N1.Fit(m,:), N2.Sugar(p,:)); % distances between mass & O's
-    nearDL = nDL(m)' * ones(1,3);     % limits to compare to
+    nearDL = nDL(m)' * ones(1,2);     % limits to compare to
     dis = dis .* (dis < nearDL);      % massive-oxygen pairs close enough
 
     g = [];                           % internal classification number
@@ -175,7 +154,7 @@ for f = 1:length(File),
      end
 
      PAngle = zAngle(N1.Fit(m(mm),:),N1.Fit(h(mm),:),N2.Sugar(10,:));
-                                  % base massive - hydrogen - phosphorus angle
+                                      % base massive - hydrogen - phosphorus angle
      PDist  = zDistance(N1.Fit(m(mm),:),N2.Sugar(10,:));        % distance
 
      [u,v] = min(-Angle+60*Dist);     % order by quality of potential bond
@@ -250,7 +229,8 @@ for f = 1:length(File),
          g = g(find(g < 100));               % remove near classifications
        end
        if length(g) > 1,                     % multiple bonds
-         g = sort(g);
+         [g,gorder] = sort(g);
+         w = w(gorder);
          if (g(1) == 6) && (g(end) == 8) && (min(w) < max(w)),
            g = 7;                            % two different oxygens
          elseif (g(1) == 6) && (g(end) == 8) && (min(w) == max(w)),
@@ -273,6 +253,36 @@ for f = 1:length(File),
 
        File(f).BaseRibose(i(k),j(k)) =   g(1);  % record classification
 
+       % --------------------------- plot locations of oxygens
+
+       if Verbose == 1 && sum(File(f).Redundant(1,i(k))) == 0,
+        edg = abs(File(f).Edge(i(k),j(k)));
+        if i(k) == j(k),
+          figure(3);
+        elseif edg > 0 && edg < 20,
+          figure(1);               % basepair with BR
+        else
+          figure(2);               % not basepaired
+        end
+
+        c = N1.Code;
+        subplot(2,2,c)
+
+        oxyg = p(w(1));
+        oxygxyz = N2.Sugar(oxyg,:);
+        oxygxyzrot = (oxygxyz - N1.Fit(1,:)) * N1.Rot;
+
+        colors = {'r','c'};
+        if g(1) < 100,
+          plot3(oxygxyzrot(1),oxygxyzrot(2),oxygxyzrot(3),[colors{w(1)} '.']);
+        else
+%          plot3(oxygxyzrot(1),oxygxyzrot(2),oxygxyzrot(3),'k.');
+        end
+        hold on
+       end
+
+
+
        if Verbose > 1,
          if ~isempty(DT),
            D = [D; [DT g(1)*ones(length(DT(:,1)),1)]];
@@ -281,11 +291,10 @@ for f = 1:length(File),
 
      end
 
-   end    % if vertical displacement of ribose is less than 6 Angstroms
   end     % if Fit is not empty
   end     % loop over nucleotide pairs
  else
-  File.BaseRibose = [];
+  File(f).BaseRibose = [];
  end      % if File.NumNT > 1
 end       % loop over files
 

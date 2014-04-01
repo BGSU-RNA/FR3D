@@ -13,6 +13,23 @@ end
 
 t = cputime;
 
+if Verbose == 1,
+  titles = {'BPh with basepairing partner','BPh with non-basepairing partner','Self BPh'};
+  for v = 1:3,
+    figure(v);
+    clf
+    subplot(2,2,1);
+    title(titles{v});
+    subplot(2,2,2);
+    title('O3* is red, O5* is cyan, O1P and O2P are blue');
+    for v = 1:4,
+      subplot(2,2,v);
+      zPlotStandardBase(v);
+      hold on
+    end
+  end
+end
+
 % ------------------------------  Meanings of the classification codes:
     %  1  A C2-H2  interacts with oxygen of phosphate, called 2BPh
     %  2  A N6-1H6 interacts with oxygen of phosphate, called 6BPh
@@ -277,6 +294,36 @@ for f = 1:length(File),
        end
 
        File(f).BasePhosphate(i(k),j(k)) =   g(1);  % record classification
+
+       % --------------------------- plot locations of oxygens
+
+       if Verbose == 1 && sum(File(f).Redundant(1,i(k))) == 0,
+        edg = abs(File(f).Edge(i(k),j(k)));
+        if i(k) == j(k),
+          figure(3);               % self interaction
+        elseif edg > 0 && edg < 20,
+          figure(1);               % basepair with BPh
+        else
+          figure(2);               % not basepaired
+        end
+
+        c = N1.Code;
+        subplot(2,2,c)
+
+        oxyg = p(w(1));
+        oxygxyz = N2.Sugar(oxyg,:);
+        oxygxyzrot = (oxygxyz - N1.Fit(1,:)) * N1.Rot;
+
+        colors = {'r','c','b','b'};
+        if g(1) < 100,
+          plot3(oxygxyzrot(1),oxygxyzrot(2),oxygxyzrot(3),[colors{w(1)} '.']);
+        else
+%          plot3(oxygxyzrot(1),oxygxyzrot(2),oxygxyzrot(3),'k.');
+        end
+        hold on
+       end
+
+
 
        if Verbose > 1,
          if ~isempty(DT),

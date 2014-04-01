@@ -20,7 +20,7 @@ function [Query] = xConstructQuery(Query,File)
 % ------------------------------- Determine whether search is geom. or symb.
 
 if ~isfield(Query,'Geometric'),
-  if isfield(Query,'Filename') & isfield(Query,'NTList'),
+  if isfield(Query,'Filename') && isfield(Query,'NTList'),
     Query.Geometric = 1;
   else
     Query.Geometric = 0;
@@ -109,7 +109,7 @@ else
   end
 end
 
-if (Query.Geometric == 0) & ~isfield(Query,'Diameter'),
+if (Query.Geometric == 0) && ~isfield(Query,'Diameter'),
   Query.Diameter = 30;
 end
 
@@ -154,7 +154,10 @@ if Query.Geometric == 1,                    % model comes from a file
                        
     end  %Anton 5/18/2011
 
-    
+  if isfield(Query,'NT'),
+    Query = rmfield(Query,'NT');
+  end
+
   for i=1:Query.NumNT,
     Query.NT(i) = File.NT(Query.Indices(i));
   end
@@ -168,6 +171,7 @@ end
 % which tell which nucleotide codes (A=1, C=2,...) meet the mask
 
 if isfield(Query,'Mask'),
+  OK = [1 1 1 1];
   for i=1:Query.NumNT,
     switch Query.Mask(i)
      case 'A', OK = [1 0 0 0];
@@ -255,9 +259,12 @@ if isfield(Query,'Edges'),
         Query.BaseRibose{i,j}     = BR2;
         Query.ExcludeBaseRibose{j,i} = EBR1;
         Query.ExcludeBaseRibose{i,j} = EBR2;
-	Query.Flank{i,j}           = Flank;
-	Query.Range{i,j}           = Range;
+      	Query.Flank{i,j}           = Flank;
+        Query.Flank{j,i}           = Flank;      % added 2014-01-27
+      	Query.Range{i,j}           = Range;
+        Query.Range{j,i}           = Range;      % added 2014-01-27
         Query.Coplanar{i,j}        = Coplanar;
+        Query.Coplanar{j,i}        = Coplanar;
         Query.OKBB{j,i}      = ReqBB;
         Query.ExBB{j,i}      = ExBB;
         Query.OKBB{i,j}      = ReqBB;
@@ -362,7 +369,11 @@ if isfield(Query,'MaxDiff'),               % matrix of max differences
         if D(i,j) == 0,                    % if no value set, use infinity
           D(i,j) = Inf;
         end
-        DS(i,j) = Query.DifferenceSign(i,j);
+        if isfield(Query,'DifferenceSign'),
+          DS(i,j) = Query.DifferenceSign(i,j);
+        else
+          DS(i,j) = 0;
+        end
      end
     end
 

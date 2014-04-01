@@ -6,7 +6,7 @@
 % and after this,
 %    [Search,File] = xDisplayCandidates(File,Search);
 
-function [Search, File] = xDisplayCandidates(FullFile,Search,Level,UsingFull,Order,ShowNavWindow)
+function [Search, File] = xDisplayCandidates(FullFile,Search,Level,UsingFull,Order,ShowNavWindow,Octave)
 
 % if File is a text string (filename), load the file and display
 
@@ -14,6 +14,18 @@ if strcmp(class(FullFile),'char'),
   Filename = FullFile;
   FullFile = zAddNTData(Filename,0);
   File = FullFile;
+end
+
+if nargin < 7,
+  Octave = 0;                                  % whether FR3D is being run through Octave
+end
+
+if exist('OCTAVE_VERSION') ~= 0,
+  Octave = 1;
+end
+
+if ~isempty(strfind(path,'zirbel')),
+  Octave = 1;
 end
 
 if nargin < 6,
@@ -84,14 +96,32 @@ else
   FIndex = 1:length(Search.File);
 end
 
+if ~isfield(Search,'SaveName'),
+  Search.SaveName = 'these candidates';
+end
+
+if ~isfield(Search,'Query'),
+  Search.Query.Geometric = 0;
+  Search.Query.NumNT = length(Search.Candidates(1,:)) - 1;
+end
+
 Query = Search.Query;
 
+if ~isfield(Search,'Discrepancy'),
+  Search.Discrepancy = zeros(size(Search.Candidates(:,1)));
+end
+
 fontsize = 10;                               % for nucleotide numbers
+NeighborhoodChanged = 0;
 
 if nargin < 3,
-  MenuTitle  = 'Display options';
+	if Octave == 0,
+	  MenuTitle  = 'Navigation options';
+	else
+		MenuTitle = ['Navigation options for ' Search.SaveName];
+	end
   Level      = 0;
-  QuitButton = 'Quit display';
+  QuitButton = 'Quit navigation';
 else
   MenuTitle  = ['Subset depth ' num2str(Level)];
   QuitButton = 'Return to larger set';
@@ -106,6 +136,15 @@ if nargin < 5,
 end
 
 OrderText = {'by discrepancy from query', 'by file, then sum of nucleotide numbers', 'by similarity', 'by centrality', 'by pair criteria'};
+
+if Octave > 0,
+  DiaryFile = [Search.SaveName '.txt'];
+else
+  DiaryText = 'diary.txt';
+end
+
+DiaryText = ['Append output to ' DiaryFile];
+DiaryState = 0;
 
 warning off
 
@@ -123,7 +162,27 @@ if ~isfield(Search,'Disc'),
   end
 end
 
-NeighMax = 4;
+% ---------------- Make labels for candidates
+
+for ii=1:L,
+  f = Search.Candidates(ii,N+1);          % file number
+  b = '';
+  for j = 1:N,                            % list all bases
+    b = [b File(f).NT(Search.Candidates(ii,j)).Base];
+  end
+  n = File(f).NT(Search.Candidates(ii,1)).Number;
+  n = sprintf('%5s',n);
+  if Search.Query.Geometric > 0,
+      if isfield(Search,'AvgDisc'),
+        d = sprintf('%6.4f',Search.AvgDisc(ii));
+      else
+        d = sprintf('%6.4f',Search.Discrepancy(ii));
+      end
+    else
+      d = sprintf('%5d',Search.Discrepancy(ii)); % orig candidate number
+    end
+  Search.Lab{ii} = [File(f).Filename n ' ' b];
+end
 
 % ----------------------------- find maximum gap between candidate nucleotides
 
@@ -136,18 +195,49 @@ else
 end
 
 maxinsert = zeros(1,N-1);
-for c = 1:L,
-  maxinsert = max(maxinsert,abs(diff(double(Search.Candidates(c,r))))-1);
+if N > 1,
+  for c = 1:L,
+    maxinsert = max(maxinsert,abs(diff(double(Search.Candidates(c,r))))-1);
+  end
 end
 
 Display(1).p         = r;
 Display(1).MaxDiff   = MaxDiff;
 Display(1).MaxInsert = maxinsert;
 
+% ---------------------------- determine which conserved columns are on the same strand
+% ---------------------------- number the columns by strand number
+
+samestrand = eye(N,N);
+for a = 1:N,
+  for b = 1:N,
+    if (isfield(Query,'Flank') && ~isempty(Query.Flank{a,b})) || (isfield(Query,'MaxDiffMat') && Query.MaxDiffMat(a,b) < Inf),
+      samestrand(a,b) = 1;
+      samestrand(b,a) = 1;
+    end
+    if max(abs(double(Search.Candidates(:,a))-double(Search.Candidates(:,b)))) <= 5,
+      samestrand(a,b) = 1;
+      samestrand(b,a) = 1;
+    end
+  end
+end
+
+samestrand = samestrand ^ N;
+
+strandnumber = zeros(1,N);
+for a = 1:N,
+  if strandnumber(1,a) == 0,
+    b = find(samestrand(a,:) > 0);
+    strandnumber(1,b) = max(strandnumber) + 1;
+  end
+end
+
+Display(1).strandnumber = strandnumber;
+
 % --------- if there is no geometric model, align to the central candidate
 
 if Query.Geometric == 0 || ~isfield(Query,'WeightedCenteredCenters'),
-  [z,j] = sort(sum(Search.Disc));           % sort by average discrepancy
+  [z,j]          = sort(sum(Search.Disc));           % sort by average discrepancy
   f              = Search.Candidates(j(1),N+1);
   Query.Indices  = double(Search.Candidates(j(1),1:N));
   Query.NT       = File(f).NT(Query.Indices);
@@ -156,30 +246,24 @@ if Query.Geometric == 0 || ~isfield(Query,'WeightedCenteredCenters'),
   Query.Filename = 'Central candidate';
 end
 
+if isfield(Query,'WeightedCenteredCenters'),
+  Query.WeightedCenteredCenters = Query.WeightedCenteredCenters * Query.NT(1).Rot;  % standard orientation for all candidates, allows better rotation in Matlab
+end
+
 % ------------------------------------------- Parameters to display candidates
 
-Display(1).n            = 1;     % which candidate is in display window 1
-Display(1).sugar        = 1;     % display sugars or not
-Display(1).neighborhood = 0;     % how large a neighborhood to show
-Display(1).superimpose  = 0;     % superimpose the first candidate?
-Display(1).supersugar   = 0;     % show sugars of first when superimposing?
-Display(1).labelbases   = 10;    % show nucleotide numbers
-Display(1).az           = -37.5; % standard view
-Display(1).el           = 30;
-Display(1).toggle       = 1;     % default view, see below
-Display(1).nearbyatoms  = 0;     % default is to not show waters, amino acids
-Display(1).showbeta     = 0;     % default is to not show beta factors
-Display(1).backbonesuper = 1;     % superimposing and sugars/backbones
-Display(1).SimilarityToggle = 1;  % 1 means eliminate duplicates; 0 not
-Display(1).SimilarityUnique = 1;
-Display(1).Centrality   = 0;     % user has not just clicked sort by centrality
+Display = VisualizationOptions(Display,Octave,Search);    % set defaults
 
 stop     = 0;                              % stop the menu?
 i        = 1;                              % current window
 nn       = 1;                              % current candidate
 
 PlotMotif(File,Search,Query,Display,i);    % graph in display window i
-rotate3d on
+if Octave == 0,
+  rotate3d on
+else
+	axis off
+end
 DisplayTable(File,Search,Query,Display,i)
 drawnow
 
@@ -203,10 +287,34 @@ while stop == 0,
   ax = axis;
   clf
   pp = p(1:Limit);
-  zGraphDistanceMatrix(Search.Disc(pp,pp),Search.Lab(pp));
-  hold on
-  co = {'w*','wo','wd','ws','wv','w<','w>','w^','w+','wx'};
-  co = [co co co co co co co co];
+
+  if Octave == 1,
+	  % --------------------------- Mark displayed candidates with blue on diagonal
+  	for ww = 1:length(pp),
+	  	Search.Disc(pp(ww),pp(ww)) = 0;
+	  end
+		ww = q(find(Search.Marked));
+	  for j = 1:length(ww),
+	  	Search.Disc(pp(ww(j)),pp(ww(j))) = 0.4;
+	 	end
+	  for j = 1:length(Display),
+	  	Search.Disc(pp(q(Display(j).n)),pp(q(Display(j).n))) = 1;
+	  end
+	  zGraphDistanceMatrix(Search.Disc(pp,pp),Search.Lab(pp));
+	else
+	  % --------------------------- Mark displayed candidates with white symbol
+	  zGraphDistanceMatrix(Search.Disc(pp,pp),Search.Lab(pp));
+	  hold on
+	  co = {'w*','wo','wd','ws','wv','w<','w>','w^','w+','wx'};
+	  co = [co co co co co co co co];
+	  if ~exist('nowhitemark.txt'),
+	    for j = 1:length(Display),
+	      plot(q(Display(j).n)+0.5,q(Display(j).n)+0.5,co{j});
+	    end
+	    m = q(find(Search.Marked));
+	    plot(m+0.5,m+0.5,'w.');
+	  end
+	end
 
   if Display(1).SimilarityToggle == 1,
 %    SU = Display(1).SimilarityUnique + 1;
@@ -215,104 +323,100 @@ while stop == 0,
 %    plot([SU SU],[1 Limit],'w');
   end
 
-  % --------------------------- Mark displayed candidates with white symbol
 
-  if ~exist('nowhitemark.txt'),
-    for j = 1:length(Display),
-      plot(q(Display(j).n)+0.5,q(Display(j).n)+0.5,co{j});
-    end
-    m = q(find(Search.Marked));
-    plot(m+0.5,m+0.5,'w.');
-%    axis(ax);
-  end
   if Limit < L,
     title(['Discrepancies between first ' num2str(Limit) ' candidates, ordered by ' OrderText{Order}]);
   else
     title(['Discrepancies between all candidates, ordered by ' OrderText{Order}]);
   end
+
   colormap('default');
   map = colormap;
   map = map((end-8):-1:8,:);
   colormap(map);
   caxis([0 0.8]);
-  colorbar('location','eastoutside');
-  set(gcf,'Name','Navigation window; click here, then click the "Navigate" button');
 
-  if N == 2 && exist('xMutualIDI') ==2,              % 2-NT candidates
- 
-  figure(98)
-  ax = axis;
-  clf
-  pp = p(1:Limit);
-  zGraphDistanceMatrix(Search.IDI(pp,pp));
-%  zGraphDistanceMatrix(Search.IDI(pp,pp),Search.Lab(pp));
-  hold on
-  co = {'w*','wo','wd','ws','wv','w<','w>','w^','w+','wx'};
-  co = [co co co co co co co co];
-  for j = 1:length(Display),
-    plot(q(Display(j).n)+0.5,q(Display(j).n)+0.5,co{j});
-  end
-  m = q(find(Search.Marked));
-  plot(m+0.5,m+0.5,'w.');
-%  axis(ax);
-  if Limit < L,
-    title(['IsoDiscrepancies between first ' num2str(Limit) ' candidates, ordered by ' OrderText{Order}]);
+  if Octave == 0,
+	  colorbar('location','eastoutside');
+    set(gcf,'Name','Navigation window; click here, then click the "Navigate" button');
   else
-    title(['IsoDiscrepancies between all candidates, ordered by ' OrderText{Order}]);
-  end
-  colormap('default');
-  map = colormap;
-  map = map((end-8):-1:8,:);
-  colormap(map);
-  caxis([0 5]);
-  colorbar('location','eastoutside');
-  set(gcf,'Name','Navigation window; click here, then click the "Navigate" button');
+    set(gcf,'Name','Navigation window; select Navigate with Figure 99 then click here');
+	end
 
-  fprintf('Counts of base combinations found in this set.\n');
+  if N == 2 && exist('xMutualIDI') == 2,              % 2-NT candidates
+ 
+	  figure(98)
+	  ax = axis;
+	  clf
+	  pp = p(1:Limit);
+	  zGraphDistanceMatrix(Search.IDI(pp,pp));
+	%  zGraphDistanceMatrix(Search.IDI(pp,pp),Search.Lab(pp));
+	  hold on
+	  co = {'w*','wo','wd','ws','wv','w<','w>','w^','w+','wx'};
+	  co = [co co co co co co co co];
+	  for j = 1:length(Display),
+	    plot(q(Display(j).n)+0.5,q(Display(j).n)+0.5,co{j});
+	  end
+	  m = q(find(Search.Marked));
+	  plot(m+0.5,m+0.5,'w.');
+	%  axis(ax);
+	  if Limit < L,
+	    title(['IsoDiscrepancies between first ' num2str(Limit) ' candidates, ordered by ' OrderText{Order}]);
+	  else
+	    title(['IsoDiscrepancies between all candidates, ordered by ' OrderText{Order}]);
+	  end
+	  colormap('default');
+	  map = colormap;
+	  map = map((end-8):-1:8,:);
+	  colormap(map);
+	  caxis([0 5]);
+	  if Octave == 0,
+		  colorbar('location','eastoutside');
+		end
+	  set(gcf,'Name','Navigation window; click here, then click the "Navigate" button');
 
-  counts = zeros(4,4);
-  for i = 1:L,
-    f = Search.Candidates(i,3);
-    a = Search.Candidates(i,1);
-    b = Search.Candidates(i,2);
-    c1 = File(f).NT(a).Code;
-    c2 = File(f).NT(b).Code;
-    counts(c1,c2) = counts(c1,c2) + 1;
-  end
+	  fprintf('Counts of base combinations found in this set.\n');
 
-  Letters = 'ACGU';
+	  counts = zeros(4,4);
+	  for i = 1:L,
+	    f = Search.Candidates(i,3);
+	    a = Search.Candidates(i,1);
+	    b = Search.Candidates(i,2);
+	    c1 = File(f).NT(a).Code;
+	    c2 = File(f).NT(b).Code;
+	    counts(c1,c2) = counts(c1,c2) + 1;
+	  end
 
-  fprintf('        A      C      G      U\n');
-  for i = 1:4,
-    fprintf('%c   %5d  %5d  %5d  %5d\n', Letters(i), counts(i,1), counts(i,2), counts(i,3), counts(i,4));
-  end
-  fprintf('\n');
+	  Letters = 'ACGU';
+
+	  fprintf('        A      C      G      U\n');
+	  for i = 1:4,
+	    fprintf('%c   %5d  %5d  %5d  %5d\n', Letters(i), counts(i,1), counts(i,2), counts(i,3), counts(i,4));
+	  end
+	  fprintf('\n');
 
   end
  end
 
-
-  if (Display(1).neighborhood == NeighMax),
-    Neighborhood = 'No Neighborhood';
-  else
-    Neighborhood = 'Larger Neighborhood';
-  end
-
-  Buttons = {'Next candidate','Previous Candidate', ... % 1,2
-         'Add plot', Neighborhood, ...                % 3,4
-         'Toggle sugar','Toggle display', ...                 % 5,6
+  Buttons = {'Next candidate','Previous candidate', ...       % 1,2
+         'Add plot', DiaryText, ...                           % 3,4
+         'Visualization options','Jump to candidate', ...     % 5,6
          'Mark/Unmark current','Reverse all marks', ...       % 7,8
          'Display marked only', ...                           % 9
          'List to screen','Write to PDB', ...                 % 10,11
          'Sort by centrality', 'Order by Similarity', ...     % 12,13
          'Show Alignment', ...                                % 14
-         'Show Scatterplot', 'Navigate with Fig 99', ...      % 15, 16
+         'Show Scatterplot', 'Navigate with Figure 99', ...      % 15, 16
          QuitButton};                                         % 17
 
-  k=menu(MenuTitle,Buttons);
+  if Octave > 0,
+    k = oMenu(MenuTitle,Buttons);
+  else
+    k=menu(MenuTitle,Buttons);
+  end
 
   ii=gcf;                                 % get current active figure
-  if (abs(ii) > length(Display)) | (ii == 0), % other window active?
+  if (abs(ii) > length(Display)) || (ii == 0), % other window active?
     ii = i;
   end
   i = ii;                                 % record and save active figure
@@ -322,12 +426,11 @@ while stop == 0,
   [az,el]=view;                          % get current view (orientation)
   Display(1).az = az;
   Display(1).el = el;
-  Display(1).x=XLim;                     % current x, y, z limits
-  Display(1).y=YLim;
-  Display(1).z=ZLim;
+  Display(1).x=xlim;                     % current x, y, z limits
+  Display(1).y=ylim;
+  Display(1).z=zlim;
 
-
- % ------------------------------------------- Want the navigation window?
+  % ------------------------------------------- Want the navigation window?
 
   if any(k == [12 13 16]),
     ShowNavWindow = min(2,1+ShowNavWindow);
@@ -341,28 +444,8 @@ while stop == 0,
 
  if ShowNavWindow == 1,                     % just indicated to show this
   fprintf('Calculating discrepancies between first %d candidates\n',Limit);
+  drawnow
   Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
-
-  for ii=1:L,
-    f = Search.Candidates(ii,N+1);          % file number
-    b = '';
-%    for j = 1:min(4,N),
-    for j = 1:N,                            % list all bases
-      b = [b File(f).NT(Search.Candidates(ii,j)).Base];
-    end
-    n = File(f).NT(Search.Candidates(ii,1)).Number;
-    n = sprintf('%5s',n);
-    if Search.Query.Geometric > 0,
-        if isfield(Search,'AvgDisc'),
-          d = sprintf('%6.4f',Search.AvgDisc(ii));
-        else
-          d = sprintf('%6.4f',Search.Discrepancy(ii));
-        end
-      else
-        d = sprintf('%5d',Search.Discrepancy(ii)); % orig candidate number
-      end
-    Search.Lab{ii} = [File(f).Filename n ' ' b];
-  end
 
   % ------------------------------------------- Calculate IDI matrix
 
@@ -392,25 +475,22 @@ while stop == 0,
   end
  end
 
+  % ------------------------------------------- respond to menu choice
 
-
-  switch k                               % k is the menu choice
+  switch k                                      % k is the menu choice
     case 1                                      % next plot
       n = Display(i).n;                         % actual candidate displayed
-      if q(n) + 1 > L,                          % q(n) is display order
+
+      if (ShowNavWindow > 0) && (q(n) + 1 > Limit) && (Limit < L),
+        Limit = min(Limit*2,L);                 % increase limit
+        fprintf('Increased display limit to %d; calculating more discrepancies\n',Limit);
+        drawnow
+        Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
+        p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
+        p((Limit+1):L) = (Limit+1):L;
+        q(p) = 1:L;                             % inverse permutation
+      elseif q(n) + 1 > L,                      % q(n) is display order
         Display(i).n = p(1);
-
-        if (ShowNavWindow > 0) && (min(Limit*2,L) > Limit),
-          Limit = min(Limit*2,L);                 % increase limit
-          fprintf('Increased display limit to %d; calculating more discrepancies\n',Limit);
-          Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
-        else
-          Limit = min(Limit*2,L);                 % increase limit
-        end
-
-        p = 1:L;                             % default permutation for display
-        q(p) = 1:L;                          % inverse permutation
-
       else
         Display(i).n = p(q(n) + 1);
       end
@@ -428,67 +508,47 @@ while stop == 0,
       i = length(Display);                      % current figure number
       figure(i);
 
-    case 4                                      % toggle Neighborhood
-      Display(1).neighborhood = Display(1).neighborhood + 1;
-      if Display(1).neighborhood > NeighMax,
-        Display(1).neighborhood = 0; 
-      end 
+    case 4
+      if DiaryState == 0,
+        diary(['SearchSaveFiles' filesep DiaryFile]);
+        DiaryState = 1;
+        DiaryText = 'Stop appending output';
+      else
+        diary off
+        DiaryState = 0;
+        DiaryText = ['Append output to ' DiaryFile];
+      end
 
     case 5                                      % toggle sugar & superimpose
+      [Display, NeighborhoodChanged] = VisualizationOptions(Display,Octave);
 
-      Display(1).backbonesuper = Display(1).backbonesuper + 1;
-      if Display(1).backbonesuper > 5,
-        Display(1).backbonesuper = 1;
+    case 6
+      jtc = input('Enter the PDB ID or nucleotide number or base string: ','s');
+      jtc = strrep(jtc,'''','');
+      keep = zeros(L,1);
+      for jt = 1:L,
+        if ~isempty(strfind(lower(Search.Lab{jt}),lower(jtc))),
+          keep(jt,1) = 1;
+        end
       end
-      switch Display(1).backbonesuper,
-      case 1,
-        Display(1).superimpose = 0;
-        Display(1).sugar       = 1;
-        Display(1).supersugar  = 0;
-      case 2,
-        Display(1).superimpose = 0;
-        Display(1).sugar       = 0;
-        Display(1).supersugar  = 0;
-      case 3,
-        Display(1).superimpose = 1;
-        Display(1).sugar       = 0;
-        Display(1).supersugar  = 0;
-      case 4,
-        Display(1).superimpose = 1;
-        Display(1).sugar       = 1;
-        Display(1).supersugar  = 0;
-      case 5,
-        Display(1).superimpose = 1;
-        Display(1).sugar       = 1;
-        Display(1).supersugar  = 1;
-      end
-
-    case 6                                      % toggle superimpose/numbers
-      Display(1).toggle = Display(1).toggle + 1;
-      if Display(1).toggle > 5,
-        Display(1).toggle = 1;
-      end
-      switch Display(1).toggle,
-      case 1,
-        Display(1).showbeta    = 0;
-        Display(1).labelbases  = fontsize;
-        Display(1).nearbyatoms = 0;
-      case 2,
-        Display(1).showbeta    = 0;
-        Display(1).labelbases  = fontsize;
-        Display(1).nearbyatoms = 1;
-      case 3,
-        Display(1).showbeta    = 0;
-        Display(1).labelbases  = 0;
-        Display(1).nearbyatoms = 1;
-      case 4,
-        Display(1).showbeta    = 1;
-        Display(1).labelbases  = 0;
-        Display(1).nearbyatoms = 1;
-      case 5,
-        Display(1).showbeta    = 1;
-        Display(1).labelbases  = fontsize;
-        Display(1).nearbyatoms = 1;
+      if sum(keep) == 1,
+        Display(i).n = find(keep);
+      elseif sum(keep) == 0,
+        fprintf('No matching candidate found\n');
+      else
+        fprintf('Multiple matches:\n');
+        fk = find(keep);
+        for jt = 1:length(fk),
+          fprintf('%d) %s\n',jt,Search.Lab{fk(jt)});
+        end
+        try
+          jt = input('Enter number to jump to it: ','s');
+          jt = strrep(jt,'''','');
+          jt = str2num(jt);
+          if ~isempty(jt) && jt > 0 && jt <= length(fk),
+            Display(i).n = fk(jt);
+          end
+        end
       end
 
     case 7                                      % mark/unmark current cand
@@ -520,12 +580,14 @@ while stop == 0,
         j = j(m);                                % put j in display order
         Search2 = SearchSubset(Search,j);
         fprintf('Marked candidates listed first\n');
+        drawnow
         xListCandidates(Search2,Inf);
 
         [y,m] = sort(q(jj));
         jj = jj(m);                             % put jj in display order
         Search2 = SearchSubset(Search,jj);
         fprintf('Unmarked candidates listed second\n');
+        drawnow
         xListCandidates(Search2,Inf);
       else
         Search2 = SearchSubset(Search,p);
@@ -550,6 +612,7 @@ while stop == 0,
       if (Display(1).Centrality == 1) && (min(Limit*2,L) > Limit),
         Limit = min(Limit*2,L);                 % increase limit
         fprintf('Increased display limit to %d; calculating more discrepancies\n',Limit);
+        drawnow
         Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
       end
 
@@ -567,11 +630,15 @@ while stop == 0,
       Display(1).SimilarityToggle = 1 - Display(1).SimilarityToggle;
 
       if Limit > 1,
+      	if Octave == 1,
+      		fprintf('Ordering by similarity\n');
+      	end
         p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
         p((Limit+1):L) = (Limit+1):L;
       else
         p = 1;
       end
+
       q(p) = 1:L;
       Order = 3;
 
@@ -596,6 +663,7 @@ while stop == 0,
         spy(CandDist == 0);
 
         fprintf('Displaying the first instance of each candidate\n');
+        drawnow
 
         clear order
 
@@ -618,7 +686,8 @@ while stop == 0,
 
         m = length(find(order < 100000));       % number of distinct instances
 
-fprintf('Found %d distinct instances\n',m);
+        fprintf('Found %d distinct instances\n',m);
+				zFlushOutput
 
         q = zOrderbySimilarity(Search.Disc(p(1:m),p(1:m)));
 
@@ -638,16 +707,14 @@ fprintf('Found %d distinct instances\n',m);
           Search2 = SearchSubset(Search,j);
           xDisplayCandidates(File(FIndex),Search2,Level+1,UsingFull,Order,ShowNavWindow);
         end
-
-
       end
 
     case 14                                     % align
-      xAlignCandidates(File(FIndex),Search,1);
+      Text = xAlignCandidates(File(FIndex),Search,1);
 %      Text = xFASTACandidates(File(FIndex),Search,1);
-%      for t = 1:length(Text),
-%        fprintf('%s\n', Text{t});
-%      end
+      for t = 1:length(Text),
+        fprintf('%s\n', Text{t});
+      end
 
     case 15                                     % scatterplot
       ViewParam.Color  = 6;
@@ -656,14 +723,22 @@ fprintf('Found %d distinct instances\n',m);
       ViewParam.ClassLimits = 1;
       ViewParam.Order = p;
       ViewParam.Color = 1;
+      ViewParam.Octave = Octave;
       p = xScatterPairs(Search,1,2,ViewParam);
       q(p) = 1:L;
       Order = 5;
 
     case 16
-      figure(99)
       if ShowNavWindow == 2,                    % already displayed
-        pt = get(gca,'CurrentPoint');
+      	if Octave == 1,
+          fprintf('Click near the diagonal to select a candidate, away from the diagonal to mark a range of candidates\n');
+          figure(99)
+      		[x,y,b] = ginput(1);
+      		pt = [x y];
+      	else
+          figure(99)
+	        pt = get(gca,'CurrentPoint');
+	      end
       else
         pt(1,1) = Display(i).n;                 % current candidate
         pt(1,2) = Display(i).n;
@@ -683,6 +758,7 @@ fprintf('Found %d distinct instances\n',m);
       if exist('fidOUT','var')
         fclose(fidOUT);
       end
+      diary off
       stop = 1;
 
   end  % switch statement for menu
@@ -693,39 +769,21 @@ fprintf('Found %d distinct instances\n',m);
 
   if any([1 2 3 7 16] == k),
       PlotMotif(File(FIndex),Search,Query,Display,i);
+      if Octave == 1,
+      	axis off
+      end
   end
 
-  % ------------------------------- The following used to be required
-  % ------------------------------- because saved Searches didn't have
-  % ------------------------------- enough information stored.  Now they do.
-
-  if (k == 4) && (UsingFull == 0) && 0 > 1,
-    fprintf('Loading structure files\n');
-    fprintf('If some are not available, Larger Neighborhood will crash\n');
-    [File,FIndex] = zAddNTData(Search.CandidateFilenames,2,FullFile);
-    for f = 1:length(File),
-      if ~isfield(File,'Distance'),
-        File(f).Distance = [];
-      end
-      if isempty(File(f).Distance) && ~isempty(File(f).NumNT),
-       if (File(f).NumNT > 0),
-        c = cat(1,File(f).NT.Center); % nucleotide centers
-        File(f).Distance = zMutualDistance(c,16); % compute distances < 16 Angstroms
-       end
-      end
-    end
-    FullFile = [];
-    UsingFull = 1;
-  end
-
-  if (Display(i).n ~= nn) || (k == 4),
+  if (Display(i).n ~= nn) || (k == 4) || (k == 5 && NeighborhoodChanged) || (L == 1 && k <= 2),
     DisplayTable(File(FIndex),Search,Query,Display,i)
     nn = Display(i).n;
+    NeighborhoodChanged = 0;
   end
 
   if any([4 5 6 8] == k),
     for j=1:length(Display)
       PlotMotif(File(FIndex),Search,Query,Display,j);
+      axis off
     end
   end
 
@@ -738,7 +796,9 @@ fprintf('Found %d distinct instances\n',m);
   end
 
   figure(i)
-  rotate3d on
+  if Octave == 0,
+    rotate3d on
+  end
   drawnow
 
 end  % end while
@@ -752,7 +812,7 @@ end
 %-------------------------------------------------------------------------
 %-------------------------------------------------------------------------
 
-function  PlotMotif(File,Search,Query,Display,i)
+function PlotMotif(File,Search,Query,Display,i)
 
   N = Query.NumNT;
 
@@ -771,8 +831,8 @@ function  PlotMotif(File,Search,Query,Display,i)
     MVP.Rotation      = R;
     MVP.Shift         = S;
     MVP.LineStyle     = '-.';
-    MVP.LineThickness = '1';
-    MVP.Sugar         = Display(1).supersugar;
+    MVP.LineThickness = 1;
+    MVP.Sugar         = Display(1).superbackbone;
     MVP.ConnectSugar  = 0;
     MVP.Grid          = 0;
     MVP.LabelBases    = Display(1).labelbases;
@@ -797,7 +857,7 @@ function  PlotMotif(File,Search,Query,Display,i)
     Title = [Title '-' nt.Base nt.Number];
   end;
 
-  VP.Sugar    = Display(1).sugar;
+  VP.Sugar    = Display(1).displaybackbone;
   VP.LabelBases = Display(1).labelbases;
   VP.ShowBeta   = Display(1).showbeta;
 
@@ -808,22 +868,115 @@ function  PlotMotif(File,Search,Query,Display,i)
 
     R = zBestRotation(MC, CC);
     S = mean(CandiCenters);
-  else
+  elseif length(Indices) > 1,
     R = File(f).NT(Indices(1)).Rot;
     S = mean(cat(1,File(f).NT(Indices).Center));
+  else
+    R = File(f).NT(Indices(1)).Rot;
+    S = File(f).NT(Indices(1)).Center;
   end
 
   VP.Rotation = R;
   VP.Shift    = S;
   VP.Grid     = 0;
 
-  if Display(1).neighborhood > 0,
-    v = Display(1).neighborhood;
-    Indices = xNeighborhood(File(f),Indices,v);
-  end
-
   if exist('amal.txt','file') > 0 && N == 3,
      VP.AtOrigin = 2;
+  end
+
+  if max(Display(1).neighborhood) > 0,
+    NeighIndices = xNeighborhood(File(f),Indices,Display(1).neighborhood,Display(1).strandnumber);
+    Indices = [Indices NeighIndices];
+  else
+    NeighIndices = [];
+  end
+
+%  if Display(1).colorstate == 0 && max(Display(1).neighborhood) > 0,
+%    VP.NucleotideBrightness(1:length(Indices)) = 1;
+%    VP.NucleotideBrightness((length(Indices)+1):(length(Indices)+length(NeighIndices))) = 0.5;
+%  end
+
+  strandnumber = [Display(1).strandnumber zeros(1,length(NeighIndices))];
+  NN = length(strandnumber);
+
+  if Display(1).colorstate == 1,
+
+    samestrand = eye(NN,NN);
+    for a = 1:NN,
+      for b = (a+1):NN,
+        if abs(double(Indices(a)) - double(Indices(b))) <= 3,
+          samestrand(a,b) = 1;
+          samestrand(b,a) = 1;
+        end
+      end
+    end
+
+    samestrand = samestrand ^ NN;
+
+    % sort indices by strand number and then by distance from 1st nucleotide?  that might color them more consistently
+
+    for a = 1:NN,
+      b = find(samestrand(a,:) > 0);     % find others in the same strand
+      if strandnumber(1,a) > 0,            % already assigned to a strand
+        strandnumber(1,b) = strandnumber(1,a); % assign to the same strand as a
+      else
+        strandnumber(1,b) = max(strandnumber) + 1;
+      end
+    end
+
+%    [y,i] = sort(Indices);
+%    Indices = Indices(i);
+%    strandnumber = strandnumber(i);
+
+    Palette = [255 0 51; ...     % red
+               205 173 0; ...    % gold
+               51 153 255; ...   % lt blue
+               153 30 255; ...   % purple
+               139 69 19; ...    % saddlebrown
+               51 0 255; ...     % bk blue
+               51 204 51; ...    % green
+               128 128 128; ...  % gray
+               255 102 0; ...    % orange
+               ];
+
+    if max(strandnumber) > length(Palette(:,1)),
+      fprintf('Too many strands for the colors that have been defined, re-using some.\n');
+    end
+
+    % color the strands from light to dark
+
+    for j = unique(strandnumber),
+      a = find(strandnumber == j);
+
+      [y,i] = sort(Indices(a));
+      a = a(i);
+
+      jj = 1 + mod(j-1,length(Palette(:,1)));       % re-use palette colors if necessary
+
+      p = Palette(jj,:)/255;
+      mi = 0.6;                                     % minimum multiplier
+      ma = 1/max(p);                              % maximum multiplier
+
+      if length(a) > 1,
+        step = (mi-ma)/(length(a)-1);
+        step = max(-0.2,step);                      % no need for drastic brightness changes
+        for b = 1:length(a),
+          VP.Colors(a(b),:) = p * (ma + step*(b-1));
+          VP.NumberColors(a(b),:) = [0 0 0];
+        end
+      else
+        VP.Colors(a,:) = p;
+        VP.NumberColors(a,:) = [0 0 0];
+      end
+    end
+
+    VP.Colors = min(1,VP.Colors);
+    VP.Colors = max(0,VP.Colors);
+  end
+
+  VP.LineThicknesses = 2*ones(1,NN);
+  if max(Display(1).neighborhood) > 0,
+    VP.LineThicknesses(1:N) = 5;
   end
 
   zDisplayNT(File(f),Indices,VP);
@@ -836,11 +989,13 @@ function  PlotMotif(File,Search,Query,Display,i)
     w = find(k < 8);                            % within 8 Angstroms
     u = unique(j(w));                           % indices of amino acids
     for uu = 1:length(u),
-      zDisplayAA(File(f),u(uu),VP);
+    	try
+	      zDisplayAA(File(f),u(uu),VP);
+	    end
     end
   end
 
-  set(gcf,'Name',Title);
+  set(gcf,'Name',strrep(Title,'\_','_'));
 
   if isfield(Search,'AvgDisc'),   
     xlabel(['Candidate ',int2str(n),' of ',int2str(s),'   Average discrepancy from others ', num2str(Search.AvgDisc(n))]);
@@ -860,159 +1015,14 @@ function  PlotMotif(File,Search,Query,Display,i)
 
   axis equal
   axis vis3d
+%  view(2)
   view([Display(1).az Display(1).el]);
   drawnow
-
-  % Commands for Amal's study of base triples:
+%  axis off
 
   if exist('amal.txt','file') > 0 && N == 3 && Display(1).neighborhood == 0,
-
-    N1 = File(f).NT(Indices(1));
-    N2 = File(f).NT(Indices(2));
-    N3 = File(f).NT(Indices(3));
-
-    if isfield(Search,'AvgDisc'),   
-      ylabel(['Plot ',int2str(n),' of ',int2str(s),'   Average discrepancy from others ', num2str(Search.AvgDisc(n))]);
-    elseif Query.Geometric > 0,
-      ylabel(['Plot ',int2str(n),' of ',int2str(s),'   Discrepancy ',...
-          num2str(Search.Discrepancy(n))]);
-    else
-      ylabel(['Plot ',int2str(n),' of ',int2str(s)]);
-    end
-
-    BP12 = File(f).Edge(Indices(1),Indices(2));
-    BP23 = File(f).Edge(Indices(2),Indices(3));
-    BP31 = File(f).Edge(Indices(3),Indices(1));
-
-    Nam = [N1.Base N2.Base N3.Base '_' zEdgeText(BP12,1) '_' zEdgeText(BP23,1) '_' zEdgeText(BP31,1) '_Model_'];
-
-    if BP12 > 100,  BP12 = BP12 - 100; end
-    if BP12 < -100, BP12 = BP12 + 100; end
-    if BP23 > 100,  BP23 = BP23 - 100; end
-    if BP23 < -100, BP23 = BP23 + 100; end
-    if BP31 > 100,  BP31 = BP31 - 100; end
-    if BP31 < -100, BP31 = BP31 + 100; end
-
-    if exist('comparetoregular.txt') > 0,
-      BP12 = fix(BP12);
-      BP23 = fix(BP23);
-      BP31 = fix(BP31);
-      Nam = [Nam zEdgeText(BP12,1) '_' zEdgeText(BP23,1) '_' zEdgeText(BP31,1) '_Model_'];
-    end
-
-    if BP12 ~= 0 && BP23 ~= 0 && BP31 ~= 0,
-      FFF = zMakeTriple(BP12,BP23,N1.Code,N2.Code,N3.Code);
-      if ~isempty(FFF),
-        hold on
-        VPP.AtOrigin = 2;
-        VPP.LabelBases = 0;
-        VPP.Sugar = 0;
-        VPP.LineStyle = '-.';
-        VPP.Title = 0;
-        zDisplayNT(FFF,1:3,VPP)
-    ytext = 'Model interactions ';
-    ytext = [ytext ' 12:' zEdgeText(BP12,1) ' '];
-    ytext = [ytext ' 23:' zEdgeText(BP23,1) ' '];
-%    ytext = [ytext ' 13:' zEdgeText(BP31,1) ' '];
-    xlabel(ytext);
-        view(2)
-
-  saveas(gcf,['Triples' filesep Nam '.fig'],'fig');
-  saveas(gcf,['Triples' filesep Nam '.png'],'png');
-
-        fprintf('12-23\n');
-        fprintf('Geometric discrepancy from model: %7.4f\n',xDiscrepancy(File(f),Indices(1:3),FFF,1:3));
-        fprintf('Triple IsoDiscrepancy from model: %7.4f\n',xDiscrepancyForTriples(File(f),Indices(1:3),FFF,1:3));
-
-      end
-
-      figure(34)
-      clf
-      FFF = zMakeTriple(BP31,BP12,N3.Code,N1.Code,N2.Code);
-      if ~isempty(FFF),
-        hold on
-        FFF.NT = FFF.NT([2 3 1]);
-        VPP.AtOrigin = 2;
-        VPP.LabelBases = 0;
-        VPP.Sugar = 0;
-        VPP.LineStyle = '-.';
-        VPP.Title = 0;
-        zDisplayNT(FFF,1:3,VPP)
-    ytext = 'Model interactions ';
-    ytext = [ytext ' 12:' zEdgeText(BP12,1) ' '];
-%    ytext = [ytext ' 23:' zEdgeText(BP23,1) ' '];
-    ytext = [ytext ' 13:' zEdgeText(BP31,1) ' '];
-    xlabel(ytext);
-        view(2)
-  axis vis3d
-  axis equal
-
-  saveas(gcf,['Triples' filesep Nam 'alternative.fig'],'fig');
-  saveas(gcf,['Triples' filesep Nam 'alternative.png'],'png');
-
-
-        fprintf('12-13\n');
-        fprintf('Geometric discrepancy from model: %7.4f\n',xDiscrepancy(File(f),Indices(1:3),FFF,1:3));
-        fprintf('Triple IsoDiscrepancy from model: %7.4f\n',xDiscrepancyForTriples(File(f),Indices(1:3),FFF,1:3));
-      end
-
-    elseif BP12 ~= 0 && BP23 ~= 0,
-      FFF = zMakeTriple(BP12,BP23,N1.Code,N2.Code,N3.Code);
-      if ~isempty(FFF),
-        hold on
-        VPP.AtOrigin = 2;
-        VPP.LabelBases = 0;
-        VPP.Sugar = 0;
-        VPP.LineStyle = '-.';
-        VPP.Title = 0;
-        zDisplayNT(FFF,1:3,VPP)
-    ytext = 'Model interactions ';
-    ytext = [ytext ' 12:' zEdgeText(BP12,1) ' '];
-    ytext = [ytext ' 23:' zEdgeText(BP23,1) ' '];
-%    ytext = [ytext ' 13:' zEdgeText(BP31,1) ' '];
-    xlabel(ytext);
-        view(2)
-
-  saveas(gcf,['Triples' filesep Nam '.fig'],'fig');
-  saveas(gcf,['Triples' filesep Nam '.png'],'png');
-
-        fprintf('12-23\n');
-        fprintf('Geometric discrepancy from model: %7.4f\n',xDiscrepancy(File(f),Indices(1:3),FFF,1:3));
-        fprintf('Triple IsoDiscrepancy from model: %7.4f\n',xDiscrepancyForTriples(File(f),Indices(1:3),FFF,1:3));
-
-      end
-
-    elseif BP12 ~= 0 && BP31 ~= 0,
-      FFF = zMakeTriple(BP31,BP12,N3.Code,N1.Code,N2.Code);
-      if ~isempty(FFF),
-        hold on
-        FFF.NT = FFF.NT([2 3 1]);
-        VPP.AtOrigin = 2;
-        VPP.LabelBases = 0;
-        VPP.Sugar = 0;
-        VPP.LineStyle = '-.';
-        VPP.Title = 0;
-        zDisplayNT(FFF,1:3,VPP)
-    ytext = 'Model interactions ';
-    ytext = [ytext ' 12:' zEdgeText(File(f).Edge(Indices(1),Indices(2))) ' '];
-%    ytext = [ytext ' 23:' zEdgeText(File(f).Edge(Indices(2),Indices(3))) ' '];
-    ytext = [ytext ' 13:' zEdgeText(File(f).Edge(Indices(1),Indices(3))) ' '];
-    xlabel(ytext);
-        view(2)
-
-  saveas(gcf,['Triples' filesep Nam '.fig'],'fig');
-  saveas(gcf,['Triples' filesep Nam '.png'],'png');
-
-        fprintf('12-13\n');
-        fprintf('Geometric discrepancy from model: %7.4f\n',xDiscrepancy(File(f),Indices(1:3),FFF,1:3));
-        fprintf('Triple IsoDiscrepancy from model: %7.4f\n',xDiscrepancyForTriples(File(f),Indices(1:3),FFF,1:3));
-      end
-    end
-
-
+    zAmalTripleStudy    % Commands for Amal's study of base triples:
   end
-  % end of commands for Amal
-
 
 %    set(gcf,'Renderer','OpenGL')
 %    set(gcf,'Renderer','zbuffer')
@@ -1031,12 +1041,11 @@ function  DisplayTable(File,Search,Query,Display,i)
     elseif Query.Geometric > 0,
       fprintf('Discrepancy %6.4f', Search.Discrepancy(n));
     else
-      fprintf('Candidate #%d', Search.Discrepancy(n));  % integer is cand num
+      fprintf('Candidate #%d of %d', Search.Discrepancy(n), length(Search.Candidates(:,1)));  % integer is cand num
     end
 
-    if Display(1).neighborhood > 0,
-      v = Display(1).neighborhood;
-      Indices = xNeighborhood(File(f),Indices,v);
+    if max(Display(1).neighborhood) > 0,
+      Indices = sort([Indices xNeighborhood(File(f),Indices,Display(1).neighborhood,Display(1).strandnumber)]);
     end
 
     zShowInteractionTable(File(f),double(Indices));
@@ -1063,3 +1072,164 @@ function [Search2] = SearchSubset(Search,j)
     Search2.Lab         = Search.Lab(j);
   end
 
+% -------------------------------------------------- Set visualization options
+function [Display,NeighborhoodChanged] = VisualizationOptions(Display,Octave,Search)
+
+NeighborhoodChanged = 0;
+
+fontsize = 10;
+
+if ~isfield(Display,'colorstate'), % set default values
+  Display(1).n                = 1;     % which candidate is in display window 1
+  Display(1).colorstate       = 0;     % 0 will color A red, etc., 1 color by strand
+  Display(1).displaybackbone  = 1;     % display sugars or not
+  Display(1).neighborhood     = zeros(1,8);     % what neighborhood to show
+  Display(1).superimposestate = 0;     % superimpose the first candidate? backbone too?
+  Display(1).superimpose      = 0;     % superimpose the first candidate?
+  Display(1).superbackbone    = 0;     % show sugars of first when superimposing?
+  Display(1).labelbases       = 10;    % show nucleotide numbers
+  Display(1).az               = -37.5; % standard view
+  Display(1).el               = 30;
+  Display(1).toggle           = 1;     % default view, see below
+  Display(1).nearbyatoms      = 0;     % default is to not show waters, amino acids
+  Display(1).showbeta         = 0;     % default is to not show beta factors
+  Display(1).backbonesuper    = 1;     % superimposing and sugars/backbones
+  Display(1).SimilarityToggle = 1;  % 1 means eliminate duplicates; 0 not
+  Display(1).SimilarityUnique = 1;
+  Display(1).Centrality       = 0;     % user has not just clicked sort by centrality
+  if isfield(Search,'oExploreNT'),
+    Display(1).colorstate = 1;
+    Display(1).neighborhood = [1 0 0 1 1 0 0 12];
+  end
+else
+
+  k = 0;
+
+% while k ~= -1,
+
+    switch Display(1).colorstate,
+    case 0,
+      NextColorState = 'Color by strand';
+    case 1,
+      NextColorState = 'Color A red, C yellow, G green, U blue';
+    end
+
+    switch Display(1).displaybackbone,
+    case 0,
+      NextBackboneState = 'Display backbone';
+    case 1,
+      NextBackboneState = 'Do not display backbone';
+    end
+
+    switch Display(1).labelbases,
+    case 0,
+      NextLabelBasesState = 'Label bases';
+    otherwise,
+      NextLabelBasesState = 'Do not label bases';
+    end
+
+    switch Display(1).superimposestate,
+    case 0,
+      NextSuperimposeState = 'Superimpose query and backbone';   % 1
+    case 1,
+      NextSuperimposeState = 'Superimpose query, no backbone';   % 2
+    case 2,
+      NextSuperimposeState = 'Do not superimpose query';         % 0
+    end
+
+    switch Display(1).nearbyatoms,
+    case 0,
+      NextNearbyAtomState = 'Show nearby atoms';
+    case 1,
+      NextNearbyAtomState = 'Do not show nearby atoms';
+    end
+
+    Buttons = {... 
+              NextColorState, ...                                % 1
+              NextBackboneState, ...                             % 2
+              NextLabelBasesState, ...                           % 3
+              NextSuperimposeState, ...                          % 4
+              NextNearbyAtomState, ...                           % 5
+              'Neighborhood: none', ...                          %  6, all zeros
+              'Neighborhood: fill in strands', ...               %  7, 1 in position 1
+              'Neighborhood: extend strands 1 nucleotide', ...   %  8, 1 in position 2
+              'Neighborhood: extend strands 2 nucleotides', ...  %  9, 1 in position 3
+              'Neighborhood: extend strands 3 nucleotides', ...  % 10, 1 in position 4
+              'Neighborhood: basepairs made', ...                % 11, 1 in position 5
+              'Neighborhood: stacks made', ...                   % 12, 1 in position 6
+              'Neighborhood: other interactions made', ...       % 13, 1 in position 7
+              'Neighborhood: 8A', ...                            % 14, 8 in position 8
+              'Neighborhood: 12A', ...                           % 15, 12 in position 8
+              'Neighborhood: 16A', ...                           % 16, 16 in position 8
+              };
+
+    MenuTitle = 'Display options';
+
+    if Octave > 0,
+      k = oMenu(MenuTitle,Buttons);
+    else
+      k=menu(MenuTitle,Buttons);
+    end
+
+    if ~isempty(k),
+      if k >= 6,
+        NeighborhoodChanged = 1;
+      end
+
+      switch k,
+      case 1,
+        Display(1).colorstate = 1 - Display(1).colorstate;
+      case 2,
+        Display(1).displaybackbone = 1 - Display(1).displaybackbone;
+      case 3,
+        Display(1).labelbases = fontsize - Display(1).labelbases;
+      case 4,
+        Display(1).superimposestate = Display(1).superimposestate + 1;
+        if Display(1).superimposestate > 2,
+          Display(1).superimposestate = 0;
+        end
+        switch Display(1).superimposestate,
+        case 0,
+          Display(1).superimpose = 0;
+          Display(1).superbackbone = 0;
+        case 1,
+          Display(1).superimpose = 1;
+          Display(1).superbackbone = 1;
+        case 2,
+          Display(1).superimpose = 1;
+          Display(1).superbackbone = 0;
+        end
+      case 5,
+        Display(1).nearbyatoms = 1 - Display(1).nearbyatoms;
+      case 6,
+        Display(1).neighborhood = zeros(1,8);
+      case 7,
+        Display(1).neighborhood(1) = 1;
+      case 8,
+        Display(1).neighborhood(2) = 1;
+        Display(1).neighborhood(3) = 0;
+        Display(1).neighborhood(4) = 0;
+      case 9,
+        Display(1).neighborhood(2) = 0;
+        Display(1).neighborhood(3) = 1;
+        Display(1).neighborhood(4) = 0;
+      case 10,
+        Display(1).neighborhood(2) = 0;
+        Display(1).neighborhood(3) = 0;
+        Display(1).neighborhood(4) = 1;
+      case 11,
+        Display(1).neighborhood(5) = 1;
+      case 12,
+        Display(1).neighborhood(6) = 1;
+      case 13,
+        Display(1).neighborhood(7) = 1;
+      case 14,
+        Display(1).neighborhood(8) = 8;
+      case 15,
+        Display(1).neighborhood(8) = 12;
+      case 16,
+        Display(1).neighborhood(8) = 16;
+      end
+    end
+% end
+end
