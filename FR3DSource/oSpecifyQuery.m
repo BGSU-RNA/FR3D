@@ -253,6 +253,27 @@
   oFR3DSearch
   return
 
+% Two helices making a long-range interaction
+  clear Query              % remove any previous Query parameters
+  Query.Name           = 'Two helices making a long-range interaction';
+  Query.Edges{1,2}     = 'stack';
+  Query.Edges{3,4}     = 'stack';
+  Query.Edges{5,6}     = 'stack';
+  Query.Edges{7,8}     = 'stack';
+  Query.Edges{1,4}     = 'cWW local';
+  Query.Edges{2,3}     = 'cWW local';
+  Query.Edges{5,8}     = 'cWW local';
+  Query.Edges{6,7}     = 'cWW local';
+  Query.Edges{1,8}     = 'LR';
+  Query.Diff{2,1}      = '> =1';
+  Query.Diff{4,3}      = '> =1';
+  Query.Diff{6,5}      = '> =1';
+  Query.Diff{8,7}      = '> =1';
+  Query.SearchFiles    = {'1S72'};
+  Query.SearchFiles    = {'Ribosome_list'};
+  oFR3DSearch
+  return
+
 
 
 % the searches below this line are older and might not work right
