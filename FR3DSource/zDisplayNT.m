@@ -35,6 +35,7 @@ VP.Animate   = 0;
 VP.AnimationFilename = '';
 VP.ShowBeta  = 0;                % show beta factor for each atom
 VP.LabelAtoms = 0;
+VP.BackboneTrace = 0;
 
 if nargin == 1,
   ViewParam = VP;
@@ -147,6 +148,10 @@ if isfield(ViewParam,'NucleotideBrightness'),
   VP.NucleotideBrightness = ViewParam.NucleotideBrightness;
 end
 
+if isfield(ViewParam,'BackboneTrace'),
+  VP.BackboneTrace = ViewParam.BackboneTrace;
+end
+
 % if File is a text string (filename), load the file and display
 
 if strcmp(class(File),'char'),
@@ -200,6 +205,12 @@ for j=1:length(Indices),                 % Loop through all nucleotides
   end
 
   zPlotOneNTRotated(File.NT(k),VP,R,S);
+
+  if VP.BackboneTrace > 0 && j < length(Indices) && any(k+1 == Indices) && File.Covalent(k,k+1) > 0,
+    p1 = (File.NT(k).Sugar(10,:) - S) * R;
+    p2 = (File.NT(k+1).Sugar(10,:) - S) * R;
+    plot3([p1(1) p2(1)], [p1(2) p2(2)], [p1(3) p2(3)],'linewidth',5);
+  end
 end
 
 Title = strcat(File.NT(Indices(1)).Base,File.NT(Indices(1)).Number);

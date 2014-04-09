@@ -979,6 +979,8 @@ function PlotMotif(File,Search,Query,Display,i)
     VP.LineThicknesses(1:N) = 5;
   end
 
+  VP.BackboneTrace = Display(1).backbonetrace;
+
   zDisplayNT(File(f),Indices,VP);
 
   if Display(1).nearbyatoms > 0 && isfield(File(f),'AA'),
@@ -1094,12 +1096,14 @@ if ~isfield(Display,'colorstate'), % set default values
   Display(1).nearbyatoms      = 0;     % default is to not show waters, amino acids
   Display(1).showbeta         = 0;     % default is to not show beta factors
   Display(1).backbonesuper    = 1;     % superimposing and sugars/backbones
-  Display(1).SimilarityToggle = 1;  % 1 means eliminate duplicates; 0 not
+  Display(1).SimilarityToggle = 1;     % 1 means eliminate duplicates; 0 not
   Display(1).SimilarityUnique = 1;
   Display(1).Centrality       = 0;     % user has not just clicked sort by centrality
+  Display(1).backbonetrace    = 0;     % don't draw a separate backbone trace
   if isfield(Search,'oExploreNT'),
     Display(1).colorstate = 1;
     Display(1).neighborhood = [1 0 0 1 1 0 0 12];
+    Display(1).backbonetrace = 1;        % don't draw a separate backbone trace
   end
 else
 
@@ -1161,6 +1165,7 @@ else
               'Neighborhood: 8A', ...                            % 14, 8 in position 8
               'Neighborhood: 12A', ...                           % 15, 12 in position 8
               'Neighborhood: 16A', ...                           % 16, 16 in position 8
+              'Backbone trace', ...                              % 17 trace the backbone
               };
 
     MenuTitle = 'Display options';
@@ -1229,6 +1234,8 @@ else
         Display(1).neighborhood(8) = 12;
       case 16,
         Display(1).neighborhood(8) = 16;
+      case 17,
+        Display(1).backbonetrace = 1 - Display(1).backbonetrace;
       end
     end
 % end
