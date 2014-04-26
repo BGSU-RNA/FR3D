@@ -36,6 +36,7 @@ VP.AnimationFilename = '';
 VP.ShowBeta  = 0;                % show beta factor for each atom
 VP.LabelAtoms = 0;
 VP.BackboneTrace = 0;
+VP.ConnectSugar = 1;
 
 if nargin == 1,
   ViewParam = VP;
@@ -150,6 +151,10 @@ end
 
 if isfield(ViewParam,'BackboneTrace'),
   VP.BackboneTrace = ViewParam.BackboneTrace;
+end
+
+if isfield(ViewParam,'ConnectSugar'),
+  VP.ConnectSugar = ViewParam.ConnectSugar;
 end
 
 % if File is a text string (filename), load the file and display

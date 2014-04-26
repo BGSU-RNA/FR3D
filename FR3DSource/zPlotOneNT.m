@@ -16,6 +16,12 @@ else
   Sugar = 0;
 end
 
+if isfield(ViewParam,'ConnectSugar'),
+  CS = ViewParam.ConnectSugar;
+else
+  CS = 0;
+end
+
 if isfield(ViewParam,'LineStyle'),
   LS = ViewParam.LineStyle;
 else
@@ -240,7 +246,7 @@ if Sugar == 1,
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
 
   % connect backbone, if distance is small enough
-  if norm(Z(13,1)-Z(10,1)) < 6,       % O3' from previous nucleotide is known
+  if norm(Z(13,1)-Z(10,1)) < 4 && CS > 0,       % O3' from previous nucleotide is known
     k = [10 13];
     plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   end  

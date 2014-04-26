@@ -9,6 +9,14 @@ function [File] = zFindBasepairExemplars(NRSetID,File)
 
 tic
 
+if ~(exist([pwd filesep 'FR3DSource']) == 7),        % if directory doesn't yet exist
+  mkdir([pwd filesep 'FR3DSource']);
+end
+
+if ~(exist([pwd filesep 'Exemplars']) == 7),        % if directory doesn't yet exist
+  mkdir([pwd filesep 'Exemplars']);
+end
+
 if nargin < 1 || length(NRSetID) == 0,
   NRSetID = 'http://rna.bgsu.edu/rna3dhub/nrlist/download/current/4.0A/csv';
 end
@@ -513,29 +521,29 @@ clf
 clear FN
 
 % -------- Create isostericity tables without subcategories
-[T,U,FN] = zExemplarTable(1,0,0,2);
+[T{1},U,FN] = zExemplarTable(1,0,0,2);
 AllFN = [FN];
-[T,U,FN] = zExemplarTable(2,0,0,2);
+[T{2},U,FN] = zExemplarTable(2,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(3,0,0,2);
+[T{3},U,FN] = zExemplarTable(3,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(4,0,0,2);
+[T{4},U,FN] = zExemplarTable(4,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(5,0,0,2);
+[T{5},U,FN] = zExemplarTable(5,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(6,0,0,2);
+[T{6},U,FN] = zExemplarTable(6,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(7,0,0,2);
+[T{7},U,FN] = zExemplarTable(7,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(8,0,0,2);
+[T{8},U,FN] = zExemplarTable(8,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(9,0,0,2);
+[T{9},U,FN] = zExemplarTable(9,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(10,0,0,2);
+[T{10},U,FN] = zExemplarTable(10,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(11,0,0,2);
+[T{11},U,FN] = zExemplarTable(11,0,0,2);
 AllFN = [AllFN FN];
-[T,U,FN] = zExemplarTable(12,0,0,2);
+[T{12},U,FN] = zExemplarTable(12,0,0,2);
 AllFN = [AllFN FN];
 
 % append_pdfs(['Isostericity' filesep 'All_basepairs.pdf'],AllFN{:});  % Make a nice PDF file that Craig likes; also uncomment squeeze_axes in zExemplarTable
@@ -543,6 +551,8 @@ AllFN = [AllFN FN];
 zExemplarTable(13,0,0,1);
 zExemplarTable(14,0,0,1);
 zExemplarTable(15,0,0,1);
+
+zExemplarFrequencyTables(T)
 
 toc
 
