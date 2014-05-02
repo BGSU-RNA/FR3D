@@ -206,7 +206,11 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
         fprintf('Saving search, including all neighboring nucleotides (which takes time)\n')
         zFlushOutput
         Search = xAddFiletoSearch(File(SIndex),Search);
+        tic
         save(['SearchSaveFiles' filesep Search.SaveName '.mat'], 'Search');  % append .mat because Octave does not automatically do that
+        fprintf('Saving data file');
+        toc
+        zFlushOutput
         Search = xDisplayCandidates(File(SIndex),Search);
       end
     end

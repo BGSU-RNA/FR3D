@@ -97,7 +97,6 @@
   Query.Diff{3,2}    = '> =1';
   Query.Diff{5,4}    = '> =1';
   Query.SearchFiles  = {'Ribosome_list'};
-  Query.SaveFile     = 0;                      % don't save the results of the search
   oFR3DSearch
   return
 

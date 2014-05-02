@@ -31,7 +31,7 @@ for j=1:length(Indices),
 end
 if isfield(File,'Info'),
   if isfield(File.Info,'Resolution'),
-    fprintf('Resolution %6.1f', File.Info.Resolution);
+    fprintf(' Resolution %6.1f', File.Info.Resolution);
   end
 end
 fprintf('\n');

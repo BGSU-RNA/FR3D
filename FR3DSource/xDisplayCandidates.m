@@ -246,9 +246,7 @@ if Query.Geometric == 0 || ~isfield(Query,'WeightedCenteredCenters'),
   Query.Filename = 'Central candidate';
 end
 
-if isfield(Query,'WeightedCenteredCenters'),
-  Query.WeightedCenteredCenters = Query.WeightedCenteredCenters * Query.NT(1).Rot;  % standard orientation for all candidates, allows better rotation in Matlab
-end
+Display(1).rotation  = Query.NT(1).Rot;
 
 % ------------------------------------------- Parameters to display candidates
 
@@ -261,9 +259,8 @@ nn       = 1;                              % current candidate
 PlotMotif(File,Search,Query,Display,i);    % graph in display window i
 if Octave == 0,
   rotate3d on
-else
-	axis off
 end
+axis off
 DisplayTable(File,Search,Query,Display,i)
 drawnow
 
@@ -406,8 +403,8 @@ while stop == 0,
          'List to screen','Write to PDB', ...                 % 10,11
          'Sort by centrality', 'Order by Similarity', ...     % 12,13
          'Show Alignment', ...                                % 14
-         'Show Scatterplot', 'Navigate with Figure 99', ...      % 15, 16
-         QuitButton};                                         % 17
+         'Show Scatterplot', 'Navigate with Figure 99', ...   % 15, 16
+         'Rotate 20 degrees',QuitButton};                     % 17,18
 
   if Octave > 0,
     k = oMenu(MenuTitle,Buttons);
@@ -710,7 +707,7 @@ while stop == 0,
       end
 
     case 14                                     % align
-      Text = xAlignCandidates(File(FIndex),Search,1);
+      Text = xAlignCandidates(File(FIndex),Search,1,p);
 %      Text = xFASTACandidates(File(FIndex),Search,1);
       for t = 1:length(Text),
         fprintf('%s\n', Text{t});
@@ -754,7 +751,11 @@ while stop == 0,
         Display(i).n = p(newn);
       end
 
-    case 17                                     % quit Display
+    case 17
+      deg = -20*pi/180;
+      Display(1).rotation = Display(1).rotation * [cos(deg) 0 sin(deg); 0 1 0; (-sin(deg)) 0 cos(deg)]; 
+
+    case 18                                     % quit Display
       if exist('fidOUT','var')
         fclose(fidOUT);
       end
@@ -767,11 +768,9 @@ while stop == 0,
     Display(1).SimilarityToggle = 1;
   end
 
-  if any([1 2 3 7 16] == k),
+  if any([1 2 3 7 16 17] == k),
       PlotMotif(File(FIndex),Search,Query,Display,i);
-      if Octave == 1,
-      	axis off
-      end
+     	axis off
   end
 
   if (Display(i).n ~= nn) || (k == 4) || (k == 5 && NeighborhoodChanged) || (L == 1 && k <= 2),
@@ -828,7 +827,7 @@ function PlotMotif(File,Search,Query,Display,i)
       R = Query.NT(1).Rot;
       S = mean(cat(1,Query.NT.Center));
     end
-    MVP.Rotation      = R;
+    MVP.Rotation      = R * Display(1).rotation;
     MVP.Shift         = S;
     MVP.LineStyle     = '-.';
     MVP.LineThickness = 1;
@@ -876,13 +875,15 @@ function PlotMotif(File,Search,Query,Display,i)
     S = File(f).NT(Indices(1)).Center;
   end
 
-  VP.Rotation = R;
+  VP.Rotation = R * Display(1).rotation;
   VP.Shift    = S;
   VP.Grid     = 0;
 
   if exist('amal.txt','file') > 0 && N == 3,
      VP.AtOrigin = 2;
   end
+
+  OrigIndices = Indices;
 
   if max(Display(1).neighborhood) > 0,
     NeighIndices = xNeighborhood(File(f),Indices,Display(1).neighborhood,Display(1).strandnumber);
@@ -980,22 +981,41 @@ function PlotMotif(File,Search,Query,Display,i)
   end
 
   VP.BackboneTrace = Display(1).backbonetrace;
+  VP.AABackboneTrace = Display(1).aabackbonetrace;
 
   zDisplayNT(File(f),Indices,VP);
 
-  if Display(1).nearbyatoms > 0 && isfield(File(f),'AA'),
-    c = cat(1,File(f).NT(Indices).Center);      % nucleotide centers
-    a = cat(1,File(f).AA.Center);               % amino acid centers
-    D = zDistance(c,a);
-    [i,j,k] = find(D);                          % 
-    w = find(k < 8);                            % within 8 Angstroms
-    u = unique(j(w));                           % indices of amino acids
-    for uu = 1:length(u),
-    	try
-	      zDisplayAA(File(f),u(uu),VP);
-	    end
+%  xlabel([File(f).Filename ' ' File(f).Info.Descriptor]);
+  fprintf([File(f).Filename ' ' File(f).Info.Descriptor '\n']);
+
+  if Display(1).nearbyatoms > 0,
+    if isfield(File(f),'AA') && length(File(f).AA) > 0,
+      c = cat(1,File(f).NT(OrigIndices).Center);      % nucleotide centers
+      clear a
+      for b = 1:length(File(f).AA),
+        if ~isempty(File(f).AA(b).Loc),
+          a(b,:) = File(f).AA(b).Center;               % amino acid centers
+        else
+          a(b,:) = [Inf Inf Inf];
+        end
+      end
+
+      D = zDistance(c,a);
+      [i,j,k] = find(D);                          % 
+      w = find(k <= Display(1).neighborhood(8));                            % within 8 Angstroms
+
+  %  	try
+      if ~isempty(w),
+        zDisplayAA(File(f),unique(j(w)),VP);
+      end
+  %   end
+    else
+      fprintf('No amino acids in structure %s\n',File(f).Filename);
     end
   end
+
+
+
 
   set(gcf,'Name',strrep(Title,'\_','_'));
 
@@ -1092,6 +1112,8 @@ if ~isfield(Display,'colorstate'), % set default values
   Display(1).labelbases       = 10;    % show nucleotide numbers
   Display(1).az               = -37.5; % standard view
   Display(1).el               = 30;
+  Display(1).az               = 0; % standard view
+  Display(1).el               = 0;
   Display(1).toggle           = 1;     % default view, see below
   Display(1).nearbyatoms      = 0;     % default is to not show waters, amino acids
   Display(1).showbeta         = 0;     % default is to not show beta factors
@@ -1100,6 +1122,7 @@ if ~isfield(Display,'colorstate'), % set default values
   Display(1).SimilarityUnique = 1;
   Display(1).Centrality       = 0;     % user has not just clicked sort by centrality
   Display(1).backbonetrace    = 0;     % don't draw a separate backbone trace
+  Display(1).aabackbonetrace  = 0;     % don't draw a separate backbone trace
   if isfield(Search,'oExploreNT'),
     Display(1).colorstate = 1;
     Display(1).neighborhood = [1 0 0 1 1 0 0 12];
@@ -1143,9 +1166,9 @@ else
 
     switch Display(1).nearbyatoms,
     case 0,
-      NextNearbyAtomState = 'Show nearby atoms';
+      NextNearbyAtomState = 'Show amino acids';
     case 1,
-      NextNearbyAtomState = 'Do not show nearby atoms';
+      NextNearbyAtomState = 'Do not show amino acids';
     end
 
     Buttons = {... 
@@ -1236,6 +1259,7 @@ else
         Display(1).neighborhood(8) = 16;
       case 17,
         Display(1).backbonetrace = 1 - Display(1).backbonetrace;
+        Display(1).aabackbonetrace = 1 - Display(1).aabackbonetrace;
       end
     end
 % end

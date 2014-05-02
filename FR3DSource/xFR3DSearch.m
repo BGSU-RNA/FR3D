@@ -219,7 +219,11 @@ if ~isempty(Candidates),                         % some candidate(s) found
     end
 
     Search = xAddFiletoSearch(File(SIndex),Search);  % moved here 2010-12-08 CLZ
+    tic
     save(['SearchSaveFiles' filesep Search.SaveName], 'Search');
+    fprintf('Saving data file');
+    toc
+    zFlushOutput
   end
 
 % ------------------------------------------------ Display results

@@ -155,9 +155,11 @@ for f=1:length(Filenames),
     end
   end
 
-  if ~isfield(File,'Info'),
-    File = zGetPDBInfo(File);          % get resolution and other info
-    SaveCode = 1;
+  if ~isfield(File,'Info') || ~isfield(File.Info,'ExpTechnique') || isempty(File.Info.ExpTechnique),
+    try
+      File = zGetPDBInfo(File);          % get resolution and other info
+      SaveCode = 1;
+    end
   end
 
   if ~isfield(File,'AA'),
@@ -322,7 +324,6 @@ for f=1:length(Filenames),
   Saved = 0;
 
   if (ReadCode > 0) || (ClassifyCode > 0) || (SaveCode > 0),
-    File = zGetPDBInfo(File);          % look for file information
     zSaveNTData(File,Verbose);
     Saved = 1;
   end
