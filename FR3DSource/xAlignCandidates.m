@@ -7,7 +7,7 @@
 % Direction can be +1 or -1; it tells the order in which to put the
 % nucleotides in the first candidate
 
-function [Text] = xAlignCandidates(File,Search,Direction,Param)
+function [Text] = xAlignCandidates(File,Search,Direction,perm)
 
 if nargin < 3,
   Direction = 1;
@@ -18,6 +18,10 @@ Candidates = Search.Candidates;
 N          = Query.NumNT;
 
 [L,t] = size(Candidates);
+
+if nargin < 4,
+  perm = 1:L;
+end
 
 [y,p] = sort(Direction*double(Candidates(1,1:N)));    
                                     % put nucleotides in inc/decreasing order
@@ -76,7 +80,8 @@ for j = 1:N,
   InsLength{j}.Count = [];
 end
 
-for c = 1:L,                                      % loop through candidates
+for ww = 1:L,                                      % loop through candidates
+  c = perm(ww);
   f = F(c);                                       % file number
   t = t + 1;
   Text{t} = [sprintf('%15s', File(f).Filename)];
@@ -150,12 +155,11 @@ for t = 1:length(Text),
   end
 end
 
-% --------------------------------------------- calculate statistics
-
 
 return
 
 
+% --------------------------------------------- calculate statistics
 
 Letters = {'A', 'C', 'G', 'U'};
 
