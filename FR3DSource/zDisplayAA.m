@@ -1,11 +1,11 @@
-% zDisplayAA(File,AAList,ViewParam) is a general-purpose nucleotide plotting program.  It can be called in several ways, for example,
+% zDisplayAA(File,AAList,ViewParam) plots amino acids.  It can be called in several ways, for example,
 % zDisplayAA('1s72',{'27','28','29'},ViewParam), and it will load the
-% named datafile and plot the nucleotides by nucleotide number.  Or, if
+% named datafile and plot the amino acids by amino acid number.  Or, if
 % data files have already been loaded, one can use zDisplayAA(File(1),[32
-% 34 35],ViewParam) to plot the nucleotides in File(1) having indices 32,
+% 34 35],ViewParam) to plot the amino acids in File(1) having indices 32,
 % 34, and 35.  Defaults for ViewParam are defined in zDisplayAA; see there
 % for the fields of ViewParam.
-% One can also use ranges of nucleotide numbers, as in
+% One can also use ranges of amino acid numbers, as in
 % zDisplayAA('rr0033_23S',{'2548:2555','2557','2559:2566'},VP);
 
 function [void] = zDisplayAA(File,AAList,ViewParam)
@@ -17,9 +17,9 @@ VP.LabelSugar= 0;
 VP.az        = 51;
 VP.el        = 14;
 VP.LineStyle = '-';              % default - thick solid lines
-VP.LineThickness = '2';          
+VP.LineThickness = 2;          
 VP.AtOrigin  = 0;                % rotate all so first is at origin
-VP.Title     = 1;                % title with nucleotide numbers, filename
+VP.AATitle     = 0;                % title with amino acid numbers, filename
 VP.Grid      = 1;                % add a grid to the graph
 VP.FontSize  = 10;               % will use Matlab's default unless overridden
 VP.Rotation  = eye(3);
@@ -30,6 +30,7 @@ VP.WritePDB      = 0;
 VP.Animate   = 0;
 VP.AnimationFilename = '';
 VP.ShowBeta  = 0;                % show beta factor for each atom
+VP.AABackboneTrace = 0;
 
 if nargin == 1,
   ViewParam = VP;
@@ -73,8 +74,8 @@ if isfield(ViewParam,'AtOrigin'),
   VP.AtOrigin = ViewParam.AtOrigin;
 end
 
-if isfield(ViewParam,'Title'),
-  VP.Title = ViewParam.Title;
+if isfield(ViewParam,'AATitle'),
+  VP.AATitle = ViewParam.AATitle;
 end
 
 if isfield(ViewParam,'Grid'),
@@ -122,6 +123,10 @@ if isfield(ViewParam,'ShowBeta'),
   VP.ShowBeta = ViewParam.ShowBeta;
 end
 
+if isfield(ViewParam,'AABackboneTrace'),
+  VP.AABackboneTrace = ViewParam.AABackboneTrace;
+end
+
 % if File is a text string (filename), load the file and display
 
 if strcmp(class(File),'char'),
@@ -145,7 +150,7 @@ else
   Indices = AAList;
 end
 
-% plot the nucleotides, at the origin or in original positions
+% plot the amino acids, at the origin or in original positions
 
 %set(gcf,'Renderer','OpenGL');
 
@@ -158,9 +163,32 @@ else
   S = VP.Shift;
 end
 
-for j=1:length(Indices),                 % Loop through all nucleotides
-  k = Indices(j);                        % index of current nucleotide
-  zPlotOneAARotated(File.AA(k),VP,R,S);
+for j=1:length(Indices),                 % Loop through all amino acids
+  k = Indices(j);                        % index of current amino acid
+  if ~isempty(File.AA(k).Loc),
+    zPlotOneAARotated(File.AA(k),VP,R,S);  % connect amino acids
+
+    tcol = [ 205   41    144]/205;             % default
+    tcol = [1 1 0.5];
+
+    if VP.AABackboneTrace > 0 && any(k+1 == Indices) && ~isempty(File.AA(k+1).Loc),
+      p1 = (File.AA(k).Loc(1,:) - S) * R;
+      p2 = (File.AA(k+1).Loc(1,:) - S) * R;
+      if norm(p1-p2) < 8,
+        plot3([p1(1) p2(1)], [p1(2) p2(2)], [p1(3) p2(3)],'color',tcol,'linewidth',5);
+      end
+    end
+
+    col = [ 205   41    144]/255;             % default
+
+    if any(k+1 == Indices) && ~isempty(File.AA(k+1).Loc),  % connect protein backbone
+      p1 = (File.AA(k).Loc(4,:) - S) * R;
+      p2 = (File.AA(k+1).Loc(1,:) - S) * R;
+      if norm(p1-p2) < 3,
+        plot3([p1(1) p2(1)], [p1(2) p2(2)], [p1(3) p2(3)],'color',col,'linewidth',2);
+      end
+    end
+  end
 end
 
 Title = strcat(File.AA(Indices(1)).Unit,File.AA(Indices(1)).Number);
@@ -177,7 +205,7 @@ end
 
 Title = strcat(Title,[' ' strrep(FN,'_','\_')]);
 
-if VP.Title > 0,
+if VP.AATitle > 0,
   title(Title);
 end
 axis equal
@@ -205,9 +233,9 @@ if VP.WritePDB == 1,
   a = 1;
   fid = fopen('PDBFile.pdb','w');
 
-  for j=1:length(Indices),                 % Loop through all nucleotides
-    k = Indices(j);                        % index of current nucleotide
-    a = zWriteNucleotidePDB(fid,File.AA(k),a,0,R,S);
+  for j=1:length(Indices),                 % Loop through all amino acids
+    k = Indices(j);                        % index of current amino acid
+%    a = zWriteAAPDB(fid,File.AA(k),a,0,R,S);  % not written yet!
   end
 
   fclose(fid);
@@ -251,8 +279,8 @@ if VP.Animate == 1,
 
     R = R * Spin;
     clf
-    for j=1:length(Indices),                 % Loop through all nucleotides
-      k = Indices(j);                        % index of current nucleotide
+    for j=1:length(Indices),                 % Loop through all amino acids
+      k = Indices(j);                        % index of current amino acid
       if isfield(VP,'Colors'),
         VP.Color = VP.Colors(k,:);
       end

@@ -192,7 +192,7 @@ case 5,
     plot3([X(i(k),1) X(j(k),1)],[X(i(k),2) X(j(k),2)],[X(i(k),3) X(j(k),3)],'Color',col,'LineWidth',LT,'LineStyle',LS);
   end
 
-  k = setdiff(1:length(X(:,1)),[i; j]);        % omitted nucleotides
+  k = setdiff(1:length(X(:,1)),[i; j]);        % omitted atoms
   for kk = 1:length(k),
     i = k(kk);                                % disconnected atom
     [y,j] = sort(D(i,:));                     % j(2) is nearest atom

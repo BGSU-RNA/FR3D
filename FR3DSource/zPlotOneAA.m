@@ -36,20 +36,17 @@ col = [255 65 150]/255;
 col = [	205  	41  	144]/255;             % default
 
 if strcmp(AA.Unit,'LYS'),
-  col = [255 65 150]/255;
+%  col = [255 65 150]/255;
 end  
-
-
-
 
 if isfield(ViewParam,'Color'),
   if length(ViewParam.Color) == 3,
-    col = ViewParam.Color;
+%    col = ViewParam.Color;
   end
 end
 
 if strcmp(LS,'-.'),
-  col = 0.7*col;
+%  col = 0.7*col;
   gray = 0.7*gray;
   LS = '-';
 end
@@ -60,7 +57,18 @@ hold on
 
 X  = AA.Loc;
 
-plot3(X(:,1),X(:,2),X(:,3),'Color',col,'LineWidth',2,'LineStyle',LS);
+D = zDistance(X,X);               % distances
+[i,j] = find((triu(D) <= 1.7) .* (triu(D) > 0));
+for k = 1:length(i),
+  plot3([X(i(k),1) X(j(k),1)],[X(i(k),2) X(j(k),2)],[X(i(k),3) X(j(k),3)],'Color',col,'LineWidth',LT,'LineStyle',LS);
+end
+
+k = setdiff(1:length(X(:,1)),[i; j]);        % omitted atoms
+for kk = 1:length(k),
+  i = k(kk);                                % disconnected atom
+  [y,j] = sort(D(i,:));                     % j(2) is nearest atom
+  plot3([X(i,1) X(j(2),1)],[X(i,2) X(j(2),2)],[X(i,3) X(j(2),3)],'Color',col,'LineWidth',LT,'LineStyle',LS);
+end
 
 if LB > 0,
   text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,[AA.Unit AA.Number],'fontweight','bold','FontSize',LB);
