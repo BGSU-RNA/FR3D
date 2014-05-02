@@ -102,6 +102,7 @@ for t = 1:12,
 		end
 	end
 end
+fclose(fid);
 
 fid = fopen(['Exemplars' filesep 'Exemplars_12x10_table.txt'],'w');
 fprintf(fid,'\t');

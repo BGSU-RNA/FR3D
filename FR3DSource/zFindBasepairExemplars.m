@@ -120,7 +120,7 @@ for f = 1:length(File),
   if ~isempty(File(f).Info.Resolution),
     Res(f) = File(f).Info.Resolution;
   else
-    Res(f) = 10;
+    Res(f) = 4;                                % unknown, but we use a 4A list, so it should not be worse than 4A
   end
 
   S(f) = length(File(f).NT);                   % size of each file
