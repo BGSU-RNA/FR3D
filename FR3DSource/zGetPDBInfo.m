@@ -1,16 +1,32 @@
-% zGetPDBInfo(File) reads a data file about PDB files and extracts
-% information about the current molecule stored in File
+% zGetPDBInfo(File) attempts to retrieve information from PDB if it is not already present
 
-% It uses PDBInfo.mat, which needs to be updated whenver new PDB data is
-% downloaded from NDB/PDB
+function [File] = zGetPDBInfo(File)
 
-function [File] = zGetPDBInfo(File,n,t)
+t = urlread(['http://www.pdb.org/pdb/rest/customReport.xml?pdbids=' File.Filename '&customReportColumns=resolution,experimentalTechnique,structureTitle,releaseDate']);
 
-if nargin < 2,
-  load(['FR3DSource' filesep 'PDBInfo.mat'],'n','t','-mat');
-end
+i = strfind(t,'<dimStructure.resolution>');
+j = strfind(t,'</dimStructure.resolution>')-1;
+r = strrep(t(i:j),'<dimStructure.resolution>','');
+File.Info.Resolution = str2num(r);
 
-PDBNames = lower(t(:,1));              % convert PDB filenames to lowercase
+i = strfind(t,'<dimStructure.experimentalTechnique>');
+j = strfind(t,'</dimStructure.experimentalTechnique>')-1;
+r = strrep(t(i:j),'<dimStructure.experimentalTechnique>','');
+File.Info.ExpTechnique = r;
+
+i = strfind(t,'<dimStructure.structureTitle>');
+j = strfind(t,'</dimStructure.structureTitle>')-1;
+r = strrep(t(i:j),'<dimStructure.structureTitle>','');
+File.Info.Descriptor = r;
+
+i = strfind(t,'<dimStructure.releaseDate>');
+j = strfind(t,'</dimStructure.releaseDate>')-1;
+r = strrep(t(i:j),'<dimStructure.releaseDate>','');
+File.Info.ReleaseDate = r;
+
+File.Info
+
+return
 
 % i = strmatch(lower(File.Filename),PDBNames);
 
