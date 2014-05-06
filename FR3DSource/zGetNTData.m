@@ -64,31 +64,31 @@ for f=1:length(Filenames),
       load(strcat(Filename,'.mat'),'File','-mat');
       if Verbose > 0,
         fprintf('Loaded  %s\n', [Filename '.mat']);
-        zFlushOutput
+        zFlushOutput;
       end
     elseif (exist(strcat(FILENAME,'.MAT'),'file') > 0),  % helps on a Mac
       load(strcat(FILENAME,'.MAT'),'File','-mat');
       if Verbose > 0,
         fprintf('Loaded  %s\n', [FILENAME '.MAT']);
-        zFlushOutput
+        zFlushOutput;
       end
     elseif (exist(strcat(FILENAME,'.mat'),'file') > 0),  % helps on a Mac
       load(strcat(FILENAME,'.mat'),'File','-mat');
       if Verbose > 0,
         fprintf('Loaded  %s\n', [FILENAME '.mat']);
-        zFlushOutput
+        zFlushOutput;
       end
     elseif (exist(strcat(filename,'.MAT'),'file') > 0),  % helps on a Mac
       load(strcat(filename,'.MAT'),'File','-mat');
       if Verbose > 0,
         fprintf('Loaded  %s\n', [FILENAME '.mat']);
-        zFlushOutput
+        zFlushOutput;
       end
     elseif (exist(strcat(filename,'.mat'),'file') > 0),  % helps on a Mac
       load(strcat(filename,'.mat'),'File','-mat');
       if Verbose > 0,
         fprintf('Loaded  %s\n', [filename '.MAT']);
-        zFlushOutput
+        zFlushOutput;
       end
     else
       ReadFull = 1;
@@ -234,7 +234,7 @@ for f=1:length(Filenames),
 
          if Verbose > 0,
            fprintf('\nClassification took %4.2f minutes\n', (cputime-t)/60);
-           zFlushOutput
+           zFlushOutput;
          end
         end
       end
@@ -301,7 +301,7 @@ for f=1:length(Filenames),
     if (r < 0.4),                                 % very few basepairs found
       if Verbose > 0,
         fprintf('Few basepairs found (%7.4f basepairs per nucleotide), reading the biological unit coordinates\n',r);
-        zFlushOutput
+        zFlushOutput;
       end
       File1 = zGetNTData([PDBFilename '1'],4,1);   % read biological unit coords
       if length(File1.NT) > 0,
@@ -310,7 +310,7 @@ for f=1:length(Filenames),
         r1 = bp / length(File1.NT);               % ratio of bp to nt
         if Verbose > 0,
           fprintf('Biological unit coordinates have %7.4f basepairs per nucleotide\n',r1);
-          zFlushOutput
+          zFlushOutput;
         end
         if r1 > r,                              % pdb1 has higher basepair ratio
           File = File1;                         % use biological unit coords

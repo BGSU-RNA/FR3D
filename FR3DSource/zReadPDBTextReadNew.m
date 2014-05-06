@@ -14,10 +14,10 @@ if exist(Filename),
     T = [];
     fid = fopen(Filename,'r');             % make all lines 80 characters
     if fid > 0
-      L = 1;
-      while L > -1
+      L = '';
+      while ischar(L),
         L = fgets(fid);
-        if L > -1
+        if ischar(L),
           a = length(L);
           if a < 80,
             L = [L ' '*ones(1,80-a)];

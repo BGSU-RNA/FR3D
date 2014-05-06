@@ -24,8 +24,6 @@ j = strfind(t,'</dimStructure.releaseDate>')-1;
 r = strrep(t(i:j),'<dimStructure.releaseDate>','');
 File.Info.ReleaseDate = r;
 
-File.Info
-
 return
 
 % i = strmatch(lower(File.Filename),PDBNames);
