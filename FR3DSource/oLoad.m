@@ -1,5 +1,7 @@
 % oLoad is a simple script which lists the saved searches in the SearchSaveFiles folder and prompts the user to load one.  This avoids the user having to copy and paste long filenames
 
+more off                                   % turn off paging
+
 d = dir([pwd filesep 'SearchSaveFiles']);
 
 keep = ones(1,length(d));

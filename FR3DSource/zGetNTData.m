@@ -21,6 +21,10 @@ if nargin < 3,
   Verbose = 0;
 end
 
+if exist('OCTAVE_VERSION', 'builtin') == 5,
+  warning('off');
+end
+
 % path(path,pwd);
 
 if strcmp(class(Filenames),'char'),

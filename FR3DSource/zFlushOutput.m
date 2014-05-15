@@ -2,7 +2,7 @@
 
 function [void] = zFlushOutput
 
-  if exist('OCTAVE_VERSION') ~= 0,
+  if exist('OCTAVE_VERSION', 'builtin') == 5,
     fflush(stdout);
   else
   	drawnow;
