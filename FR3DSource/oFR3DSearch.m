@@ -20,6 +20,8 @@
 %    .Discrepancy               % geometric discrepancy of each candidate
                                 % from the query, for geometric searches
 
+more off                                   % turn off paging
+
 if ~exist('Verbose'),
   Verbose = 1;                               % default is to print output
 end
