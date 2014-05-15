@@ -113,11 +113,17 @@ zFlushOutput
       if isfield(File(f),'AA') && length(File(f).AA) > 0,
         c = cat(1,File(f).NT(AllOrigIndices{f}).Center);      % nucleotide centers
         a = cat(1,File(f).AA.Center);               % amino acid centers
-        D = zDistance(c,a);                         % NT-AA distances
-        [i,j,k] = find(D);                          % 
-        w = find(k < 16);                           % within 16 Angstroms
-        u = unique(j(w));                           % indices of amino acids
-        Search.File(f).AA(u) = File(f).AA(u);       % add these AAs
+        [ss,tt] = size(a);
+        [sss,ttt] = size(c);
+        if ss == 0 || sss == 0,
+          Search.File(f).AA = [];
+        else
+          D = zDistance(c,a);                         % NT-AA distances
+          [i,j,k] = find(D);                          % 
+          w = find(k < 16);                           % within 16 Angstroms
+          u = unique(j(w));                           % indices of amino acids
+          Search.File(f).AA(u) = File(f).AA(u);       % add these AAs
+        end
       else
         Search.File(f).AA = [];
       end

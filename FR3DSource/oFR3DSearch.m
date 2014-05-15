@@ -208,10 +208,13 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
         Search = xAddFiletoSearch(File(SIndex),Search);
         tic
         save(['SearchSaveFiles' filesep Search.SaveName '.mat'], 'Search');  % append .mat because Octave does not automatically do that
-        fprintf('Saving data file');
+        fprintf('Saving data file, ');
         toc
         zFlushOutput
         Search = xDisplayCandidates(File(SIndex),Search);
+        fprintf('Saving search\n')
+        zFlushOutput
+        save(['SearchSaveFiles' filesep Search.SaveName '.mat'], 'Search');  % save any changes like new discrepancies
       end
     end
   end

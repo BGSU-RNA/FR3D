@@ -77,7 +77,12 @@ end
 [L,N] = size(Search.Candidates);
 N = N - 1;                                   % number of nucleotides
 
-Limit = min(L,300);                          % for mutual discrep matrix
+if isfield(Search,'Limit'),
+  Limit = Search.Limit;
+else
+  Limit = min(L,300);                          % for mutual discrep matrix
+end
+
 p = 1:L;                                     % default permutation for display
 q(p) = 1:L;                                  % inverse permutation
                                % p : display position -> real candidate number
@@ -440,36 +445,40 @@ while stop == 0,
  % ------------------------------------------- Calculate distance matrix
 
  if ShowNavWindow == 1,                     % just indicated to show this
-  fprintf('Calculating discrepancies between first %d candidates\n',Limit);
-  drawnow
-  Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
+   if Limit < L,
+     fprintf('Calculating discrepancies between first %d candidates\n',Limit);
+   else
+     fprintf('Calculating discrepancies between all %d candidates\n',L);
+   end
+   drawnow
+   Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
 
-  % ------------------------------------------- Calculate IDI matrix
+   % ------------------------------------------- Calculate IDI matrix
 
-  if N == 2 && exist('xMutualIDI') == 2,              % 2-NT candidates
+   if N == 2 && exist('xMutualIDI') == 2,              % 2-NT candidates
 
-  Search = xMutualIDI(File,Search,Limit); % calculate some discrepancies
+   Search = xMutualIDI(File,Search,Limit); % calculate some discrepancies
 
-  for ii=1:L,
-    f = Search.Candidates(ii,N+1);          % file number
-    b = '';
-    for j = 1:min(4,N),
-      b = [b File(f).NT(Search.Candidates(ii,j)).Base];
-    end
-    n = File(f).NT(Search.Candidates(ii,1)).Number;
-    n = sprintf('%4s',n);
-    if Search.Query.Geometric > 0,
-        if isfield(Search,'AvgDisc'),
-          d = sprintf('%6.4f',Search.AvgDisc(ii));
-        else
-          d = sprintf('%6.4f',Search.Discrepancy(ii));
-        end
-      else
-        d = sprintf('%5d',Search.Discrepancy(ii)); % orig candidate number
-      end
-    Search.Lab{ii} = [b n ' ' File(f).Filename];
-    end
-  end
+   for ii=1:L,
+     f = Search.Candidates(ii,N+1);          % file number
+     b = '';
+     for j = 1:min(4,N),
+       b = [b File(f).NT(Search.Candidates(ii,j)).Base];
+     end
+     n = File(f).NT(Search.Candidates(ii,1)).Number;
+     n = sprintf('%4s',n);
+     if Search.Query.Geometric > 0,
+         if isfield(Search,'AvgDisc'),
+           d = sprintf('%6.4f',Search.AvgDisc(ii));
+         else
+           d = sprintf('%6.4f',Search.Discrepancy(ii));
+         end
+       else
+         d = sprintf('%5d',Search.Discrepancy(ii)); % orig candidate number
+       end
+     Search.Lab{ii} = [b n ' ' File(f).Filename];
+     end
+   end
  end
 
   % ------------------------------------------- respond to menu choice
@@ -480,6 +489,7 @@ while stop == 0,
 
       if (ShowNavWindow > 0) && (q(n) + 1 > Limit) && (Limit < L),
         Limit = min(Limit*2,L);                 % increase limit
+        Search.Limit = Limit;
         fprintf('Increased display limit to %d; calculating more discrepancies\n',Limit);
         drawnow
         Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
@@ -608,6 +618,7 @@ while stop == 0,
 
       if (Display(1).Centrality == 1) && (min(Limit*2,L) > Limit),
         Limit = min(Limit*2,L);                 % increase limit
+        Search.Limit = Limit;
         fprintf('Increased display limit to %d; calculating more discrepancies\n',Limit);
         drawnow
         Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
@@ -629,6 +640,7 @@ while stop == 0,
       if Limit > 1,
       	if Octave == 1,
       		fprintf('Ordering by similarity\n');
+          zFlushOutput;
       	end
         p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
         p((Limit+1):L) = (Limit+1):L;
@@ -655,12 +667,12 @@ while stop == 0,
         SortedCand(:,1:N) = sort(SortedCand(:,1:N),2);  % sort indices
         CandDist = zDistance(double(SortedCand));
 
-        figure(32)
-        clf
-        spy(CandDist == 0);
+%        figure(32)
+%        clf
+%        spy(CandDist == 0);
 
         fprintf('Displaying the first instance of each candidate\n');
-        drawnow
+        zFlushOutput;
 
         clear order
 
@@ -684,7 +696,7 @@ while stop == 0,
         m = length(find(order < 100000));       % number of distinct instances
 
         fprintf('Found %d distinct instances\n',m);
-				zFlushOutput
+				zFlushOutput;
 
         q = zOrderbySimilarity(Search.Disc(p(1:m),p(1:m)));
 
@@ -1090,6 +1102,7 @@ function [Search2] = SearchSubset(Search,j)
   Search2.Marked      = Search.Marked(j);
   Search2.Disc        = Search.Disc(j,j);
   Search2.DiscComputed= Search.DiscComputed(1,j);
+  Search2.Limit       = length(j);
   if isfield(Search,'Lab'),
     Search2.Lab         = Search.Lab(j);
   end
