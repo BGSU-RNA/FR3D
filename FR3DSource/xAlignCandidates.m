@@ -17,6 +17,22 @@ Query      = Search.Query;
 Candidates = Search.Candidates;
 N          = Query.NumNT;
 
+if ~isfield(Search.Query,'Flank'),
+  for a = 1:N,
+    for b = 1:N,
+      Search.Query.Flank{a,b} = [];
+    end
+  end
+end 
+
+for a = 1:N,
+  for b = 1:N,
+    if isempty(Search.Query.Flank{a,b}),
+      Search.Query.Flank{a,b} = Search.Query.Flank{b,a};
+    end
+  end
+end
+
 [L,t] = size(Candidates);
 
 if nargin < 4,
@@ -25,8 +41,10 @@ end
 
 [y,p] = sort(Direction*double(Candidates(1,1:N)));    
                                     % put nucleotides in inc/decreasing order
-Cand = double(Candidates(:,p));     % re-order nucleotides
+Cand = double(Candidates(:,p));     % re-order nucleotides in Candidates
 F    = Candidates(:,N+1);           % file numbers
+
+Flank = Search.Query.Flank(p,p);    % reorder
 
 if isfield(Query,'MaxDiffMat'),
   MaxDiff = diag(Query.MaxDiffMat(p,p),1);
@@ -53,7 +71,7 @@ t = 1;                                          % line of text we're on
 k = N;                                          % number of columns being shown
 Text{t} = sprintf('               ');
 if Query.Geometric > 0,
-  Text{t} = [Text{t} sprintf('           ')];
+  Text{t} = [Text{t} sprintf('           ')];   % space for discrepancy?
 end
 for j=1:N,
   Text{t} = [Text{t} sprintf('        ')];
@@ -61,7 +79,7 @@ end
 Text{t} = [Text{t} sprintf('    ')];
 for n = 1:(N-1),
   Text{t} = [Text{t} sprintf('%d',mod(n,10))];
-  if (MaxDiff(n) < Inf) | (maxinsert(n) < 5),   % if only few insertions
+  if (MaxDiff(n) < Inf) | (maxinsert(n) < 5) | ~isempty(Flank{n,n+1}),   % if only few insertions
     for i=1:maxinsert(n),
       Text{t} = [Text{t} sprintf(' ')];
       k = k + 1;                                % more columns being shown
@@ -105,16 +123,24 @@ for ww = 1:L,                                      % loop through candidates
     j = File(F(c)).NT(Cand(c,n)).Code;
     CorrCodeList(c,n) = j;                        % store code of corresp base
     k = k + 1;
-    if (MaxDiff(n) < Inf) | (maxinsert(n) < 5),   % if only few insertions
+    if (MaxDiff(n) < Inf) | (maxinsert(n) < 5) | ~isempty(Flank{n,n+1}),   % if only few insertions
       if Cand(c,n+1) - Cand(c,n) > 1,             % increasing order
         for i = (Cand(c,n)+1):(Cand(c,n+1)-1),
-          Text{t} = [Text{t} sprintf('%c', File(F(c)).NT(i).Base)];   % show insertions
+          if ~isempty(File(F(c)).NT(i).Base),
+            Text{t} = [Text{t} File(F(c)).NT(i).Base];   % show insertions
+          else
+            Text{t} = [Text{t} '_'];
+          end
           j = File(F(c)).NT(i).Code;
           InsCode{n}.Count(j) = InsCode{n}.Count(j) + 1;
         end
       elseif Cand(c,n+1) - Cand(c,n) < -1,        % decreasing order
         for i = (Cand(c,n)-1):-1:(Cand(c,n+1)+1),
-          Text{t} = [Text{t} sprintf('%c', File(F(c)).NT(i).Base)];   % show insertions
+          if ~isempty(File(F(c)).NT(i).Base),
+            Text{t} = [Text{t} File(F(c)).NT(i).Base];   % show insertions
+          else
+            Text{t} = [Text{t} '_'];
+          end
           j = File(F(c)).NT(i).Code;
           InsCode{n}.Count(j) = InsCode{n}.Count(j) + 1;
         end
@@ -151,7 +177,7 @@ end
 
 for t = 1:length(Text),
   while length(Text{t}) < maxl,
-    Text{t} = [' ' Text{t}];
+    Text{t} = [Text{t} ' '];
   end
 end
 
