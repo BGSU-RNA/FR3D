@@ -154,6 +154,7 @@ edgemap = {'B',' W',' H',' H',' W',' H',' H',' H',' H',' S',' W',' W',' W',' H',
 edgemap = {[1 2], 2, 3, 0, 2, 3, 3, 3, 0, 1, 2, 2, 2, 0, 2, 3, 0, 3, 2};
 edgename = 'SWH';
 % 0 is 0BPh/BR, 1 is sugar, 2 is WC, 3 is Hoogsteen
+% Note:  0BPh and 0BR are stored as 0, which is the same as no interaction
 
 BPh = zeros(N,N);
 
@@ -172,7 +173,6 @@ for a = 1:N,                                      % first NT of possible BPh
         elseif (e > 100 && e < 120),              % near interaction
           nearedge = [nearedge edgemap{e-100}];   % append edge of near interaction
         end
-
       end
 
       if length(edge) > 0,                        % at least one interaction
@@ -224,7 +224,6 @@ for a = 1:N,                                    % first NT of possible BPh
         elseif (e > 100 && e < 120),              % near interaction
           nearedge = [nearedge edgemap{e-100}];   % append near interaction
         end
-
       end
 
       if length(edge) > 0,                        % at least one interaction
