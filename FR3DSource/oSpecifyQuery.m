@@ -162,14 +162,15 @@
 % Internal loops with at least one nucleotide internal to each strand
 
   clear Query              % remove any previous Query parameters
-  Query.Name           = 'Internal loops with at least one nucleotide in 1S72';
+  Query.Name           = 'Internal loops with at least one nucleotide in 2QBG';
   Query.Edges{1,2}     = 'borderSS';
   Query.Edges{2,3}     = 'cWW';
   Query.Edges{3,4}     = 'borderSS';
   Query.Edges{1,4}     = 'cWW';
   Query.Diff{2,1}      = '>';
   Query.Diff{4,3}      = '>';
-  Query.SearchFiles    = {'1S72'};
+  Query.SearchFiles    = {'2QBG'};
+  Query.SearchFiles    = {'nrlist_current_4.0A_list'};
   oFR3DSearch
   return
 

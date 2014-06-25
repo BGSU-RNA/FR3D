@@ -300,6 +300,17 @@ if isfield(Query,'Edges'),
       end
     end
   end
+
+  Query.BorderSSActive = 0;
+  [s,t] = size(Query.Flank);
+  for a = 1:s,
+    for b = 1:t,
+      if ~isempty(Query.Flank),
+        Query.BorderSSActive = 1;
+        Query.Diameter = Inf;
+      end
+    end
+  end
 end
 
 % --------- precompute parameters for geometric screening and ranking

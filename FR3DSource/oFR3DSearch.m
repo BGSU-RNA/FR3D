@@ -99,11 +99,11 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
       dmin = ceil(max(max(File(i).Distance)));
     end
 
-    if (ceil(Query.DistCutoff) > dmin) && (File(i).NumNT > 0),
-      c = cat(1,File(i).NT(1:File(i).NumNT).Center);
-      File(i).Distance = zMutualDistance(c,Query.DistCutoff); 
-               % sparse matrix of center-center distances, up to Query.DistCutoff
+
+    if ((ceil(Query.DistCutoff) > dmin) || Query.BorderSSActive > 0) && (File(i).NumNT > 0),
+      File(i) = zFR3DDistances(File(i),Query);
     end
+
   end
 
   zFlushOutput

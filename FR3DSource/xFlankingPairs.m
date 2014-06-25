@@ -32,7 +32,9 @@ if File.NumNT > 0,
 
   for k = 1:(length(a)-1),              % run through all NT making nested cWW
     if a(k+1) - a(k) > 1,               % where there is a gap in the number,
-      H(a(k),a(k+1)) = 1;               % these two flank a single-stranded region
+      if File.NT(a(k)).Chain == File.NT(a(k+1)).Chain,  % same chain
+        H(a(k),a(k+1)) = 1;               % these two flank a single-stranded region
+      end
     end
   end
 
@@ -62,3 +64,8 @@ if 0 > 1,
   end
 end
 
+if 0 > 1,
+  for f = 1:length(File),
+    File(f) = xFlankingPairs(File(f));
+  end
+end
