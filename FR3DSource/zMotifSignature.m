@@ -146,13 +146,6 @@ if Verbose > 0,
   fprintf('zMotifSignature: Signature: %s\n', SS);
 end
 
-% don't proceed if zPhoneme is not on the path
-% zPhoneme is not part of the official FR3D.
-if ~exist('zPhoneme', 'file')
-    AllPhoneme = {};
-    return;
-end
-
 % ----------------------------------------- clean up signature
 
 while Sig(1) == '-' && length(Sig) > 1,
@@ -163,24 +156,12 @@ while Sig(end) == '-' && length(Sig) > 1,
   Sig = Sig(1:(end-1));
 end
 
-Pho = Sig;
-Phoneme = zPhoneme;
-for i = 1:length(Phoneme(:,1)),
-  Pho = strrep(Pho,Phoneme{i,1},Phoneme{i,2});
-end
-Pho = strrep(Pho,'-','');
-Pho = lower(Pho);
-
-if Verbose > 0,
-  fprintf('zMotifSignature: Phonetic:  %s\n', Pho);
-end
-
 AllSig{Rotation} = Sig;
-AllPhoneme{Rotation} = Pho;
+AllPhoneme{Rotation} = Sig;
 
 if Strands > 1 && Rotation < Strands,
   [Si,Al,Ph] = zMotifSignature(Edge,Strands,Rotation+1,Type);
   AllSig{Rotation+1} = Si;
-  AllPhoneme{Rotation+1} = Ph{Rotation+1};
+  AllPhoneme{Rotation+1} = Si;
 end
 
