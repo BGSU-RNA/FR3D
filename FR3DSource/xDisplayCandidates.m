@@ -25,7 +25,7 @@ if exist('OCTAVE_VERSION') ~= 0,
 end
 
 if ~isempty(strfind(path,'zirbel')),
-  Octave = 0;
+  Octave = 1;
 end
 
 if nargin < 6,
