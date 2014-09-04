@@ -42,22 +42,6 @@ if File.NumNT > 0,
  
   File.Flank = H;                       % store
 
-  % ----------------- remove isolated nested cWW pairs and re-run this algorithm
-
-  [i,j] = find(triu(H));
-
-  w = intersect(i,j);
-
-  w
-
-  for k = 1:length(w),
-    fprintf('Nucleotide %s%s_%s is in an isolated cWW basepair\n',File.NT(w(k)).Base,File.NT(w(k)).Number,File.NT(w(k)).Chain);
-    oExploreNT(File,w(k));
-  end
-
-
-
-
 else
 
   File.Flank = [];
