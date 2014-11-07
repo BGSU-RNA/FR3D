@@ -105,6 +105,8 @@ for a = 1:N,                                    % first NT of possible pair
 
     if Verbose > 0,
       figure(57)
+      xlabel('True and near coplanar pairs over length');
+      ylabel('Near basepairs over length')
       hold on
       axis([-0.1 1.1 -0.1 1.1]);
     end
@@ -193,7 +195,7 @@ for a = 1:N,                                      % first NT of possible BPh
             fprintf('pConsensusInteractions: No agreement on BPh\n');
           end
 
-          pause
+%          pause
         end
       end
 %    end
@@ -244,7 +246,7 @@ for a = 1:N,                                    % first NT of possible BPh
             fprintf('pConsensusInteractions: No agreement on BR\n');
           end
 
-          pause
+%          pause
         end
       end
 %    end
@@ -300,7 +302,7 @@ if 0 > 1,
               fprintf('pConsensusInteractions: BB interaction on %s edge between %d and %d, %d candidates\n', edgename(truemode), a, b, L);
             end
 
-            pause
+%            pause
           end
         end
       end
