@@ -132,6 +132,15 @@ if s > 1,
 	end
 end
 
+if s > 1,
+	A = floor(s/2);
+	top = minperm(1:A);
+	bot = minperm((s-A+1):s);
+	if sum(sum(D(top,top))) > sum(sum(D(bot,bot))),
+		minperm = fliplr(minperm);
+	end
+end
+
 if Verbose > 0,
   fprintf('Using method %10s.\n', method{minmethod});
 end
