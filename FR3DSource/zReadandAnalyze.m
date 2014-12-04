@@ -42,7 +42,11 @@ if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading'], 'dir') == 7,
   end
 end
 
-[ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, NTLETTER, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(PDBFilename,Verbose);
+if isempty(strfind(lower(PDBFilename),'atoms')),
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, NTLETTER, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(PDBFilename,Verbose);
+else
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, NTLETTER, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadCIFAtoms(PDBFilename,Verbose);
+end
 
 if ~isempty(ATOMNUMBER),
 
