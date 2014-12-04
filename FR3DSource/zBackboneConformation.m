@@ -7,11 +7,13 @@ end
 
 File.Backbone = sparse([],[],[],length(File.NT),length(File.NT));
 
+PDBFile = [File.PDBID '.pdb'];
+
 if exist('chiropraxis.jar') == 2 ...       % if chiropraxis is here
    && File.NumNT > 1 ...                   % and there is more than one NT
-   && exist(File.PDBFilename) == 2,        % and the PDB file is available
+   && exist(PDBFile) == 2,        % and the PDB file is available
 
-  d = which(File.PDBFilename);
+  d = which(PDBFile);
   e = which('chiropraxis.jar');
   g = which('suitename.0.3.070628.win.exe');
 

@@ -22,9 +22,15 @@
 
 function [File] = zReadandAnalyze(PDBFilename,Verbose)
 
-i = strfind(PDBFilename,'.');
-if ~isempty(i),
-  Filename = PDBFilename(1:(i(end)-1));
+Verbose = 1;
+
+if ~isempty(strfind(lower(PDBFilename),'cifatoms')),
+  Filename = strrep(PDBFilename,'.cifatoms','-CIF.mat');
+else
+  i = strfind(PDBFilename,'.');
+  if ~isempty(i),
+    Filename = PDBFilename(1:(i(end)-1));
+  end
 end
 
 if nargin < 2,
@@ -42,10 +48,10 @@ if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading'], 'dir') == 7,
   end
 end
 
-if isempty(strfind(lower(PDBFilename),'atoms')),
-  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, NTLETTER, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(PDBFilename,Verbose);
+if isempty(strfind(lower(PDBFilename),'.cif')),
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(PDBFilename,Verbose);
 else
-  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, NTLETTER, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadCIFAtoms(PDBFilename,Verbose);
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable] = zReadCIFAtoms(PDBFilename,Verbose);
 end
 
 if ~isempty(ATOMNUMBER),
@@ -54,16 +60,12 @@ if Verbose > 1,
   ATOMNUMBER(1:10)
   ATOMNAME(1:10)
   VERSION(1:10)
-  NTLETTER(1:10)
+  UNITNAME(1:10)
   CHAIN(1:10)
   NTNUMBER(1:10)
 end
 
-P = [P BETA];                           % include beta factors with positions
-
-if 0 > 1,
-  delete([TempFileName '.txt']);
-end
+P = [P BETA];                           % include beta factors with positions to make it easier to assign them to atoms
 
 if Readable == 0,
   fprintf('zReadandAnalyze was unable to read the PDB file %s\n',PDBFilename);
@@ -97,279 +99,275 @@ hh  = 1;                                     % current HETATM number
 
 while i <= length(NTNUMBER),                 % go through all atoms
 
+  while i <= length(NTNUMBER) && strcmp(ATOM_TYPE{i},'HETATM'),
+    Het(hh).AtomNumber = ATOMNUMBER(i);
+    Het(hh).Atom       = ATOMNAME{i};
+    Het(hh).Unit       = UNITNAME{i};
+    Het(hh).Chain      = CHAIN{i};
+    Het(hh).Number     = NTNUMBER{i};
+    Het(hh).Loc        = P(i,1:3);
+    Het(hh).Beta       = P(i,4);
+    Het(hh).Center     = P(i,1:3);
+    Het(hh).ModelNum   = ModelNum(i);   % Anton 9/14/2011
+    i  = i + 1;
+    hh = hh + 1;
+  end
 
+  if i <= length(NTNUMBER),
 
-% for file 1EG0, this loop never ends
-
- while i <= length(NTNUMBER) && strcmp(ATOM_TYPE{i},'HETATM'),
-   Het(hh).AtomNumber = ATOMNUMBER(i);
-   Het(hh).Atom       = ATOMNAME{i};
-   Het(hh).Unit       = NTLETTER{i};
-   Het(hh).Chain      = CHAIN{i};
-   Het(hh).Number     = NTNUMBER{i};
-   Het(hh).Loc        = P(i,1:3);
-   Het(hh).Beta       = P(i,4);
-   Het(hh).Center     = P(i,1:3);
-   Het(hh).ModelNum   = ModelNum(i);   % Anton 9/14/2011
-   i  = i + 1;
-   hh = hh + 1;
- end
-
- if i <= length(NTNUMBER),
-
-  UnitType = 0;                             % RNA NT = 1, Amino acid = 2, etc.
-  j = [];                                   % initialize rows of next nucleo.
-  ntnum = NTNUMBER{i};                      % nucleotide number from pdb file
-  chnum = CHAIN{i}; %Anton 12/12/10
+    UnitType = 0;                             % RNA NT = 1, Amino acid = 2, etc.
+    j = [];                                   % initialize rows of next nucleo.
+    ntnum = NTNUMBER{i};                      % nucleotide number from pdb file
+    chnum = CHAIN{i}; %Anton 12/12/10
 %   while (i <= length(NTNUMBER)) & (strcmp(NTNUMBER{i},ntnum)) %Anton 12/12/10
 % to deal with consecutive nucleotides that differ only by chain
-  while (i <= length(NTNUMBER)) && (strcmp(NTNUMBER{i},ntnum)) && (strcmp(CHAIN{i},chnum))  %Anton 12/12/10
-                                            % pull out rows for this nucleotide
-                                            % assumes they are continguous
-    j = [j; i];                             % add rows for this nucleotide
-    i = i + 1;                              % go to the next row
-  end
-
-  Sugar = Inf * ones(12,4);
-  Loc   = Inf * ones(11,4);
-
-  NTBase = NTLETTER{j(1)};                % one or three letter code
-
-  if length(NTBase) == 1,                 % looks like a nucleotide
-    NT(n).Base    = NTLETTER{j(1)};       % letter for this nucleotide
-    NT(n).Unit    = NTLETTER{j(1)};       % letter for this nucleotide
-    NT(n).Chain   = CHAIN{j(1)};          % what chain nucleotide is in
-    NT(n).Number  = NTNUMBER{j(1)};       % nucleotide number for this molecule
-    NT(n).ModelNum= ModelNum(j(1));       % model number, especially for NMR    
-            
-    % Anton 7/22/2011 To ensure compatibility with the NDB data model.
-    % need to add handling of other cases in the future
-    V = [VERSION{min(j):max(j)}];
-    if isempty(V)
-        NT(n).AltLoc = '';
-    elseif strfind(V,'A')
-        NT(n).AltLoc = 'A';           
+    while (i <= length(NTNUMBER)) && (strcmp(NTNUMBER{i},ntnum)) && (strcmp(CHAIN{i},chnum))  %Anton 12/12/10
+                                              % pull out rows for this nucleotide
+                                              % assumes they are continguous
+      j = [j; i];                             % add rows for this nucleotide
+      i = i + 1;                              % go to the next row
     end
-    % Anton 7/22/2011    
-    
-  end
 
-  NTBackbone = 0;                         % distinguish AAs from modified NTs
+    Sugar = Inf * ones(12,4);
+    Loc   = Inf * ones(11,4);                 % make it possible to recognize missing atom locations
 
-  if strcmp(NTBase,'A'),
-    for k = min(j):max(j),
-     if strcmp(VERSION{k},'A') || isempty(VERSION{k}),
-      switch ATOMNAME{k},
-        case 'N9',      Loc( 1,:) = P(k,:);
-        case 'C4',      Loc( 2,:) = P(k,:);
-        case 'N3',      Loc( 3,:) = P(k,:);
-        case 'N1',      Loc( 4,:) = P(k,:);
-        case 'C6',      Loc( 5,:) = P(k,:);
-        case 'N6',      Loc( 6,:) = P(k,:);
-        case 'C8',      Loc( 7,:) = P(k,:);
-        case 'C5',      Loc( 8,:) = P(k,:);
-        case 'C2',      Loc( 9,:) = P(k,:);
-        case 'N7',      Loc(10,:) = P(k,:);
-        case {'C1*','C1'''},     Sugar( 1,:) = P(k,:);
-        case {'C2*','C2'''},     Sugar( 2,:) = P(k,:);
-        case {'O2*','O2'''},     Sugar( 3,:) = P(k,:);
-        case {'C3*','C3'''},     Sugar( 4,:) = P(k,:);
-        case {'O3*','O3'''},     Sugar( 5,:) = P(k,:);
-        case {'C4*','C4'''},     Sugar( 6,:) = P(k,:);
-        case {'O4*','O4'''},     Sugar( 7,:) = P(k,:);
-        case {'C5*','C5'''},     Sugar( 8,:) = P(k,:);
-        case {'O5*','O5'''},     Sugar( 9,:) = P(k,:);
-        case 'P',                Sugar(10,:) = P(k,:);
-        case {'O1P','OP1'},      Sugar(11,:) = P(k,:);
-        case {'O2P','OP2'},      Sugar(12,:) = P(k,:);
+    UnitName = UNITNAME{j(1)};                % one or three letter code
+
+    if length(UnitName) == 1,                 % looks like a nucleotide
+      NT(n).Base     = UNITNAME{j(1)};        % letter for this nucleotide
+      NT(n).Unit     = UNITNAME{j(1)};        % letter for this nucleotide
+      NT(n).Chain    = CHAIN{j(1)};           % what chain nucleotide is in
+      NT(n).Number   = NTNUMBER{j(1)};        % nucleotide number for this molecule
+      NT(n).ModelNum = ModelNum(j(1));        % model number, especially for NMR    
+      if exist('UNITID'),
+        NT(n).UnitID = UNITID{j(1)};          % Unit ID like 3G9Y|1|C|G|3
+      else
+        NT(n).UnitID = '';
       end
-     end
-    end
-    Loc(11,:)    = zeros(1,4);
-    NT(n).Loc    = Loc(:,1:3);
-    NT(n).Sugar  = Sugar(:,1:3);
-    NT(n).Beta   = [Sugar(:,4); Loc(1:10,4)];   % sugar first, then base
-    NT(n).Center = mean(Loc(1:10,1:3));         % mean of heavy base atoms
-    NT(n).Code   = 1;                           % A is 1, C is 2, etc.
-    UnitType = 1;                              % RNA nucleotide               
-    n = n + 1;
-  elseif strcmp(NTBase,'C') || strcmp(NTBase,'C+'),
-    for k = min(j):max(j),
-     if strcmp(VERSION{k},'A') || isempty(VERSION{k}),
-      switch ATOMNAME{k},
-        case 'N1',      Loc( 1,:) = P(k,:);
-        case 'C2',      Loc( 2,:) = P(k,:);
-        case 'O2',      Loc( 3,:) = P(k,:);
-        case 'N3',      Loc( 4,:) = P(k,:);
-        case 'C4',      Loc( 5,:) = P(k,:);
-        case 'N4',      Loc( 6,:) = P(k,:);
-        case 'C6',      Loc( 7,:) = P(k,:);
-        case 'C5',      Loc( 8,:) = P(k,:);
-        case {'C1*','C1'''},     Sugar( 1,:) = P(k,:);
-        case {'C2*','C2'''},     Sugar( 2,:) = P(k,:);
-        case {'O2*','O2'''},     Sugar( 3,:) = P(k,:);
-        case {'C3*','C3'''},     Sugar( 4,:) = P(k,:);
-        case {'O3*','O3'''},     Sugar( 5,:) = P(k,:);
-        case {'C4*','C4'''},     Sugar( 6,:) = P(k,:);
-        case {'O4*','O4'''},     Sugar( 7,:) = P(k,:);
-        case {'C5*','C5'''},     Sugar( 8,:) = P(k,:);
-        case {'O5*','O5'''},     Sugar( 9,:) = P(k,:);
-        case 'P',       Sugar(10,:) = P(k,:);
-        case {'O1P','OP1'},     Sugar(11,:) = P(k,:);
-        case {'O2P','OP2'},     Sugar(12,:) = P(k,:);
-      end
-     end
-    end
-    Loc( 9,:) = zeros(1,4);
-    Loc(10,:) = zeros(1,4);
-    Loc(11,:) = zeros(1,4);
-    NT(n).Loc    = Loc(:,1:3);
-    NT(n).Sugar  = Sugar(:,1:3);
-    NT(n).Beta   = [Sugar(:,4); Loc(1:8,4)];   % sugar first, then base
-    NT(n).Center = mean(Loc(1:8,1:3));
-    NT(n).Code   = 2;                          % A is 1, C is 2, etc.
-    UnitType = 1;                              % RNA nucleotide
-    n = n + 1;
-  elseif strcmp(NTBase,'G'),
-    for k = min(j):max(j),
-     if strcmp(VERSION{k},'A') || isempty(VERSION{k}),
-      switch ATOMNAME{k},
-        case 'N9',      Loc( 1,:) = P(k,:);
-        case 'C4',      Loc( 2,:) = P(k,:);
-        case 'N3',      Loc( 3,:) = P(k,:);
-        case 'N1',      Loc( 4,:) = P(k,:);
-        case 'C6',      Loc( 5,:) = P(k,:);
-        case 'O6',      Loc( 6,:) = P(k,:);
-        case 'C8',      Loc( 7,:) = P(k,:);
-        case 'C5',      Loc( 8,:) = P(k,:);
-        case 'C2',      Loc( 9,:) = P(k,:);
-        case 'N7',      Loc(10,:) = P(k,:);
-        case 'N2',      Loc(11,:) = P(k,:);
-        case {'C1*','C1'''},     Sugar( 1,:) = P(k,:);
-        case {'C2*','C2'''},     Sugar( 2,:) = P(k,:);
-        case {'O2*','O2'''},     Sugar( 3,:) = P(k,:);
-        case {'C3*','C3'''},     Sugar( 4,:) = P(k,:);
-        case {'O3*','O3'''},     Sugar( 5,:) = P(k,:);
-        case {'C4*','C4'''},     Sugar( 6,:) = P(k,:);
-        case {'O4*','O4'''},     Sugar( 7,:) = P(k,:);
-        case {'C5*','C5'''},     Sugar( 8,:) = P(k,:);
-        case {'O5*','O5'''},     Sugar( 9,:) = P(k,:);
-        case 'P',       Sugar(10,:) = P(k,:);
-        case {'O1P','OP1'},     Sugar(11,:) = P(k,:);
-        case {'O2P','OP2'},     Sugar(12,:) = P(k,:);
-      end
-     end
-    end
-    NT(n).Loc    = Loc(:,1:3);
-    NT(n).Sugar  = Sugar(:,1:3);
-    NT(n).Beta   = [Sugar(:,4); Loc(:,4)];   % sugar first, then base
-    NT(n).Center = mean(Loc(1:11,1:3));
-    NT(n).Code   = 3;                          % A is 1, C is 2, etc.
-    UnitType = 1;                              % RNA nucleotide
-    n = n + 1;
-  elseif strcmp(NTBase,'U') || strcmp(NTBase,'+U'),
-    for k = min(j):max(j),
-     if strcmp(VERSION{k},'A') || isempty(VERSION{k}),
-      switch ATOMNAME{k},
-        case 'N1',      Loc( 1,:) = P(k,:);
-        case 'C2',      Loc( 2,:) = P(k,:);
-        case 'O2',      Loc( 3,:) = P(k,:);
-        case 'N3',      Loc( 4,:) = P(k,:);
-        case 'C4',      Loc( 5,:) = P(k,:);
-        case 'O4',      Loc( 6,:) = P(k,:);
-        case 'C6',      Loc( 7,:) = P(k,:);
-        case 'C5',      Loc( 8,:) = P(k,:);
-        case {'C1*','C1'''},     Sugar( 1,:) = P(k,:);
-        case {'C2*','C2'''},     Sugar( 2,:) = P(k,:);
-        case {'O2*','O2'''},     Sugar( 3,:) = P(k,:);
-        case {'C3*','C3'''},     Sugar( 4,:) = P(k,:);
-        case {'O3*','O3'''},     Sugar( 5,:) = P(k,:);
-        case {'C4*','C4'''},     Sugar( 6,:) = P(k,:);
-        case {'O4*','O4'''},     Sugar( 7,:) = P(k,:);
-        case {'C5*','C5'''},     Sugar( 8,:) = P(k,:);
-        case {'O5*','O5'''},     Sugar( 9,:) = P(k,:);
-        case 'P',                Sugar(10,:) = P(k,:);
-        case {'O1P','OP1'},      Sugar(11,:) = P(k,:);
-        case {'O2P','OP2'},      Sugar(12,:) = P(k,:);
-      end
-     end
-    end
-    Loc( 9,:) = zeros(1,4);
-    Loc(10,:) = zeros(1,4);
-    Loc(11,:) = zeros(1,4);
-    NT(n).Loc    = Loc(:,1:3);
-    NT(n).Sugar  = Sugar(:,1:3);
-    NT(n).Beta   = [Sugar(:,4); Loc(1:8,4)];   % sugar first, then base
-    NT(n).Center = mean(Loc(1:8,1:3));
-    NT(n).Code   = 4;                          % A is 1, C is 2, etc.
-    UnitType = 1;                              % RNA nucleotide
-    n = n + 1;
-  elseif length(NTBase) == 3,                  % probably an amino acid
-
-    AA(aa).AtomNumber = ATOMNUMBER(j);
-    AA(aa).Atom       = ATOMNAME(j);        % store atom names
-    AA(aa).Unit       = NTLETTER{j(1)};
-    AA(aa).Chain      = CHAIN{j(1)};        % what chain the a.a. is in
-    AA(aa).Number     = NTNUMBER{j(1)};     % number for this a.a.
-    AA(aa).Loc        = P(j,1:3);
-    AA(aa).Beta       = P(j,4);
-    k = min(4,length(j));
-    AA(aa).Center     = mean(P(j(1:k),1:3),1); % backbone center
-    AA(aa).ModelNum   = ModelNum(j(1));     % Anton 9/14/2011
-    
-    aa = aa + 1;
-    UnitType = 2;
-
-    % ------------------------- Might this be a nucleotide with 3 letter name?
-
-    for m = 1:length(AA(aa-1).Atom),
-      if ~isempty(strfind(AA(aa-1).Atom{m},'''')),
-        NTBackbone = 1;
-      end
-    end
-  end                                         % end four if statements
-
-  if (UnitType == 0) || NTBackbone == 1,      % unrecognized nucleotide
-    fprintf('Unrecognized unit:  %s%4s_%s will be added as HETATM ========= \n',NTBase,NTNUMBER{j(1)},CHAIN{j(1)});
-    if NTBackbone == 1,
-      aa = aa - 1;                            % not an amino acid
+      NT(n).AltLoc   = VERSION{j(1)};
     end
 
-    for hhh = 1:length(j),
-      Het(hh+hhh-1).AtomNumber = ATOMNUMBER(j(hhh));
-      Het(hh+hhh-1).Atom       = ATOMNAME{j(hhh)};
-      Het(hh+hhh-1).Unit       = NTLETTER{j(hhh)};
-      Het(hh+hhh-1).Chain      = CHAIN{j(hhh)};
-      Het(hh+hhh-1).Number     = NTNUMBER{j(hhh)};
-      Het(hh+hhh-1).Loc        = P(j(hhh),1:3);
-      Het(hh+hhh-1).Beta       = P(j(hhh),4);
-      Het(hh+hhh-1).Center     = P(j(hhh),1:3);
-    end
-    hh = hh + length(j);
+    NTBackbone = 0;                         % distinguish AAs from modified NTs
 
-  elseif (UnitType == 1),                     % standard RNA base
-
-    if (max(max(Loc)) == Inf),                 % base atoms missing
-      n = n - 1;
-      if Verbose > 0,
-        NumGood = length(find((Loc(1,:) < Inf) .* (abs(Loc(1,:)) > 0)));
-        fprintf('Base %s%4s_%s has %d atoms, so it will be skipped\n',NTBase,NTNUMBER{j(1)},CHAIN{j(1)},NumGood);
-      end
-    elseif (max(max(Sugar)) == Inf),          % sugar atom missing
-      NumGood = 12;
-      for k = 1:12,
-        if Sugar(k,1) == Inf,
-          Sugar(k,:) = Loc(1,:);              % use glycosidic atom
-          NumGood    = NumGood - 1;
+    if strcmp(UnitName,'A'),
+      for k = min(j):max(j),
+        if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || isempty(VERSION{k}),
+          switch ATOMNAME{k},
+            case 'N9',      Loc( 1,:) = P(k,:);
+            case 'C4',      Loc( 2,:) = P(k,:);
+            case 'N3',      Loc( 3,:) = P(k,:);
+            case 'N1',      Loc( 4,:) = P(k,:);
+            case 'C6',      Loc( 5,:) = P(k,:);
+            case 'N6',      Loc( 6,:) = P(k,:);
+            case 'C8',      Loc( 7,:) = P(k,:);
+            case 'C5',      Loc( 8,:) = P(k,:);
+            case 'C2',      Loc( 9,:) = P(k,:);
+            case 'N7',      Loc(10,:) = P(k,:);
+            case {'C1*','C1'''},     Sugar( 1,:) = P(k,:);
+            case {'C2*','C2'''},     Sugar( 2,:) = P(k,:);
+            case {'O2*','O2'''},     Sugar( 3,:) = P(k,:);
+            case {'C3*','C3'''},     Sugar( 4,:) = P(k,:);
+            case {'O3*','O3'''},     Sugar( 5,:) = P(k,:);
+            case {'C4*','C4'''},     Sugar( 6,:) = P(k,:);
+            case {'O4*','O4'''},     Sugar( 7,:) = P(k,:);
+            case {'C5*','C5'''},     Sugar( 8,:) = P(k,:);
+            case {'O5*','O5'''},     Sugar( 9,:) = P(k,:);
+            case 'P',                Sugar(10,:) = P(k,:);
+            case {'O1P','OP1'},      Sugar(11,:) = P(k,:);
+            case {'O2P','OP2'},      Sugar(12,:) = P(k,:);
+          end
         end
       end
-      NT(n-1).Sugar = Sugar(:,1:3);
-      if Verbose > 0,
-        fprintf('Base %s%4s_%s backbone has %d atoms, substituting glycosidic atom\n',NT(n-1).Base,NT(n-1).Number,NT(n-1).Chain,NumGood);
+      Loc(11,:)    = zeros(1,4);
+      NT(n).Loc    = Loc(:,1:3);
+      NT(n).Sugar  = Sugar(:,1:3);
+      NT(n).Beta   = [Sugar(:,4); Loc(1:10,4)];   % sugar first, then base
+      NT(n).Center = mean(Loc(1:10,1:3));         % mean of heavy base atoms
+      NT(n).Code   = 1;                           % A is 1, C is 2, etc.
+      UnitType = 1;                               % RNA nucleotide               
+      n = n + 1;
+    elseif strcmp(UnitName,'C') || strcmp(UnitName,'C+'),
+      for k = min(j):max(j),
+        if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || isempty(VERSION{k}),
+          switch ATOMNAME{k},
+            case 'N1',      Loc( 1,:) = P(k,:);
+            case 'C2',      Loc( 2,:) = P(k,:);
+            case 'O2',      Loc( 3,:) = P(k,:);
+            case 'N3',      Loc( 4,:) = P(k,:);
+            case 'C4',      Loc( 5,:) = P(k,:);
+            case 'N4',      Loc( 6,:) = P(k,:);
+            case 'C6',      Loc( 7,:) = P(k,:);
+            case 'C5',      Loc( 8,:) = P(k,:);
+            case {'C1*','C1'''},     Sugar( 1,:) = P(k,:);
+            case {'C2*','C2'''},     Sugar( 2,:) = P(k,:);
+            case {'O2*','O2'''},     Sugar( 3,:) = P(k,:);
+            case {'C3*','C3'''},     Sugar( 4,:) = P(k,:);
+            case {'O3*','O3'''},     Sugar( 5,:) = P(k,:);
+            case {'C4*','C4'''},     Sugar( 6,:) = P(k,:);
+            case {'O4*','O4'''},     Sugar( 7,:) = P(k,:);
+            case {'C5*','C5'''},     Sugar( 8,:) = P(k,:);
+            case {'O5*','O5'''},     Sugar( 9,:) = P(k,:);
+            case 'P',       Sugar(10,:) = P(k,:);
+            case {'O1P','OP1'},     Sugar(11,:) = P(k,:);
+            case {'O2P','OP2'},     Sugar(12,:) = P(k,:);
+          end
+        end
+      end
+      Loc( 9,:) = zeros(1,4);
+      Loc(10,:) = zeros(1,4);
+      Loc(11,:) = zeros(1,4);
+      NT(n).Loc    = Loc(:,1:3);
+      NT(n).Sugar  = Sugar(:,1:3);
+      NT(n).Beta   = [Sugar(:,4); Loc(1:8,4)];   % sugar first, then base
+      NT(n).Center = mean(Loc(1:8,1:3));
+      NT(n).Code   = 2;                          % A is 1, C is 2, etc.
+      UnitType = 1;                              % RNA nucleotide
+      n = n + 1;
+    elseif strcmp(UnitName,'G'),
+      for k = min(j):max(j),
+        if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || isempty(VERSION{k}),
+          switch ATOMNAME{k},
+            case 'N9',      Loc( 1,:) = P(k,:);
+            case 'C4',      Loc( 2,:) = P(k,:);
+            case 'N3',      Loc( 3,:) = P(k,:);
+            case 'N1',      Loc( 4,:) = P(k,:);
+            case 'C6',      Loc( 5,:) = P(k,:);
+            case 'O6',      Loc( 6,:) = P(k,:);
+            case 'C8',      Loc( 7,:) = P(k,:);
+            case 'C5',      Loc( 8,:) = P(k,:);
+            case 'C2',      Loc( 9,:) = P(k,:);
+            case 'N7',      Loc(10,:) = P(k,:);
+            case 'N2',      Loc(11,:) = P(k,:);
+            case {'C1*','C1'''},     Sugar( 1,:) = P(k,:);
+            case {'C2*','C2'''},     Sugar( 2,:) = P(k,:);
+            case {'O2*','O2'''},     Sugar( 3,:) = P(k,:);
+            case {'C3*','C3'''},     Sugar( 4,:) = P(k,:);
+            case {'O3*','O3'''},     Sugar( 5,:) = P(k,:);
+            case {'C4*','C4'''},     Sugar( 6,:) = P(k,:);
+            case {'O4*','O4'''},     Sugar( 7,:) = P(k,:);
+            case {'C5*','C5'''},     Sugar( 8,:) = P(k,:);
+            case {'O5*','O5'''},     Sugar( 9,:) = P(k,:);
+            case 'P',       Sugar(10,:) = P(k,:);
+            case {'O1P','OP1'},     Sugar(11,:) = P(k,:);
+            case {'O2P','OP2'},     Sugar(12,:) = P(k,:);
+          end
+        end
+      end
+      NT(n).Loc    = Loc(:,1:3);
+      NT(n).Sugar  = Sugar(:,1:3);
+      NT(n).Beta   = [Sugar(:,4); Loc(:,4)];   % sugar first, then base
+      NT(n).Center = mean(Loc(1:11,1:3));
+      NT(n).Code   = 3;                          % A is 1, C is 2, etc.
+      UnitType = 1;                              % RNA nucleotide
+      n = n + 1;
+    elseif strcmp(UnitName,'U') || strcmp(UnitName,'+U'),
+      for k = min(j):max(j),
+        if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || isempty(VERSION{k}),
+          switch ATOMNAME{k},
+            case 'N1',      Loc( 1,:) = P(k,:);
+            case 'C2',      Loc( 2,:) = P(k,:);
+            case 'O2',      Loc( 3,:) = P(k,:);
+            case 'N3',      Loc( 4,:) = P(k,:);
+            case 'C4',      Loc( 5,:) = P(k,:);
+            case 'O4',      Loc( 6,:) = P(k,:);
+            case 'C6',      Loc( 7,:) = P(k,:);
+            case 'C5',      Loc( 8,:) = P(k,:);
+            case {'C1*','C1'''},     Sugar( 1,:) = P(k,:);
+            case {'C2*','C2'''},     Sugar( 2,:) = P(k,:);
+            case {'O2*','O2'''},     Sugar( 3,:) = P(k,:);
+            case {'C3*','C3'''},     Sugar( 4,:) = P(k,:);
+            case {'O3*','O3'''},     Sugar( 5,:) = P(k,:);
+            case {'C4*','C4'''},     Sugar( 6,:) = P(k,:);
+            case {'O4*','O4'''},     Sugar( 7,:) = P(k,:);
+            case {'C5*','C5'''},     Sugar( 8,:) = P(k,:);
+            case {'O5*','O5'''},     Sugar( 9,:) = P(k,:);
+            case 'P',                Sugar(10,:) = P(k,:);
+            case {'O1P','OP1'},      Sugar(11,:) = P(k,:);
+            case {'O2P','OP2'},      Sugar(12,:) = P(k,:);
+          end
+        end
+      end
+      Loc( 9,:) = zeros(1,4);
+      Loc(10,:) = zeros(1,4);
+      Loc(11,:) = zeros(1,4);
+      NT(n).Loc    = Loc(:,1:3);
+      NT(n).Sugar  = Sugar(:,1:3);
+      NT(n).Beta   = [Sugar(:,4); Loc(1:8,4)];   % sugar first, then base
+      NT(n).Center = mean(Loc(1:8,1:3));
+      NT(n).Code   = 4;                          % A is 1, C is 2, etc.
+      UnitType = 1;                              % RNA nucleotide
+      n = n + 1;
+    elseif length(UnitName) == 3,                  % probably an amino acid
+
+      AA(aa).AtomNumber = ATOMNUMBER(j);
+      AA(aa).Atom       = ATOMNAME(j);        % store atom names
+      AA(aa).Unit       = UNITNAME{j(1)};
+      AA(aa).Chain      = CHAIN{j(1)};        % what chain the a.a. is in
+      AA(aa).Number     = NTNUMBER{j(1)};     % number for this a.a.
+      AA(aa).Loc        = P(j,1:3);
+      AA(aa).Beta       = P(j,4);
+      k = min(4,length(j));
+      AA(aa).Center     = mean(P(j(1:k),1:3),1); % backbone center
+      AA(aa).ModelNum   = ModelNum(j(1));     % Anton 9/14/2011
+      
+      aa = aa + 1;
+      UnitType = 2;
+
+      % ------------------------- Might this be a nucleotide with 3 letter name?
+
+      for m = 1:length(AA(aa-1).Atom),
+        if ~isempty(strfind(AA(aa-1).Atom{m},'''')),
+          NTBackbone = 1;
+        end
+      end
+
+    else
+
+      fprintf('zReadandAnalyze:  Unknown unit %s\n',UnitName);
+
+    end                                         % end four if statements
+
+    if (UnitType == 0) || NTBackbone == 1,      % unrecognized nucleotide
+      fprintf('Unrecognized unit:  %s%4s_%s will be added as HETATM ========= \n',UnitName,NTNUMBER{j(1)},CHAIN{j(1)});
+      if NTBackbone == 1,
+        aa = aa - 1;                            % not an amino acid
+      end
+
+      for hhh = 1:length(j),
+        Het(hh+hhh-1).AtomNumber = ATOMNUMBER(j(hhh));
+        Het(hh+hhh-1).Atom       = ATOMNAME{j(hhh)};
+        Het(hh+hhh-1).Unit       = UNITNAME{j(hhh)};
+        Het(hh+hhh-1).Chain      = CHAIN{j(hhh)};
+        Het(hh+hhh-1).Number     = NTNUMBER{j(hhh)};
+        Het(hh+hhh-1).Loc        = P(j(hhh),1:3);
+        Het(hh+hhh-1).Beta       = P(j(hhh),4);
+        Het(hh+hhh-1).Center     = P(j(hhh),1:3);
+      end
+      hh = hh + length(j);
+
+    elseif (UnitType == 1),                     % standard RNA base
+
+      if (max(max(Loc)) == Inf),                 % base atoms missing
+        n = n - 1;
+        if Verbose > 0,
+          NumGood = length(find((Loc(1,:) < Inf) .* (abs(Loc(1,:)) > 0)));
+          fprintf('Base %s%4s_%s has %d atoms, so it will be skipped\n',UnitName,NTNUMBER{j(1)},CHAIN{j(1)},NumGood);
+        end
+      elseif (max(max(Sugar)) == Inf),          % sugar atom missing
+        NumGood = 12;
+        for k = 1:12,
+          if Sugar(k,1) == Inf,
+            Sugar(k,:) = Loc(1,:);              % use glycosidic atom
+            NumGood    = NumGood - 1;
+          end
+        end
+        NT(n-1).Sugar = Sugar(:,1:3);
+        if Verbose > 0,
+          fprintf('Base %s%4s_%s backbone has %d atoms, substituting glycosidic atom\n',NT(n-1).Base,NT(n-1).Number,NT(n-1).Chain,NumGood);
+        end
       end
     end
   end
- end
 end                                           % end while i < ... loop
 
 NumNT = n - 1;                                % total number of nucleotides
@@ -460,4 +458,3 @@ else
 end
 
 File = orderfields(File);
-

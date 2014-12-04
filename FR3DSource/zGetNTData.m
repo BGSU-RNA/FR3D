@@ -34,14 +34,25 @@ end
 for f=1:length(Filenames),
   Filename = Filenames{f};
 
-  if ~isempty(strfind(lower(Filename),'atoms')),
+  if ~isempty(strfind(lower(Filename),'cifatoms')),
     PDBFilename = Filename;
+    PDBID = strrep(Filename,'.cifatoms','');
+    Filename = [PDBID '-CIF'];
+  elseif ~isempty(strfind(lower(Filename),'.cif')),
+    PDBID = upper(strrep(lower(Filename),'.cif',''));
+    PDBFilename = Filename;
+    Filename = [PDBID '-CIF'];
+  elseif ~isempty(strfind(lower(Filename),'-cif')),
+    PDBID = upper(strrep(lower(Filename),'-cif',''));
+    PDBFilename = strrep(upper(Filename),'-CIF','.cifatoms');
   elseif isempty(strfind(lower(Filename),'.pdb')),
-    PDBFilename  = [Filename '.pdb'];
+    PDBID = upper(Filename);
+    PDBFilename  = [PDBID '.pdb'];
   else
     PDBFilename  = Filename;
     i = strfind(Filename,'.');
     Filename = Filename(1:(i(end)-1));
+    PDBID = upper(strrep(Filename,'.pdb',''));
     ReadCode = 4;
   end
 
@@ -110,6 +121,8 @@ for f=1:length(Filenames),
   if ~exist('File'),
     File = [];
   end
+
+  File.PDBID = PDBID;
 
   if ~isfield(File,'ClassVersion'),
     File.ClassVersion = 0;
@@ -307,7 +320,7 @@ for f=1:length(Filenames),
     bp = nnz(zSparseRange(abs(triu(File.Edge)),0,16));
                                                   % number of basepairs
     r  = bp / length(File.NT);                    % ratio of bp to nt
-    if (r < 0.4),                                 % very few basepairs found
+    if (r < 0.4) && isempty(strfind(lower(PDBFilename),'cif')),                                 % very few basepairs found
       if Verbose > 0,
         fprintf('Few basepairs found (%7.4f basepairs per nucleotide), reading the biological unit coordinates\n',r);
         zFlushOutput;

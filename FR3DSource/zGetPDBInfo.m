@@ -4,14 +4,18 @@ function [File] = zGetPDBInfo(File)
 
 t = '';
 
+PDBID = File.PDBID;
+PDBID = strrep(PDBID,'-CIF','');              % strip off this identifier of the source of the file
+PDBID = strrep(PDBID,'.mat','');
+
 attempts = 0;
 while attempts < 30,
   attempts = attempts + 1;
   try
-    t = urlread(['http://www.pdb.org/pdb/rest/customReport.xml?pdbids=' File.Filename '&customReportColumns=source,resolution,experimentalTechnique,structureTitle,releaseDate']);
+    t = urlread(['http://www.pdb.org/pdb/rest/customReport.xml?pdbids=' PDBID '&customReportColumns=source,resolution,experimentalTechnique,structureTitle,releaseDate']);
   catch
     pause(1)
-    fprintf('zGetPDBInfo:  Having trouble reading %s data from PDB; attempt %d\n',File.Filename,attempts);
+    fprintf('zGetPDBInfo:  Having trouble reading %s data from PDB; attempt %d\n',PDBID,attempts);
     t
   end
 end

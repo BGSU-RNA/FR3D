@@ -1,20 +1,20 @@
 % zReadCIFAtoms.m reads ATOM and HETATM records extracted from a CIF file
 % It assumes that the data fields are always in this order:
 % loop_
-% _atom_site.group_PDB 
-% _atom_site.id 
-% _atom_site.type_symbol 
-% _atom_site.label% _atom_id 
-% _atom_site.label_alt_id 
-% _atom_site.label_comp_id 
-% _atom_site.label_asym_id 
-% _atom_site.label_entity_id 
-% _atom_site.label_seq_id 
-% _atom_site.pdbx_PDB_ins_code 
-% _atom_site.Cartn_x 
-% _atom_site.Cartn_y 
-% _atom_site.Cartn_z 
-% _atom_site.occupancy 
+% _atom_site.group_PDB           'ATOM'
+% _atom_site.id                  '699'
+% _atom_site.type_symbol         'C'
+% _atom_site.label_atom_id       'CD1'
+% _atom_site.label_alt_id        '.'
+% _atom_site.label_comp_id       'LEU'
+% _atom_site.label_asym_id       '0'
+% _atom_site.label_entity_id     '?'
+% _atom_site.label_seq_id        '38'
+% _atom_site.pdbx_PDB_ins_code   '?'
+% _atom_site.Cartn_x             '-18.272'
+% _atom_site.Cartn_y             '175.872'
+% _atom_site.Cartn_z             '-187.65'
+% _atom_site.occupancy           '?'
 % _atom_site.B_iso_or_equiv 
 % _atom_site.Cartn_x_esd 
 % _atom_site.Cartn_y_esd 
@@ -25,46 +25,168 @@
 % _atom_site.auth_seq_id 
 % _atom_site.auth_comp_id 
 % _atom_site.auth_asym_id 
-% _atom_site.auth% _atom_id 
+% _atom_site.auth_atom_id 
 % _atom_site.pdbx_PDB_model_num 
+% _atom_site.
+%    'ATOM'    '699'    'C'    'CD1'    '.'    'LEU'    '0'    '?'    '38'    '?'    '-18.272'    '175.872'    '-187.65'    '?'    '?'    '?'    '?'    '?'    '?'
+%    '?'    '.'    '38'    'LEU'    '0'    'CD1'    '1'    '2QBG|1|0|LEU|38'     ''
 
-% Test with:  File = zAddNTData('2QBG_temp.cifatoms')
+%   'ATOM'    '2'    'C'    'C'    '.'    'GLY'    '1'    '?'    '3'    '?'    '69.193'    '193.537'    '-102.468'    '?'    '?'    '?'    '?'    '?'    '?'    '?'
+%    '.'    '3'    'GLY'    '1'    'C'    '1'    '2QBG|1|1|GLY|3'     ''
 
-function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,OCC,BETA,ModelNum,Readable] = zReadCIFAtoms(Filename,Verbose)
+% Test with:  File = zAddNTData('2QBG.cifatoms')
+
+function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,BETA,UNITID,ModelNum,Readable] = zReadCIFAtoms(PDBFilename,Verbose)
 
 Verbose = 1;
 
 KeepPDB = 1;
 
-if exist(Filename),
+if exist(PDBFilename),
   c = 1;                               % line counter
   if Verbose > 0,
-    fprintf('zReadCIFAtoms: Reading %s\n', Filename);
+    fprintf('zReadCIFAtoms: Reading %s\n', PDBFilename);
   end
 
-  T = textread(Filename,'%s','whitespace','\n');
+  T = textread(PDBFilename,'%s','whitespace','\n');
 
-  fprintf('zReadCIFAtoms:  Read %d lines from file\n',length(Lines));
+  fprintf('zReadCIFAtoms:  Read %d lines from file\n',size(T,1));
 
-  keyboard
+  header = 1;
+  fieldcounter = 0;  
+  row = 1;
+  UnitIDField = [];
+  while header == 1,
+    if any(strfind(T{row,1},'ATOM') == 1) || any(strfind(T{row,1},'HETATM') == 1),                % line starts with ATOM or HETATM
+      header = 0;                                    % header is over
+      break
+    end
+    if ~isempty(strfind(T{row,1},'_atom_site.')),
+      fieldcounter = fieldcounter + 1;
+      switch strrep(T{row,1},' ',''),
+      case '_atom_site.group_PDB' 
+        AtomTypeField = fieldcounter;
+      case '_atom_site.id'
+        AtomNumberField = fieldcounter;
+      case '_atom_site.type_symbol'
+      case '_atom_site.label_atom_id'
+        AtomLabelIDField = fieldcounter;
+      case '_atom_id' 
+      case '_atom_site.label_alt_id' 
+        VersionField = fieldcounter;
+      case '_atom_site.label_comp_id' 
+        UnitNameField = fieldcounter;
+      case '_atom_site.label_asym_id' 
+        ChainField = fieldcounter;
+      case '_atom_site.label_entity_id' 
+      case '_atom_site.label_seq_id' 
+        ResidueNumberField = fieldcounter;
+      case '_atom_site.pdbx_PDB_ins_code' 
+      case '_atom_site.Cartn_x' 
+        XCoordField = fieldcounter;
+      case '_atom_site.Cartn_y' 
+        YCoordField = fieldcounter;
+      case '_atom_site.Cartn_z' 
+        ZCoordField = fieldcounter;
+      case '_atom_site.occupancy' 
+      case '_atom_site.B_iso_or_equiv' 
+      case '_atom_site.Cartn_x_esd' 
+      case '_atom_site.Cartn_y_esd' 
+      case '_atom_site.Cartn_z_esd' 
+      case '_atom_site.occupancy_esd' 
+      case '_atom_site.B_iso_or_equiv_esd' 
+      case '_atom_site.pdbx_formal_charge' 
+      case '_atom_site.auth_seq_id' 
+      case '_atom_site.auth_comp_id' 
+      case '_atom_site.auth_asym_id' 
+      case '_atom_site.auth'
+      case '_atom_id' 
+      case '_atom_site.pdbx_PDB_model_num'
+      case '_atom_site.unit_id'
+        UnitIDField = fieldcounter;
+      end 
+    end
+    row = row + 1;
+  end
+
+  AtomCounter = 1;
+
+  while row <= size(T,1),
+    entry = zStringSplit(T{row,1});
+
+    if strcmp(entry{1},'ATOM') || strcmp(entry{1},'HETATM'),
+
+%function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,OCC,BETA,ModelNum,Readable] = zReadCIFAtoms(PDBFilename,Verbose)
+
+      ATOM_TYPE{AtomCounter} = entry{AtomTypeField};
+      ATOMNAME{AtomCounter} = strrep(entry{AtomLabelIDField},'"','');       % remove double quotes on backbone atom names
+      ATOMNUMBER{AtomCounter} = entry{AtomNumberField};
+      VERSION{AtomCounter} = entry{VersionField};
+      UNITNAME{AtomCounter} = entry{UnitNameField};
+      CHAIN{AtomCounter} = entry{ChainField};
+      NTNUMBER{AtomCounter} = entry{ResidueNumberField};
+      P(AtomCounter,:) = [str2num(entry{XCoordField}) str2num(entry{YCoordField}) str2num(entry{ZCoordField})];
+      BETA(AtomCounter,1) = NaN;
+      OCC{AtomCounter} = 'NaN';
+      if isempty(UnitIDField),
+        UNITID{AtomCounter} = '';
+      else
+        UNITID{AtomCounter} = entry{UnitIDField};
+      end
+
+    end
+    AtomCounter = AtomCounter + 1;
+    row = row + 1;
+
+  end
+
+  Readable = 1;
+  ModelNum = ones(AtomCounter-1,1);
 
 else
-  fprintf('zReadCIFAtoms: File %s was not found\n', Filename);
-  ATOM_TYPE = [];
-  ATOMNUMBER = [];
-  NTLETTER = [];
-  NTNUMBER = [];
-  P        = [];
-  ATOMNAME = [];
-  VERSION  = [];
-  UNITNAME = [];
-  OCC      = [];
-  BETA     = [];
-  CHAIN    = [];
-  ModelNum = [];
-  Readable = 0;
-  return
+  PDBID = PDBFilename(1:4);
+
+  if Verbose > 0,
+    fprintf('Attempting to download %s.cif from PDB\n', PDBID);
+  end
+
+  a = ['http://www.rcsb.org/pdb/files/' PDBID '.cif'];
+
+  try
+    c = urlread(a);
+    fid = fopen(['PDBFiles' filesep PDBID '.cif'],'w');
+    fprintf(fid,'%s\n',c);
+    fclose(fid);
+  catch
+
+    fprintf('zReadCIFAtoms: File %s was not found\n', PDBFilename);
+    ATOM_TYPE = [];
+    ATOMNUMBER = [];
+    NTLETTER = [];
+    NTNUMBER = [];
+    P        = [];
+    ATOMNAME = [];
+    VERSION  = [];
+    UNITNAME = [];
+    OCC      = [];
+    BETA     = [];
+    CHAIN    = [];
+    ModelNum = [];
+    UNITID   = [];
+    Readable = 0;
+    return
+  end
 end
+
+return
+
+
+
+
+
+
+
+
 
 % -------------------------------------- Extract MODRES rows
 
