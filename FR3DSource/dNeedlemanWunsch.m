@@ -58,8 +58,6 @@ j = M;     % current location in seq2
 s1 = [];   % accumulating letters in first row of alignment
 s2 = [];   % accumulating letters in second row of alignment
 
-matches = 0;
-
 while (i > 0) || (j > 0),
   switch tracematrix(i+1,j+1),
   case 1,
@@ -77,11 +75,10 @@ while (i > 0) || (j > 0),
     align2 = [j align2];
     i = i - 1;
     j = j - 1;
-    matches = matches + 1;
   end
 end    
 
-
+matches = sum(s1==s2);
 
 return
 
@@ -106,4 +103,9 @@ seq2 = 'aacguaugugcaga';
 File = zAddNTData({'1s72','2aw4'});
 seq1 = cat(2,File(1).NT.Base);
 seq2 = cat(2,File(2).NT.Base);
+tic
 [Score, Alignment, Start] = nwalign(seq1,seq2,'Alphabet','NT')
+toc
+tic
+[matches,align1,align2,s1,s2] = dNeedlemanWunsch(seq1,seq2,p,d)
+toc

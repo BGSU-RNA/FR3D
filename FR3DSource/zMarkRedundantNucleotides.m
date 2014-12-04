@@ -14,7 +14,7 @@ DiscCutoff = 0.4;                               % limit on how dissimilar
 for f = 1:length(File),
 
  File(f).Redundant = sparse([],[],[],length(File(f).NT),length(File(f).NT));
- LongestChain{f} = [1 1];
+ LongestChain{f} = [];
 
  ChainIndicator = zeros(1,length(File(f).NT));
  clear NuclNum
@@ -67,7 +67,7 @@ for f = 1:length(File),
     end
 
     if Verbose > 0,
-      fprintf('%s %s\n', File(f).Filename, File(f).Info.ExpTechnique);
+      fprintf('%s\n', File(f).Filename);
       for u = 1:length(U),
         fprintf('%s Chain %s (%5.4f):  %s\n', File(f).Filename, File(f).NT(indic{u}(1)).Chain, U(u), bases{u});
       end
