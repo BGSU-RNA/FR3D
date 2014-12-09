@@ -14,7 +14,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
   end
 
   if nargin < 6,
-    Verbose = 3;
+    Verbose = 1;
   end
 
   if nargin < 5,

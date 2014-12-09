@@ -34,34 +34,16 @@ end
 for f=1:length(Filenames),
   Filename = Filenames{f};
 
-  if ~isempty(strfind(lower(Filename),'cifatoms')),
-    PDBFilename = Filename;
-    PDBID = strrep(Filename,'.cifatoms','');
-    Filename = [PDBID '-CIF'];
-  elseif ~isempty(strfind(lower(Filename),'.cif')),
-    PDBID = upper(strrep(lower(Filename),'.cif',''));
-    PDBFilename = Filename;
-    Filename = [PDBID '-CIF'];
-  elseif ~isempty(strfind(lower(Filename),'-cif')),
-    PDBID = upper(strrep(lower(Filename),'-cif',''));
-    PDBFilename = strrep(upper(Filename),'-CIF','.cifatoms');
-  elseif isempty(strfind(lower(Filename),'.pdb')),
-    PDBID = upper(Filename);
-    PDBFilename  = [PDBID '.pdb'];
-  else
-    PDBFilename  = Filename;
-    i = strfind(Filename,'.');
-    Filename = Filename(1:(i(end)-1));
-    PDBID = upper(strrep(Filename,'.pdb',''));
-    ReadCode = 4;
-  end
+  PDBID = strrep(upper(Filename),'.MAT','');
+  PDBID = strrep(PDBID,'.CIFATOMS','');
+  PDBID = strrep(PDBID,'.CIF','');
+  PDBID = strrep(PDBID,'-CIF','');
 
-  FILENAME = upper(Filename);
-  filename = lower(Filename);
+  MatFile = [PDBID '.mat'];                                 % load this file if it exists
 
   ClassifyCode = 0;
   SaveCode     = 0;
-  ReadPDB      = 0;
+  ReadText     = 0;
 
   if (ReadCode > 3),
     ReadFull = 1;
@@ -71,51 +53,42 @@ for f=1:length(Filenames),
 
   clear File
 
-  if ReadCode == 4,                     % re-read the PDB file
-    File = zReadandAnalyze(PDBFilename,Verbose);   % might not work on a Mac
-    ClassifyCode = 1;
-    ReadFull = 0;                       % no need to read PDB file again
-    ReadPDB  = 1;
-  else                                  % try to load a precomputed version
-    if (exist(strcat(Filename,'.mat'),'file') > 0),
-      load(strcat(Filename,'.mat'),'File','-mat');
-      if Verbose > 0,
-        fprintf('Loaded  %s\n', [Filename '.mat']);
-        zFlushOutput;
+  if ReadCode == 4,
+    File = zReadandAnalyze(Filename,Verbose);               % read text file; trust that its filename is correct; this is the only way to use original .cif file
+    File.Filename = PDBID;
+    ClassifyCode = 1;                                       % need to classify interactions
+    ReadText = 1;                                           % read the text file of coordinates
+  end
+
+  if ReadCode < 4,                                          % try to load a .mat file; faster
+    try
+      load(MatFile,'File','-mat');
+    catch
+      try
+        load([lower(PDBID) '.mat'],'File','-mat');
+      catch
+        try 
+          load(PDBID,'File','-mat');
+        catch
+          ReadCode = 5;                                     % failed to load a mat file, now look for a text file to read
+        end
       end
-    elseif (exist(strcat(FILENAME,'.MAT'),'file') > 0),  % helps on a Mac
-      load(strcat(FILENAME,'.MAT'),'File','-mat');
-      if Verbose > 0,
-        fprintf('Loaded  %s\n', [FILENAME '.MAT']);
-        zFlushOutput;
-      end
-    elseif (exist(strcat(FILENAME,'.mat'),'file') > 0),  % helps on a Mac
-      load(strcat(FILENAME,'.mat'),'File','-mat');
-      if Verbose > 0,
-        fprintf('Loaded  %s\n', [FILENAME '.mat']);
-        zFlushOutput;
-      end
-    elseif (exist(strcat(filename,'.MAT'),'file') > 0),  % helps on a Mac
-      load(strcat(filename,'.MAT'),'File','-mat');
-      if Verbose > 0,
-        fprintf('Loaded  %s\n', [FILENAME '.mat']);
-        zFlushOutput;
-      end
-    elseif (exist(strcat(filename,'.mat'),'file') > 0),  % helps on a Mac
-      load(strcat(filename,'.mat'),'File','-mat');
-      if Verbose > 0,
-        fprintf('Loaded  %s\n', [filename '.MAT']);
-        zFlushOutput;
-      end
-    else
-      ReadFull = 1;
     end
   end
 
-  if (ReadFull == 1),                     % try to load the full version
+  if ReadCode < 4,
+    if Verbose > 0,
+      fprintf('Loaded  %s\n', [Filename '.mat']);
+      zFlushOutput;
+    end
+  end
+
+  if ReadCode == 5,
+    PDBFilename = [PDBID '.cifatoms'];                      % try to read the processed file with unit ids added and symmetry operations done
     File = zReadandAnalyze(PDBFilename,Verbose);
-    ClassifyCode = 1;
-    ReadPDB      = 1;
+    File.Filename = PDBID;
+    ClassifyCode = 1;                                       % need to classify interactions
+    ReadText = 1;                                           % read the text file of coordinates
   end
 
   if ~exist('File'),
@@ -314,33 +287,37 @@ for f=1:length(Filenames),
 %    end
   end
 
-  % ----------------- If it just read the .pdb file and no pairs, look at BUC
 
-  if (ReadPDB == 1) && (isempty(strfind(PDBFilename,'.pdb1'))) && length(File.NT) > 0,
-    bp = nnz(zSparseRange(abs(triu(File.Edge)),0,16));
-                                                  % number of basepairs
-    r  = bp / length(File.NT);                    % ratio of bp to nt
-    if (r < 0.4) && isempty(strfind(lower(PDBFilename),'cif')),                                 % very few basepairs found
-      if Verbose > 0,
-        fprintf('Few basepairs found (%7.4f basepairs per nucleotide), reading the biological unit coordinates\n',r);
-        zFlushOutput;
-      end
-      File1 = zGetNTData([PDBFilename '1'],4,1);   % read biological unit coords
-      if length(File1.NT) > 0,
-        bp = nnz(zSparseRange(abs(triu(File1.Edge)),0,16));
-                                                  % number of basepairs
-        r1 = bp / length(File1.NT);               % ratio of bp to nt
+  % obsolete code for reading .pdb1 files to get the biological unit coordinates; these can be obtained with symmetry operators in CIF files
+  if 0 > 1,
+    % ----------------- If it just read the coordinate file and no pairs, look at BUC
+
+    if (ReadText == 1) && (isempty(strfind(PDBFilename,'.pdb1'))) && length(File.NT) > 0,
+      bp = nnz(zSparseRange(abs(triu(File.Edge)),0,16));
+                                                    % number of basepairs
+      r  = bp / length(File.NT);                    % ratio of bp to nt
+      if (r < 0.4) && isempty(strfind(lower(PDBFilename),'cif')),                                 % very few basepairs found
         if Verbose > 0,
-          fprintf('Biological unit coordinates have %7.4f basepairs per nucleotide\n',r1);
+          fprintf('Few basepairs found (%7.4f basepairs per nucleotide), reading the biological unit coordinates\n',r);
           zFlushOutput;
         end
-        if r1 > r,                              % pdb1 has higher basepair ratio
-          File = File1;                         % use biological unit coords
+        File1 = zGetNTData([PDBFilename '1'],4,1);   % read biological unit coords
+        if length(File1.NT) > 0,
+          bp = nnz(zSparseRange(abs(triu(File1.Edge)),0,16));
+                                                    % number of basepairs
+          r1 = bp / length(File1.NT);               % ratio of bp to nt
+          if Verbose > 0,
+            fprintf('Biological unit coordinates have %7.4f basepairs per nucleotide\n',r1);
+            zFlushOutput;
+          end
+          if r1 > r,                              % pdb1 has higher basepair ratio
+            File = File1;                         % use biological unit coords
+          end
         end
       end
     end
   end
-    
+
   File = orderfields(File);
 
   Saved = 0;

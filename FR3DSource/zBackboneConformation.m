@@ -7,7 +7,7 @@ end
 
 File.Backbone = sparse([],[],[],length(File.NT),length(File.NT));
 
-PDBFile = [File.PDBID '.pdb'];
+PDBFile = [File.PDBID '.pdb'];             % programs below do not read .cif files
 
 if exist('chiropraxis.jar') == 2 ...       % if chiropraxis is here
    && File.NumNT > 1 ...                   % and there is more than one NT

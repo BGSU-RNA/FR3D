@@ -39,12 +39,12 @@ for f = 1:length(File),
         if x < 2  && x < y,
           File(f).Covalent(i-1,j(k)) = 1;
           File(f).Covalent(j(k),i-1) = -1;
-fprintf('Covalent connection c35 between nucleotides not in order in the PDB file.  %s %s %s\n', File(f).Filename, File(f).NT(i-1).Number, File(f).NT(j(k)).Number);
+fprintf('zBackboneContinuity: Covalent connection c35 between nucleotides not in order in the PDB file.  %s %s %s\n', File(f).Filename, File(f).NT(i-1).Number, File(f).NT(j(k)).Number);
         elseif y < 2,
           File(f).Covalent(i-1,j(k)) = 2;
           File(f).Covalent(j(k),i-1) = -2;
 
-fprintf('Covalent connection c25 between nucleotides not in order in the PDB file.  %s %s %s\n', File(f).Filename, File(f).NT(i-1).Number, File(f).NT(j(k)).Number);
+fprintf('zBackboneContinuity: Covalent connection c25 between nucleotides not in order in the PDB file.  %s %s %s\n', File(f).Filename, File(f).NT(i-1).Number, File(f).NT(j(k)).Number);
         end
       end
     end

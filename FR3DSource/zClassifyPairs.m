@@ -41,7 +41,7 @@ v = v(k);
 
 % fprintf('zClassifyPairs:  Minimum distance between centers = %7.4f\n',min(v));
 
-k = find(v > 2);                                % 1QCU has overlapping NTs
+k = find(v > 2);                                % some files have overlapping NTs, this will avoid them
                                                 % 2.75 occurs sometimes
 i = i(k);
 j = j(k);

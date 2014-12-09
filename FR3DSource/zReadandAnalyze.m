@@ -48,10 +48,11 @@ if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading'], 'dir') == 7,
   end
 end
 
-if isempty(strfind(lower(PDBFilename),'.cif')),
+if isempty(strfind(lower(PDBFilename),'.cif')) && isempty(strfind(lower(PDBFilename),'-cif')),
   [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(PDBFilename,Verbose);
+  CoordinateFile = PDBFilename;
 else
-  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable] = zReadCIFAtoms(PDBFilename,Verbose);
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms(PDBFilename,Verbose);
 end
 
 if ~isempty(ATOMNUMBER),
@@ -76,7 +77,7 @@ end
 % Otherwise they land right on top of one another and confuse basepairs
 % But don't do this with files like 3NJ6, which are x-ray and have 2 models
 
-if (max(ModelNum) > 4) && (PDBFilename(end) == 'b'),
+if (max(ModelNum) > 2),
   P(:,1) = P(:,1) + 1000*(ModelNum - 1);  % move by 1000 Angstroms
 end
 
@@ -140,9 +141,9 @@ while i <= length(NTNUMBER),                 % go through all atoms
       NT(n).Number   = NTNUMBER{j(1)};        % nucleotide number for this molecule
       NT(n).ModelNum = ModelNum(j(1));        % model number, especially for NMR    
       if exist('UNITID'),
-        NT(n).UnitID = UNITID{j(1)};          % Unit ID like 3G9Y|1|C|G|3
+        NT(n).ID = UNITID{j(1)};          % Unit ID like 3G9Y|1|C|G|3
       else
-        NT(n).UnitID = '';
+        NT(n).ID = '';
       end
       NT(n).AltLoc   = VERSION{j(1)};
     end
@@ -309,6 +310,11 @@ while i <= length(NTNUMBER),                 % go through all atoms
       k = min(4,length(j));
       AA(aa).Center     = mean(P(j(1:k),1:3),1); % backbone center
       AA(aa).ModelNum   = ModelNum(j(1));     % Anton 9/14/2011
+      if exist('UNITID'),
+        AA(aa).ID = UNITID{j(1)};          % Unit ID like 3G9Y|1|C|G|3
+      else
+        AA(aa).ID = '';
+      end
       
       aa = aa + 1;
       UnitType = 2;
@@ -401,7 +407,7 @@ end
 
 % Fill in fields of File ----------------------------------------------------
 
-File.PDBFilename = PDBFilename;
+File.PDBFilename = CoordinateFile;
 File.Filename  = Filename;
 File.NT        = NT(1:NumNT);
 File.NumNT     = NumNT;

@@ -36,21 +36,58 @@
 
 % Test with:  File = zAddNTData('2QBG.cifatoms')
 
-function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,BETA,UNITID,ModelNum,Readable] = zReadCIFAtoms(PDBFilename,Verbose)
+function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,BETA,UNITID,ModelNum,Readable,UseFile] = zReadCIFAtoms(Filename,Verbose)
 
 Verbose = 1;
+CIFDownloaded = 0;
+UseFile = '';
 
-KeepPDB = 1;
+PDBID = strrep(upper(Filename),'.MAT','');
+PDBID = strrep(PDBID,'.CIFATOMS','');
+PDBID = strrep(PDBID,'.CIF','');
+PDBID = strrep(PDBID,'-CIF','');
 
-if exist(PDBFilename),
+if exist(Filename),
+  UseFile = Filename;
+elseif exist([PDBID '.cif']),                           % no .cif file found
+  CIFDownloaded = 1;
+else
+  try
+    if Verbose > 0,
+      fprintf('zReadCIFAtoms: Attempting to download %s.cif from PDB\n', PDBID);
+    end
+    c = urlread(['http://www.rcsb.org/pdb/files/' PDBID '.cif']);
+    fid = fopen(['PDBFiles' filesep PDBID '.cif'],'w');
+    fprintf(fid,'%s\n',c);
+    fclose(fid);
+    CIFDownloaded = 1;
+  catch
+    fprintf('zReadCIFAtoms: Unable to download %s.cif from PDB\n', PDBID);
+  end
+end
+
+if CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.cifatoms')),
+  try
+    if ~isempty(strfind(pwd,'zirbel')),
+      fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in .cifatoms file\n');
+%      ['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']
+      system(['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
+    end
+    UseFile = [PDBID '.cifatoms'];
+  catch
+    fprintf('zReadCIFAtoms: Unable to use cifatom_writing.py to convert .cif file to .cifatoms file\n');
+  end
+end
+
+if ~isempty(UseFile),
   c = 1;                               % line counter
   if Verbose > 0,
-    fprintf('zReadCIFAtoms: Reading %s\n', PDBFilename);
+    fprintf('zReadCIFAtoms: Reading %s\n', Filename);
   end
 
-  T = textread(PDBFilename,'%s','whitespace','\n');
+  T = textread(Filename,'%s','whitespace','\n');
 
-  fprintf('zReadCIFAtoms:  Read %d lines from file\n',size(T,1));
+  fprintf('zReadCIFAtoms: Read %d lines from file\n',size(T,1));
 
   header = 1;
   fieldcounter = 0;  
@@ -80,8 +117,8 @@ if exist(PDBFilename),
         ChainField = fieldcounter;
       case '_atom_site.label_entity_id' 
       case '_atom_site.label_seq_id' 
-        ResidueNumberField = fieldcounter;
       case '_atom_site.pdbx_PDB_ins_code' 
+        InsertionCode = fieldcounter;
       case '_atom_site.Cartn_x' 
         XCoordField = fieldcounter;
       case '_atom_site.Cartn_y' 
@@ -96,12 +133,14 @@ if exist(PDBFilename),
       case '_atom_site.occupancy_esd' 
       case '_atom_site.B_iso_or_equiv_esd' 
       case '_atom_site.pdbx_formal_charge' 
-      case '_atom_site.auth_seq_id' 
+      case '_atom_site.auth_seq_id'
+        ResidueNumberField = fieldcounter;
       case '_atom_site.auth_comp_id' 
       case '_atom_site.auth_asym_id' 
       case '_atom_site.auth'
       case '_atom_id' 
       case '_atom_site.pdbx_PDB_model_num'
+        ModelNumberField = fieldcounter;
       case '_atom_site.unit_id'
         UnitIDField = fieldcounter;
       end 
@@ -116,7 +155,7 @@ if exist(PDBFilename),
 
     if strcmp(entry{1},'ATOM') || strcmp(entry{1},'HETATM'),
 
-%function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,OCC,BETA,ModelNum,Readable] = zReadCIFAtoms(PDBFilename,Verbose)
+%function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,OCC,BETA,ModelNum,Readable] = zReadCIFAtoms(Filename,Verbose)
 
       ATOM_TYPE{AtomCounter} = entry{AtomTypeField};
       ATOMNAME{AtomCounter} = strrep(entry{AtomLabelIDField},'"','');       % remove double quotes on backbone atom names
@@ -124,14 +163,25 @@ if exist(PDBFilename),
       VERSION{AtomCounter} = entry{VersionField};
       UNITNAME{AtomCounter} = entry{UnitNameField};
       CHAIN{AtomCounter} = entry{ChainField};
-      NTNUMBER{AtomCounter} = entry{ResidueNumberField};
+      if entry{InsertionCode} ~= '?'
+        NTNUMBER{AtomCounter} = [entry{ResidueNumberField} entry{InsertionCode}];
+      else
+        NTNUMBER{AtomCounter} = entry{ResidueNumberField};
+      end
       P(AtomCounter,:) = [str2num(entry{XCoordField}) str2num(entry{YCoordField}) str2num(entry{ZCoordField})];
       BETA(AtomCounter,1) = NaN;
       OCC{AtomCounter} = 'NaN';
+      ModelNum(AtomCounter,1) = str2num(entry{ModelNumberField});
       if isempty(UnitIDField),
         UNITID{AtomCounter} = '';
+        MN = 1;                          % just in case
       else
         UNITID{AtomCounter} = entry{UnitIDField};
+        UnitIDParts = zStringSplit(entry{UnitIDField},'|');
+        MN = str2num(UnitIDParts{2});
+        if MN ~= ModelNum(AtomCounter,1),
+          fprintf('zReadCIFAtoms: Disagreement about model number in this entry: %s\n',T{row,1});
+        end
       end
 
     end
@@ -141,25 +191,10 @@ if exist(PDBFilename),
   end
 
   Readable = 1;
-  ModelNum = ones(AtomCounter-1,1);
 
 else
-  PDBID = PDBFilename(1:4);
 
-  if Verbose > 0,
-    fprintf('Attempting to download %s.cif from PDB\n', PDBID);
-  end
-
-  a = ['http://www.rcsb.org/pdb/files/' PDBID '.cif'];
-
-  try
-    c = urlread(a);
-    fid = fopen(['PDBFiles' filesep PDBID '.cif'],'w');
-    fprintf(fid,'%s\n',c);
-    fclose(fid);
-  catch
-
-    fprintf('zReadCIFAtoms: File %s was not found\n', PDBFilename);
+    fprintf('zReadCIFAtoms: File %s was not found\n', Filename);
     ATOM_TYPE = [];
     ATOMNUMBER = [];
     NTLETTER = [];
@@ -174,8 +209,7 @@ else
     ModelNum = [];
     UNITID   = [];
     Readable = 0;
-    return
-  end
+    UseFile = '';
 end
 
 return
