@@ -9,10 +9,11 @@ end
 for f = 1:length(File);
   if length(File(f).NT) > 0,
     clear ChainInd ChainRed
-    Chain = cat(2,File(f).NT.Chain);                  % chains
+    Chain = cell(length(File(f).NT),1);           % cell array to hold chain identifiers
+    [Chain{:}] = deal(File(f).NT.Chain);               % all chain identifiers
     U = unique(Chain);
     for u = 1:length(U),                              % loop through chains
-      ChainInd{u} = find(Chain == U(u));              % NTs in this chain
+      ChainInd{u} = find(ismember(Chain,U{u}));              % NTs in this chain
     end
                              % tally redundancies between all pairs of chains
     ChainRed = [];
@@ -97,7 +98,7 @@ for f = 1:length(File);
 
     if Verbose > 0,
       fprintf('%s\t',File(f).Filename);
-      fprintf('%s',U(KeepChains));
+      fprintf('%s',U{KeepChains});
       fprintf('\n');
     end
 

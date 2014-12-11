@@ -20,11 +20,12 @@ for f = 1:length(File),
  clear NuclNum
 
  if length(File(f).NT) > 0,                     % File has nucleotides
-  Chain = cat(2,File(f).NT.Chain);              % all chain identifiers
+  Chain = cell(length(File(f).NT),1);           % cell array to hold chain identifiers
+  [Chain{:}] = deal(File(f).NT.Chain);               % all chain identifiers
   U = unique(Chain);                            % unique chain identifiers
 
   for u = 1:length(U),                          % loop through all chains IDs
-    i = find(Chain == U(u));                    % indices of this chain ID
+    i = find(ismember(Chain,U{u}));             % indices of this chain ID
     ChainIndicator(i) = u;                      % mark these as all the same
     
     for b = 1:length(i),
@@ -53,7 +54,7 @@ for f = 1:length(File),
     end
   end
 
-  U = unique(ChainIndicator);                   % unique chain identifiers
+  U = unique(ChainIndicator);                   % unique chain identifier integers
 
   if length(U) > 1,                             % more than one chain
     leng = [];

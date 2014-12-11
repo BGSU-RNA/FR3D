@@ -35,6 +35,7 @@
 %    '.'    '3'    'GLY'    '1'    'C'    '1'    '2QBG|1|1|GLY|3'     ''
 
 % Test with:  File = zAddNTData('2QBG.cifatoms')
+% Test with:  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,BETA,UNITID,ModelNum,Readable,UseFile] = zReadCIFAtoms2('4V99.cifatoms')
 
 function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,BETA,UNITID,ModelNum,Readable,UseFile] = zReadCIFAtoms(Filename,Verbose)
 
@@ -87,46 +88,68 @@ if ~isempty(UseFile),
     fprintf('zReadCIFAtoms: Reading %s\n', Filename);
   end
 
-  T = textread(Filename,'%s','whitespace','\n');
-
-  fprintf('zReadCIFAtoms: Read %d lines from file\n',size(T,1));
-
+  fid = fopen(UseFile,'r');
+  header = 1;
+  headerlines = 0;
   header = 1;
   fieldcounter = 0;  
   row = 1;
   UnitIDField = [];
-  while header == 1,
-    if any(strfind(T{row,1},'ATOM') == 1) || any(strfind(T{row,1},'HETATM') == 1),                % line starts with ATOM or HETATM
+  ColumnsToKeep = 1;
+
+  Line = fgetl(fid);
+  while ischar(Line) && header == 1,
+    headerlines = headerlines + 1;
+    if any(strfind(Line,'ATOM') == 1) || any(strfind(Line,'HETATM') == 1),                % line starts with ATOM or HETATM
       header = 0;                                    % header is over
-      break
     end
-    if ~isempty(strfind(T{row,1},'_atom_site.')),
+    if ~isempty(strfind(Line,'_atom_site.')),
       fieldcounter = fieldcounter + 1;
-      switch strrep(T{row,1},' ',''),
+      switch strrep(Line,' ',''),
       case '_atom_site.group_PDB' 
         AtomTypeField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.id'
         AtomNumberField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.type_symbol'
       case '_atom_site.label_atom_id'
         AtomLabelIDField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_id' 
       case '_atom_site.label_alt_id' 
         VersionField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.label_comp_id' 
         UnitNameField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.label_asym_id' 
         ChainField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.label_entity_id' 
       case '_atom_site.label_seq_id' 
       case '_atom_site.pdbx_PDB_ins_code' 
-        InsertionCode = fieldcounter;
+        InsertionCodeField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.Cartn_x' 
         XCoordField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.Cartn_y' 
         YCoordField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.Cartn_z' 
         ZCoordField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.occupancy' 
       case '_atom_site.B_iso_or_equiv' 
       case '_atom_site.Cartn_x_esd' 
@@ -137,106 +160,101 @@ if ~isempty(UseFile),
       case '_atom_site.pdbx_formal_charge' 
       case '_atom_site.auth_seq_id'
         ResidueNumberField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.auth_comp_id' 
       case '_atom_site.auth_asym_id' 
       case '_atom_site.auth'
       case '_atom_id' 
       case '_atom_site.pdbx_PDB_model_num'
         ModelNumberField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.unit_id'
         UnitIDField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       end 
     end
-    row = row + 1;
+    Line = fgetl(fid);
   end
 
-  AtomCounter = 1;
-  StartTime = cputime;
+  fclose(fid);
 
-  while row <= size(T,1),
-    entry = zStringSplit(T{row,1});
+  headerlines = headerlines - 1;
 
-    if mod(AtomCounter,10000) == 0,
-      fprintf('zReadCIFAtoms: Processed %d atoms so far, %8.6f atoms per second\n',AtomCounter,AtomCounter/(cputime-StartTime));
+  fprintf('Found %d fields to read\n',fieldcounter);
+  fprintf('Found %d header lines to skip\n',headerlines);
+
+  format = '';
+  for i = 1:fieldcounter,
+    if any(i == [XCoordField YCoordField ZCoordField ModelNumberField]),
+      format = [format '%f'];
+    elseif any(i == [AtomTypeField AtomNumberField AtomLabelIDField VersionField UnitNameField ChainField InsertionCodeField ResidueNumberField UnitIDField])
+      format = [format '%s'];
+    else
+      format = [format '%*s'];            % skip this field
     end
+  end
 
-    if strcmp(entry{1},'ATOM') || strcmp(entry{1},'HETATM'),
+  D = whos();
+  fprintf('%12d\n',sum(cat(1,D.bytes)));
 
-%function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,OCC,BETA,ModelNum,Readable] = zReadCIFAtoms(Filename,Verbose)
+  fid = fopen(UseFile);
+  A = textscan(fid,format,'headerlines',headerlines);
+  fclose(fid);
 
-      ATOM_TYPE{AtomCounter}  = entry{AtomTypeField};
-      ATOMNAME{AtomCounter}   = strrep(entry{AtomLabelIDField},'"','');       % remove double quotes on backbone atom names
-      ATOMNUMBER{AtomCounter} = entry{AtomNumberField};
-      VERSION{AtomCounter}    = entry{VersionField};
-      UNITNAME{AtomCounter}   = entry{UnitNameField};
-      CHAIN{AtomCounter}      = entry{ChainField};
-      if entry{InsertionCode} ~= '?'
-        NTNUMBER{AtomCounter} = [entry{ResidueNumberField} entry{InsertionCode}];
-      else
-        NTNUMBER{AtomCounter} = entry{ResidueNumberField};
-      end
-      P(AtomCounter,:)        = [str2num(entry{XCoordField}) str2num(entry{YCoordField}) str2num(entry{ZCoordField})];
-      BETA(AtomCounter,1)     = NaN;
-      OCC{AtomCounter}        = 'NaN';
-      ModelNum(AtomCounter,1) = str2num(entry{ModelNumberField});
-      if isempty(UnitIDField),
-        UNITID{AtomCounter} = '';
-        MN = 1;                          % just in case
-      else
-        UNITID{AtomCounter} = entry{UnitIDField};
-        UnitIDParts = zStringSplit(entry{UnitIDField},'|');
-        MN = str2num(UnitIDParts{2});
-        if MN ~= ModelNum(AtomCounter,1),
-          fprintf('zReadCIFAtoms: Disagreement about model number in this entry: %s\n',T{row,1});
-        end
-      end
+  D = whos();
+  fprintf('%12d\n',round(sum(cat(1,D.bytes))));
 
-      AtomCounter = AtomCounter + 1;
+  i = 1;
 
+  while strcmp(A{fieldtocolumn(AtomTypeField)}{i},'ATOM') || strcmp(A{fieldtocolumn(AtomTypeField)}{i},'HETATM'),
+    i = i + 1;
+  end
+  NumLines = i-1;
+
+  D = whos();
+  fprintf('%12d\n',round(sum(cat(1,D.bytes))));
+
+  fprintf('Found %d lines of ATOM data\n',NumLines);
+
+  ATOM_TYPE     = A{fieldtocolumn(AtomTypeField)}(1:NumLines);
+  ATOMNAME      = A{fieldtocolumn(AtomLabelIDField)}(1:NumLines);
+  ATOMNUMBER    = A{fieldtocolumn(AtomNumberField)}(1:NumLines);
+  VERSION       = A{fieldtocolumn(VersionField)}(1:NumLines);
+  UNITNAME      = A{fieldtocolumn(UnitNameField)}(1:NumLines);
+  CHAIN         = A{fieldtocolumn(ChainField)}(1:NumLines);
+  InsertionCode = A{fieldtocolumn(InsertionCodeField)}(1:NumLines);
+  NTNUMBER      = A{fieldtocolumn(ResidueNumberField)}(1:NumLines);
+  P             = [A{fieldtocolumn(XCoordField)}(1:NumLines) A{fieldtocolumn(YCoordField)}(1:NumLines) A{fieldtocolumn(ZCoordField)}(1:NumLines)];
+  ModelNum      = A{fieldtocolumn(ModelNumberField)}(1:NumLines);
+
+  D = whos();
+  fprintf('%12d\n',sum(cat(1,D.bytes)));
+
+  fprintf('Defined most variables to pass back\n');
+
+  BETA = NaN * ones(NumLines,1);
+  OCC = cell(NumLines,1);
+  for i = 1:NumLines,
+    if InsertionCode{i} ~= '?'
+      NTNUMBER{i} = [NTNUMBER{i} InsertionCode{i}];
     end
+    ATOMNAME{i} = strrep(ATOMNAME{i},'"','');             % remove double quotes on backbone atom names
+    OCC{i} = '';
+  end
 
-    row = row + 1;
-
-    if AtomCounter == DataSize,
-      DataSize = DataSize * 2;
-      ATOM_TYPE{DataSize} = '';
-      ATOMNAME{DataSize} = '';
-      ATOMNUMBER{DataSize} = '';
-      VERSION{DataSize} = '';
-      UNITNAME{DataSize} = '';
-      CHAIN{DataSize} = '';
-      NTNUMBER{DataSize} = '';
-      P(DataSize,:) = [0 0 0];
-      BETA(DataSize,1) = NaN;
-      OCC{DataSize} = '';
-      ModelNum(DataSize,1) = NaN;
-      UNITID{DataSize} = '';
-    end
-
+  if ~isempty(UnitIDField),
+    UNITID = A{fieldtocolumn(UnitIDField)}(1:NumLines);
+  else
+    UNITID = OCC;
   end
 
   Readable = 1;
-  fprintf('zReadCIFAtoms: Processed %d atoms from file\n',AtomCounter-1);
 
-  AtomCounter = AtomCounter - 1;
-
-  NTNUMBER{AtomCounter-1}
-  CHAIN{AtomCounter-1}
-  NTNUMBER{AtomCounter}
-  CHAIN{AtomCounter}
-
-  ATOM_TYPE  = ATOM_TYPE(1:AtomCounter);
-  ATOMNAME   = ATOMNAME(1:AtomCounter);
-  ATOMNUMBER = ATOMNUMBER(1:AtomCounter);
-  VERSION    = VERSION(1:AtomCounter);
-  UNITNAME   = UNITNAME(1:AtomCounter);
-  CHAIN      = CHAIN(1:AtomCounter);
-  NTNUMBER   = NTNUMBER(1:AtomCounter);
-  P          = P(1:AtomCounter,:);
-  BETA       = BETA(1:AtomCounter,1);
-  OCC        = OCC(1:AtomCounter);
-  ModelNum   = ModelNum(1:AtomCounter,1);
-  UNITID     = UNITID(1:AtomCounter);
+  D = whos();
+  fprintf('%12d\n',sum(cat(1,D.bytes)));
 
 else
 

@@ -52,7 +52,7 @@ if isempty(strfind(lower(PDBFilename),'.cif')) && isempty(strfind(lower(PDBFilen
   [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(PDBFilename,Verbose);
   CoordinateFile = PDBFilename;
 else
-  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms(PDBFilename,Verbose);
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms2(PDBFilename,Verbose);
 end
 
 if ~isempty(ATOMNUMBER),
@@ -88,15 +88,22 @@ zStandardBases                % read in QM locations of atoms in 4 bases
 Lim(1,:) = [10 8 11 8];       % number of base atoms, excluding hydrogen
 Lim(2,:) = [15 13 16 12];     % total number of atoms, including hydrogen
 
+% Define standard amino acid names
+
+AminoAcids = {'ALA','ARG','ASN','ASP','CYS','GLN','GLU','GLY','HIS','ILE','LEU','LYS','MET','PHE','PRO','PYL','SEC','SER','THR','TRP','TYR','VAL'};  % 22 values
+
 % Extract locations of base and sugar atoms ---------------------------------
 
 NT  = [];                                    % nucleotide data structure
 n   = 1;                                     % current NT index
 AA  = [];                                    % amino acid data structure
-Het = [];                                    % HETATM data structure
 aa  = 1;                                     % current amino acid index
-i   = 1;                                     % current atom/row number
+Het = [];                                    % HETATM data structure
 hh  = 1;                                     % current HETATM number
+i   = 1;                                     % current atom/row number
+ntDataSize  = 1000;                          % manage space allocation
+aaDataSize  = 1000;                          % manage space allocation
+hetDataSize = 1000;                          % manage space allocation
 
 while i <= length(NTNUMBER),                 % go through all atoms
 
@@ -112,6 +119,12 @@ while i <= length(NTNUMBER),                 % go through all atoms
     Het(hh).ModelNum   = ModelNum(i);   % Anton 9/14/2011
     i  = i + 1;
     hh = hh + 1;
+
+    if hh == hetDataSize,
+      hetDataSize = hetDataSize * 2;
+      Het(hetDataSize).Unit = '';
+    end
+
   end
 
   if i <= length(NTNUMBER),
@@ -141,7 +154,7 @@ while i <= length(NTNUMBER),                 % go through all atoms
       NT(n).Number   = NTNUMBER{j(1)};        % nucleotide number for this molecule
       NT(n).ModelNum = ModelNum(j(1));        % model number, especially for NMR    
       if exist('UNITID'),
-        NT(n).ID = UNITID{j(1)};          % Unit ID like 3G9Y|1|C|G|3
+        NT(n).ID = UNITID{j(1)};              % Unit ID like 3G9Y|1|C|G|3
       else
         NT(n).ID = '';
       end
@@ -298,8 +311,7 @@ while i <= length(NTNUMBER),                 % go through all atoms
       NT(n).Code   = 4;                          % A is 1, C is 2, etc.
       UnitType = 1;                              % RNA nucleotide
       n = n + 1;
-    elseif length(UnitName) == 3,                  % probably an amino acid
-
+    elseif ismember(UnitName,AminoAcids),        % one of 22 amino acids
       AA(aa).AtomNumber = ATOMNUMBER(j);
       AA(aa).Atom       = ATOMNAME(j);        % store atom names
       AA(aa).Unit       = UNITNAME{j(1)};
@@ -332,6 +344,16 @@ while i <= length(NTNUMBER),                 % go through all atoms
       fprintf('zReadandAnalyze:  Unknown unit %s\n',UnitName);
 
     end                                         % end four if statements
+
+    if n == ntDataSize,
+      ntDataSize = ntDataSize * 2;
+      NT(ntDataSize).Unit = '';
+    end
+
+    if aa == aaDataSize,
+      aaDataSize = aaDataSize * 2;
+      AA(aaDataSize).Unit = '';
+    end
 
     if (UnitType == 0) || NTBackbone == 1,      % unrecognized nucleotide
       fprintf('Unrecognized unit:  %s%4s_%s will be added as HETATM ========= \n',UnitName,NTNUMBER{j(1)},CHAIN{j(1)});
@@ -378,6 +400,7 @@ end                                           % end while i < ... loop
 
 NumNT = n - 1;                                % total number of nucleotides
 NumAA = aa - 1;
+NumHet = hh - 1;
 
 % Compute best shift and rotation matrices ---------------------------------
 
@@ -419,8 +442,8 @@ File.Edge      = sparse(NumNT,NumNT);
 File.Modified  = 1;
 File.Header    = [];
 File.BasePhosphate = [];
-File.AA        = AA;
-File.Het       = Het;
+File.AA        = AA(1:NumAA);
+File.Het       = Het(1:NumHet);
 
 % Calculate configuration (syn or anti) -------------------------------------
 
