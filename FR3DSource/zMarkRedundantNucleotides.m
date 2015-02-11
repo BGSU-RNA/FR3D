@@ -1,7 +1,7 @@
 % zMarkRedundantNucleotides(File) identifies redundant chains in File and sets File.Redundant(i,j) = 1 if nucleotides with indices i and j, from different chains, are redundant when these chains are aligned and superimposed.
 
 % Some chains are identified with different letters.
-% In NMR structures, however, they may all be called the same thing
+% In NMR structures, however, they may all have the same letter, but be in different models
 
 function [File] = zMarkRedundantNucleotides(File, Verbose)
 
@@ -21,7 +21,7 @@ for f = 1:length(File),
 
  if length(File(f).NT) > 0,                     % File has nucleotides
   Chain = cell(length(File(f).NT),1);           % cell array to hold chain identifiers
-  [Chain{:}] = deal(File(f).NT.Chain);               % all chain identifiers
+  [Chain{:}] = deal(File(f).NT.Chain);          % all chain identifiers
   U = unique(Chain);                            % unique chain identifiers
 
   for u = 1:length(U),                          % loop through all chains IDs
