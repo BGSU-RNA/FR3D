@@ -1,12 +1,12 @@
 % zGetNTData(Filenames,ReadCode,Verbose) reads data files, depending on ReadCode
 %
 % If ReadCode = 0, it looks for Filename.mat and reads it if it exists.
-% If ReadCode = 1, it looks for Filename.mat, reads it, and re-does 
+% If ReadCode = 1, it looks for Filename.mat, reads it, and re-does
 %    the classification of interacting pairs
-% If ReadCode = 2, it looks for Filename.mat, reads it 
+% If ReadCode = 2, it looks for Filename.mat, reads it
 % If ReadCode = 3, it looks for Filename.mat, reads it, re-does the
 %    classification of pairs
-% If ReadCode = 4, it reads Filename.pdb, analyzes each nucleotide, 
+% If ReadCode = 4, it reads Filename.pdb, analyzes each nucleotide,
 %    and classifies interacting pairs
 
 function [Files] = zGetNTData(Filenames,ReadCode,Verbose)
@@ -38,6 +38,7 @@ for f=1:length(Filenames),
   PDBID = strrep(PDBID,'.CIFATOMS','');
   PDBID = strrep(PDBID,'.CIF','');
   PDBID = strrep(PDBID,'-CIF','');
+  PDBID = strrep(PDBID,'.PDB','');
 
   MatFile = [PDBID '.mat'];                                 % load this file if it exists
 
@@ -53,6 +54,11 @@ for f=1:length(Filenames),
 
   clear File
 
+  if ~isempty(strfind(upper(Filename),'.PDB')),
+    File = zReadandAnalyze(Filename);
+    ReadCode = 0;
+  end
+
   if ReadCode == 4,
     File = zReadandAnalyze(Filename,Verbose);               % read text file; trust that its filename is correct; this is the only way to use original .cif file
     File.Filename = PDBID;
@@ -67,7 +73,7 @@ for f=1:length(Filenames),
       try
         load([lower(PDBID) '.mat'],'File','-mat');
       catch
-        try 
+        try
           load(PDBID,'File','-mat');
         catch
           ReadCode = 5;                                     % failed to load a mat file, now look for a text file to read
@@ -84,8 +90,12 @@ for f=1:length(Filenames),
   end
 
   if ReadCode == 5,
-    PDBFilename = [PDBID '.cifatoms'];                      % try to read the processed file with unit ids added and symmetry operations done
-    File = zReadandAnalyze(PDBFilename,Verbose);
+    try
+      PDBFilename = [PDBID '.cifatoms'];                      % try to read the processed file with unit ids added and symmetry operations done
+      File = zReadandAnalyze(PDBFilename,Verbose);
+    catch
+      File = zReadandAnalyze(Filename,Verbose);
+    end
     File.Filename = PDBID;
     ClassifyCode = 1;                                       % need to classify interactions
     ReadText = 1;                                           % read the text file of coordinates
@@ -164,7 +174,7 @@ for f=1:length(Filenames),
       File = zStoreO3(File);
     end
 
-    if (ReadCode == 1) || (ReadCode == 3) || (ReadCode == 4) || ... 
+    if (ReadCode == 1) || (ReadCode == 3) || (ReadCode == 4) || ...
       (ClassifyCode == 1) || (File.ClassVersion < CurrentVersion),
 
       blank2 = sparse([],[],[],File.NumNT,File.NumNT);
