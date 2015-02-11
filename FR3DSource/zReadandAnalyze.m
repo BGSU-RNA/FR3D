@@ -48,11 +48,11 @@ if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading'], 'dir') == 7,
   end
 end
 
-if isempty(strfind(lower(PDBFilename),'.cif')) && isempty(strfind(lower(PDBFilename),'-cif')),
+if ~isempty(strfind(lower(PDBFilename),'.pdb')),
   [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(PDBFilename,Verbose);
   CoordinateFile = PDBFilename;
 else
-  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms2(PDBFilename,Verbose);
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms(PDBFilename,Verbose);
 end
 
 if ~isempty(ATOMNUMBER),
@@ -152,7 +152,7 @@ while i <= length(NTNUMBER),                 % go through all atoms
       NT(n).Unit     = UNITNAME{j(1)};        % letter for this nucleotide
       NT(n).Chain    = CHAIN{j(1)};           % what chain nucleotide is in
       NT(n).Number   = NTNUMBER{j(1)};        % nucleotide number for this molecule
-      NT(n).ModelNum = ModelNum(j(1));        % model number, especially for NMR    
+      NT(n).ModelNum = ModelNum(j(1));        % model number, especially for NMR
       if exist('UNITID'),
         NT(n).ID = UNITID{j(1)};              % Unit ID like 3G9Y|1|C|G|3
       else
@@ -198,7 +198,7 @@ while i <= length(NTNUMBER),                 % go through all atoms
       NT(n).Beta   = [Sugar(:,4); Loc(1:10,4)];   % sugar first, then base
       NT(n).Center = mean(Loc(1:10,1:3));         % mean of heavy base atoms
       NT(n).Code   = 1;                           % A is 1, C is 2, etc.
-      UnitType = 1;                               % RNA nucleotide               
+      UnitType = 1;                               % RNA nucleotide
       n = n + 1;
     elseif strcmp(UnitName,'C') || strcmp(UnitName,'C+'),
       for k = min(j):max(j),
@@ -327,7 +327,7 @@ while i <= length(NTNUMBER),                 % go through all atoms
       else
         AA(aa).ID = '';
       end
-      
+
       aa = aa + 1;
       UnitType = 2;
 
