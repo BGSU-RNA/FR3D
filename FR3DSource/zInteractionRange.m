@@ -56,11 +56,11 @@ for f = 1:length(File),
 
 
 
-  %    d(q) = max(d(q), abs(i(m)-i(q))+abs(j(m)-j(q))); 
+  %    d(q) = max(d(q), abs(i(m)-i(q))+abs(j(m)-j(q)));
                               % increase interaction range for these pairs
                               % to account for how far they cross i(m),j(m)
 
-      d(q) = max([d(q) min([abs(i(m)-i(q)) abs(j(m)-j(q))],[],2)],[],2); 
+      d(q) = max([d(q) min([abs(i(m)-i(q)) abs(j(m)-j(q))],[],2)],[],2);
                               % for all nested cWW pairs crossed, keep track
                               % of how many nucleotides this pair would need to
                               % move over to get uncrossed, keep the maximum
@@ -93,19 +93,21 @@ for f = 1:length(File),
 
   d = min(d,abs(i-j)-1);              % adjust for local in-strand interactions
 
-  % ----------------------------------- remove interactions between chains; these have range 0 and crossing number 0
+  if 0 > 1,
+    % ----------------------------------- remove interactions between chains and thus set their range and crossing number to 0
 
-  Keep = ones(length(i),1);
-  for k = 1:length(i),
-    if ~strcmp(File(f).NT(i(k)).Chain,File(f).NT(j(k)).Chain),
-      Keep(k) = 0;
+    Keep = ones(length(i),1);
+    for k = 1:length(i),
+      if ~strcmp(File(f).NT(i(k)).Chain,File(f).NT(j(k)).Chain),
+        Keep(k) = 0;
+      end
     end
+    k = find(Keep);
+    i = i(k);
+    j = j(k);
+    d = d(k);
+    cww = cww(k);
   end
-  k = find(Keep);
-  i = i(k);
-  j = j(k);
-  d = d(k);
-  cww = cww(k);
 
   S = sparse(i,j,d,N,N);
   S = S + S';
