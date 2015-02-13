@@ -1,7 +1,7 @@
-% FR3D_interaction_list produces lists of all FR3D annotated interactions
+% FR3D_interaction_list_unit_id produces lists of all FR3D annotated interactions
 
-% To run from the command line, matlab -r FR3D_interaction_list('1s72')
-% To run from the command line, matlab -r FR3D_interaction_list('1s72','C:\Users\zirbel\Documents\FR3D')
+% To run from the command line,     matlab -r FR3D_interaction_list_unit_id('1s72')
+% To put files in a specific place, matlab -r FR3D_interaction_list_unit_id('1s72','C:\Users\zirbel\Documents\FR3D')
 
 % 1S72_interactions_FR3D.txt contains all interactions except near
 % 1S72_near_interactions_FR3D.txt contains near interactions
@@ -17,7 +17,7 @@
 %        base-ribose interactions follow the same classification routine,
 %        but use the O2', O3', and O4' atoms on the ribose sugar
 
-function [void] = FR3D_interaction_list(File,datapath)
+function [void] = FR3D_interaction_list_unit_id(File,datapath)
 
 path(path,[pwd filesep 'FR3DSource']);
 
@@ -39,7 +39,7 @@ for f = 1:length(File),
 
   DataHeader1 = sprintf('# PDB_ID_FR3D_Version_%s',Vers);
 
-  DataHeader2 = sprintf('PDB_ID\tInteraction\tNucleotide_1_Base\tNucleotide_1_PDB_Number\tNucleotide_1_Chain\tNucleotide_1_Sequence_Position\tNucleotide_2_Base\tNucleotide_2_PDB_Number\tNucleotide_2_Chain\tNucleotide_2_Sequence_Position');
+  DataHeader2 = sprintf('Unit_ID_1\tInteraction\tUnit_ID_2');
 
   % -------------------------------------------------- Set paths
 
@@ -96,7 +96,7 @@ for f = 1:length(File),
 
       T = zEdgeText(File(f).Edge(i,j(k)),0,N1.Code,N2.Code);
 
-      DText{c} = sprintf('%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%d\n', File(f).Filename, T, N1.Base, N1.Number, N1.Chain, ii, N2.Base, N2.Number, N2.Chain, jj);
+      DText{c} = sprintf('%s\t%s\t%s\n', File(f).NT(i).ID, T, File(f).NT(j(k)).ID);
 
       InterType(c) = abs(File(f).Edge(i,j(k)));
 
@@ -119,7 +119,7 @@ for f = 1:length(File),
 
       T = zBasePhosphateText(BPh(i,j(k)),1);
 
-      DText{c} = sprintf('%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%d\n', File(f).Filename, T, N1.Base, N1.Number, N1.Chain, ii, N2.Base, N2.Number, N2.Chain, jj);
+      DText{c} = sprintf('%s\t%s\t%s\n', File(f).NT(i).ID, T, File(f).NT(j(k)).ID);
 
       if abs(BPh(i,j(k))) > 100,
         InterType(c) = abs(BPh(i,j(k)));      % near interaction
@@ -148,7 +148,7 @@ for f = 1:length(File),
 
       T = zBaseRiboseText(BR(i,j(k)),1);
 
-      DText{c} = sprintf('%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%d\n', File(f).Filename, T, N1.Base, N1.Number, N1.Chain, ii, N2.Base, N2.Number, N2.Chain, jj);
+      DText{c} = sprintf('%s\t%s\t%s\n', File(f).NT(i).ID, T, File(f).NT(j(k)).ID);
 
       if abs(BR(i,j(k))) > 100,
         InterType(c) = abs(BR(i,j(k)));      % near interaction
