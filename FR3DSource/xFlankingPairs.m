@@ -9,7 +9,7 @@ if File.NumNT > 0,
   [i,j] = find(E);                      % indices of NT's making cWWs
 
   % Paircode list
-  % 1-AA  2-CA  3-GA  4-UA  5-AC  6-CC  7-GC  8-UC 
+  % 1-AA  2-CA  3-GA  4-UA  5-AC  6-CC  7-GC  8-UC
   % 9-AG 10-CG 11-GG 12-UG 13-AU 14-CU 15-GU 16-UU
 
   %  paircode = 4*(N2.Code-1) + N1.Code;           % AA is 1, CA is 2, etc.
@@ -32,14 +32,14 @@ if File.NumNT > 0,
 
   for k = 1:(length(a)-1),              % run through all NT making nested cWW
     if a(k+1) - a(k) > 1,               % where there is a gap in the number,
-      if File.NT(a(k)).Chain == File.NT(a(k+1)).Chain,  % same chain
+      if strcmp(File.NT(a(k)).Chain, File.NT(a(k+1)).Chain),  % same chain
         H(a(k),a(k+1)) = 1;               % these two flank a single-stranded region
       end
     end
   end
 
   H = H + H';                           % symmetrize H
- 
+
   File.Flank = H;                       % store
 
 else
