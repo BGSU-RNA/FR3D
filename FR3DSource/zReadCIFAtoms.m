@@ -69,12 +69,15 @@ end
 
 if CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.cifatoms')),
   try
-    if ~isempty(strfind(pwd,'zirbel')),
-      fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in .cifatoms file\n');
-%      ['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']
-      system(['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
-    end
     UseFile = [PDBID '.cifatoms'];
+    if ~isempty(strfind(pwd,'zirbel')),
+      fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in %s\n',[PDBID '.cifatoms']);
+%      ['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']
+      [status,result] = system(['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
+      if status ~= 0,
+        UseFile = [PDBID '.cif'];
+      end
+    end
   catch
     fprintf('zReadCIFAtoms: Unable to use cifatom_writing.py to convert .cif file to .cifatoms file\n');
   end
