@@ -22,48 +22,72 @@ end
 
 i = strfind(t,'<dimStructure.resolution>');
 j = strfind(t,'</dimStructure.resolution>')-1;
-r = strrep(t(i(1):j(1)),'<dimStructure.resolution>','');
-File.Info.Resolution = str2num(r);
+if ~isempty(i) && ~isempty(j),
+  r = strrep(t(i(1):j(1)),'<dimStructure.resolution>','');
+  File.Info.Resolution = str2num(r);
+else
+  File.Info.Resolution = NaN;
+end
 if isempty(File.Info.Resolution),
   File.Info.Resolution = NaN;
 end
 
 i = strfind(t,'<dimStructure.experimentalTechnique>');
 j = strfind(t,'</dimStructure.experimentalTechnique>')-1;
-r = strrep(t(i(1):j(1)),'<dimStructure.experimentalTechnique>','');
-File.Info.ExpTechnique = r;
+if ~isempty(i) && ~isempty(j),
+  r = strrep(t(i(1):j(1)),'<dimStructure.experimentalTechnique>','');
+  File.Info.ExpTechnique = r;
+else
+  File.Info.ExpTechnique = '';
+end
 
 i = strfind(t,'<dimStructure.structureTitle>');
 j = strfind(t,'</dimStructure.structureTitle>')-1;
-r = strrep(t(i(1):j(1)),'<dimStructure.structureTitle>','');
-File.Info.Descriptor = r;
+if ~isempty(i) && ~isempty(j),
+  r = strrep(t(i(1):j(1)),'<dimStructure.structureTitle>','');
+  File.Info.Descriptor = r;
+else
+  File.Info.Descriptor = '';
+end
 
 i = strfind(t,'<dimStructure.releaseDate>');
 j = strfind(t,'</dimStructure.releaseDate>')-1;
-r = strrep(t(i(1):j(1)),'<dimStructure.releaseDate>','');
-File.Info.ReleaseDate = r;
+if ~isempty(i) && ~isempty(j),
+  r = strrep(t(i(1):j(1)),'<dimStructure.releaseDate>','');
+  File.Info.ReleaseDate = r;
+else
+  File.Info.ReleaseDate = '';
+end
 
 i = strfind(t,'<dimStructure.releaseDate>');
 j = strfind(t,'</dimStructure.releaseDate>')-1;
-r = strrep(t(i(1):j(1)),'<dimStructure.releaseDate>','');
-File.Info.Author = r;
+if ~isempty(i) && ~isempty(j),
+  r = strrep(t(i(1):j(1)),'<dimStructure.releaseDate>','');
+  File.Info.Author = r;
+else
+  File.Info.Author = '';
+end
 
 i = strfind(t,'<dimEntity.chainId>') + 19;
 j = strfind(t,'</dimEntity.chainId>') - 1;
 m = strfind(t,'<dimEntity.source>') + 18;
 n = strfind(t,'</dimEntity.source>') - 1;
 
-if isfield(File,'LongestChain') && ~isempty(File.LongestChain) && ~isempty(File.NT),
+if ~isempty(i) && ~isempty(j) && ~isempty(m) && ~isempty(n),
+  if isfield(File,'LongestChain') && ~isempty(File.LongestChain) && ~isempty(File.NT),
 
-  LC = File.NT(File.LongestChain(1)).Chain;          % identifier of longest chain
+    LC = File.NT(File.LongestChain(1)).Chain;          % identifier of longest chain
 
-  for k = 1:length(i),
-    if strcmp(LC,t(i(k):j(k))),
-      File.Info.Source = t(m(k):n(k));
+    for k = 1:length(i),
+      if strcmp(LC,t(i(k):j(k))),
+        File.Info.Source = t(m(k):n(k));
+      end
     end
+  else
+    File.Info.Source = t(i(1):j(1));
   end
 else
-  File.Info.Source = t(i(1):j(1));
+  File.Info.Source = '';
 end
 
 return

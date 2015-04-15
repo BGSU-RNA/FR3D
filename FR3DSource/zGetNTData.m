@@ -56,49 +56,50 @@ for f=1:length(Filenames),
 
   if ~isempty(strfind(upper(Filename),'.PDB')),
     File = zReadandAnalyze(Filename);
-    ReadCode = 0;
-  end
+    ReadCode = 4;
+  else
 
-  if ReadCode == 4,
-    File = zReadandAnalyze(Filename,Verbose);               % read text file; trust that its filename is correct; this is the only way to use original .cif file
-    File.Filename = PDBID;
-    ClassifyCode = 1;                                       % need to classify interactions
-    ReadText = 1;                                           % read the text file of coordinates
-  end
+    if ReadCode == 4,
+      File = zReadandAnalyze(Filename,Verbose);               % read text file; trust that its filename is correct; this is the only way to use original .cif file
+      File.Filename = PDBID;
+      ClassifyCode = 1;                                       % need to classify interactions
+      ReadText = 1;                                           % read the text file of coordinates
+    end
 
-  if ReadCode < 4,                                          % try to load a .mat file; faster
-    try
-      load(MatFile,'File','-mat');
-    catch
+    if ReadCode < 4,                                          % try to load a .mat file; faster
       try
-        load([lower(PDBID) '.mat'],'File','-mat');
+        load(MatFile,'File','-mat');
       catch
         try
-          load(PDBID,'File','-mat');
+          load([lower(PDBID) '.mat'],'File','-mat');
         catch
-          ReadCode = 5;                                     % failed to load a mat file, now look for a text file to read
+          try
+            load(PDBID,'File','-mat');
+          catch
+            ReadCode = 5;                                     % failed to load a mat file, now look for a text file to read
+          end
         end
       end
     end
-  end
 
-  if ReadCode < 4,
-    if Verbose > 0,
-      fprintf('Loaded  %s\n', [Filename '.mat']);
-      zFlushOutput;
+    if ReadCode < 4,
+      if Verbose > 0,
+        fprintf('Loaded  %s\n', [Filename '.mat']);
+        zFlushOutput;
+      end
     end
-  end
 
-  if ReadCode == 5,
-    try
-      PDBFilename = [PDBID '.cifatoms'];                      % try to read the processed file with unit ids added and symmetry operations done
-      File = zReadandAnalyze(PDBFilename,Verbose);
-    catch
-      File = zReadandAnalyze(Filename,Verbose);
+    if ReadCode == 5,
+      try
+        PDBFilename = [PDBID '.cifatoms'];                      % try to read the processed file with unit ids added and symmetry operations done
+        File = zReadandAnalyze(PDBFilename,Verbose);
+      catch
+        File = zReadandAnalyze(Filename,Verbose);
+      end
+      File.Filename = PDBID;
+      ClassifyCode = 1;                                       % need to classify interactions
+      ReadText = 1;                                           % read the text file of coordinates
     end
-    File.Filename = PDBID;
-    ClassifyCode = 1;                                       % need to classify interactions
-    ReadText = 1;                                           % read the text file of coordinates
   end
 
   if ~exist('File'),
