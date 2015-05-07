@@ -15,18 +15,18 @@
 % _atom_site.Cartn_y             '175.872'
 % _atom_site.Cartn_z             '-187.65'
 % _atom_site.occupancy           '?'
-% _atom_site.B_iso_or_equiv 
-% _atom_site.Cartn_x_esd 
-% _atom_site.Cartn_y_esd 
-% _atom_site.Cartn_z_esd 
-% _atom_site.occupancy_esd 
-% _atom_site.B_iso_or_equiv_esd 
-% _atom_site.pdbx_formal_charge 
-% _atom_site.auth_seq_id 
-% _atom_site.auth_comp_id 
-% _atom_site.auth_asym_id 
-% _atom_site.auth_atom_id 
-% _atom_site.pdbx_PDB_model_num 
+% _atom_site.B_iso_or_equiv
+% _atom_site.Cartn_x_esd
+% _atom_site.Cartn_y_esd
+% _atom_site.Cartn_z_esd
+% _atom_site.occupancy_esd
+% _atom_site.B_iso_or_equiv_esd
+% _atom_site.pdbx_formal_charge
+% _atom_site.auth_seq_id
+% _atom_site.auth_comp_id
+% _atom_site.auth_asym_id
+% _atom_site.auth_atom_id
+% _atom_site.pdbx_PDB_model_num
 % _atom_site.
 %    'ATOM'    '699'    'C'    'CD1'    '.'    'LEU'    '0'    '?'    '38'    '?'    '-18.272'    '175.872'    '-187.65'    '?'    '?'    '?'    '?'    '?'    '?'
 %    '?'    '.'    '38'    'LEU'    '0'    'CD1'    '1'    '2QBG|1|0|LEU|38'     ''
@@ -50,9 +50,9 @@ PDBID = strrep(PDBID,'-CIF','');
 
 if exist(Filename),
   UseFile = Filename;
-elseif exist([PDBID '.cif']),                           % no .cif file found
+elseif exist([PDBID '.cif']),                           % .cif file found
   CIFDownloaded = 1;
-else
+else                                                    % no .cif file found
   try
     if Verbose > 0,
       fprintf('zReadCIFAtoms: Attempting to download %s.cif from PDB\n', PDBID);
@@ -67,16 +67,19 @@ else
   end
 end
 
-if CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.cifatoms')),
+if isempty(UseFile) && CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.cifatoms')),
   try
-    UseFile = [PDBID '.cifatoms'];
+    status = 1;
     if ~isempty(strfind(pwd,'zirbel')),
       fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in %s\n',[PDBID '.cifatoms']);
-%      ['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']
       [status,result] = system(['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
-      if status ~= 0,
-        UseFile = [PDBID '.cif'];
-      end
+    else
+      fprintf('zReadCIFAtoms: You can modify zReadCIFAtoms to specify where to find cifatom_writing.py to produce .cifatoms file.\n');
+    end
+    if status == 0,
+      UseFile = [PDBID '.cifatoms'];
+    else
+      UseFile = [PDBID '.cif'];
     end
   catch
     fprintf('zReadCIFAtoms: Unable to use cifatom_writing.py to convert .cif file to .cifatoms file\n');
@@ -95,7 +98,7 @@ if ~isempty(UseFile),
   header = 1;
   headerlines = 0;
   header = 1;
-  fieldcounter = 0;  
+  fieldcounter = 0;
   row = 1;
   UnitIDField = [];
   ColumnsToKeep = 1;
@@ -109,7 +112,7 @@ if ~isempty(UseFile),
     if ~isempty(strfind(Line,'_atom_site.')),
       fieldcounter = fieldcounter + 1;
       switch strrep(Line,' ',''),
-      case '_atom_site.group_PDB' 
+      case '_atom_site.group_PDB'
         AtomTypeField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
@@ -122,53 +125,53 @@ if ~isempty(UseFile),
         AtomLabelIDField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_id' 
-      case '_atom_site.label_alt_id' 
+      case '_atom_id'
+      case '_atom_site.label_alt_id'
         VersionField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_site.label_comp_id' 
+      case '_atom_site.label_comp_id'
         UnitNameField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_site.label_asym_id' 
+      case '_atom_site.label_asym_id'
         ChainField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_site.label_entity_id' 
-      case '_atom_site.label_seq_id' 
-      case '_atom_site.pdbx_PDB_ins_code' 
+      case '_atom_site.label_entity_id'
+      case '_atom_site.label_seq_id'
+      case '_atom_site.pdbx_PDB_ins_code'
         InsertionCodeField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_site.Cartn_x' 
+      case '_atom_site.Cartn_x'
         XCoordField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_site.Cartn_y' 
+      case '_atom_site.Cartn_y'
         YCoordField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_site.Cartn_z' 
+      case '_atom_site.Cartn_z'
         ZCoordField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_site.occupancy' 
-      case '_atom_site.B_iso_or_equiv' 
-      case '_atom_site.Cartn_x_esd' 
-      case '_atom_site.Cartn_y_esd' 
-      case '_atom_site.Cartn_z_esd' 
-      case '_atom_site.occupancy_esd' 
-      case '_atom_site.B_iso_or_equiv_esd' 
-      case '_atom_site.pdbx_formal_charge' 
+      case '_atom_site.occupancy'
+      case '_atom_site.B_iso_or_equiv'
+      case '_atom_site.Cartn_x_esd'
+      case '_atom_site.Cartn_y_esd'
+      case '_atom_site.Cartn_z_esd'
+      case '_atom_site.occupancy_esd'
+      case '_atom_site.B_iso_or_equiv_esd'
+      case '_atom_site.pdbx_formal_charge'
       case '_atom_site.auth_seq_id'
         ResidueNumberField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      case '_atom_site.auth_comp_id' 
-      case '_atom_site.auth_asym_id' 
+      case '_atom_site.auth_comp_id'
+      case '_atom_site.auth_asym_id'
       case '_atom_site.auth'
-      case '_atom_id' 
+      case '_atom_id'
       case '_atom_site.pdbx_PDB_model_num'
         ModelNumberField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
@@ -177,7 +180,7 @@ if ~isempty(UseFile),
         UnitIDField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
-      end 
+      end
     end
     Line = fgetl(fid);
   end
@@ -186,8 +189,8 @@ if ~isempty(UseFile),
 
   headerlines = headerlines - 1;
 
-  fprintf('Found %d fields to read\n',fieldcounter);
-  fprintf('Found %d header lines to skip\n',headerlines);
+  fprintf('zReadCIFAtoms: Found %d fields to read\n',fieldcounter);
+  fprintf('zReadCIFAtoms: Found %d header lines to skip\n',headerlines);
 
   format = '';
   for i = 1:fieldcounter,
@@ -220,7 +223,7 @@ if ~isempty(UseFile),
   D = whos();
   fprintf('%12d\n',round(sum(cat(1,D.bytes))));
 
-  fprintf('Found %d lines of ATOM data\n',NumLines);
+  fprintf('zReadCIFAtoms: Found %d lines of ATOM data\n',NumLines);
 
   ATOM_TYPE     = A{fieldtocolumn(AtomTypeField)}(1:NumLines);
   ATOMNAME      = A{fieldtocolumn(AtomLabelIDField)}(1:NumLines);
@@ -236,7 +239,7 @@ if ~isempty(UseFile),
   D = whos();
   fprintf('%12d\n',sum(cat(1,D.bytes)));
 
-  fprintf('Defined most variables to pass back\n');
+  fprintf('zReadCIFAtoms: Defined most variables to pass back\n');
 
   BETA = NaN * ones(NumLines,1);
   OCC = cell(NumLines,1);
@@ -260,23 +263,22 @@ if ~isempty(UseFile),
   fprintf('%12d\n',sum(cat(1,D.bytes)));
 
 else
-
-    fprintf('zReadCIFAtoms: File %s was not found\n', Filename);
-    ATOM_TYPE = [];
-    ATOMNUMBER = [];
-    NTLETTER = [];
-    NTNUMBER = [];
-    P        = [];
-    ATOMNAME = [];
-    VERSION  = [];
-    UNITNAME = [];
-    OCC      = [];
-    BETA     = [];
-    CHAIN    = [];
-    ModelNum = [];
-    UNITID   = [];
-    Readable = 0;
-    UseFile = '';
+  fprintf('zReadCIFAtoms: File %s was not found\n', Filename);
+  ATOM_TYPE = [];
+  ATOMNUMBER = [];
+  NTLETTER = [];
+  NTNUMBER = [];
+  P        = [];
+  ATOMNAME = [];
+  VERSION  = [];
+  UNITNAME = [];
+  OCC      = [];
+  BETA     = [];
+  CHAIN    = [];
+  ModelNum = [];
+  UNITID   = [];
+  Readable = 0;
+  UseFile = '';
 end
 
 return
@@ -303,12 +305,12 @@ if 0 > 1,
   fclose(fid);
 end
 
-%         1         2         3         4         5         6         7         
+%         1         2         3         4         5         6         7
 %1234567890123456789012345678901234567890123456789012345678901234567890123456789
-%MODRES 1H3E PSU B   35    U  PSEUDOURIDINE-5'-MONOPHOSPHATE                  
-%MODRES 1H3E 5MU B   54    T  RIBOSYLTHYMINE-5'-MONOPHOSPHATE                  
-%MODRES 1H3E PSU B   55    U  PSEUDOURIDINE-5'-MONOPHOSPHATE                   
-%MODRES 1H3E MAD B   58    A  6-HYDRO-1-METHYLADENOSINE-5'-MONOPHOSPHATE       
+%MODRES 1H3E PSU B   35    U  PSEUDOURIDINE-5'-MONOPHOSPHATE
+%MODRES 1H3E 5MU B   54    T  RIBOSYLTHYMINE-5'-MONOPHOSPHATE
+%MODRES 1H3E PSU B   55    U  PSEUDOURIDINE-5'-MONOPHOSPHATE
+%MODRES 1H3E MAD B   58    A  6-HYDRO-1-METHYLADENOSINE-5'-MONOPHOSPHATE
 
 % -------------------------------------- Extract ATOM, HETATM, MODEL rows
 
@@ -330,12 +332,12 @@ for z = 1:length(k),
   ModelNum(z,1) = length(find(k(z) > m));
 end
 
-%         1         2         3         4         5         6         7         
+%         1         2         3         4         5         6         7
 %1234567890123456789012345678901234567890123456789012345678901234567890123456789
-%ATOM     20  OP2   A 0  11      20.863 146.760 101.535  1.00 65.62           O 
-%HETATM13211  OP1 1MA 0 628      40.887 106.997  94.641  1.00 24.89           O 
-%HETATM91248  O   HOH     1      82.803  66.117  95.494  1.00 32.08           O 
-%ATOM   3047  C6    C A 141A     98.940 267.136 -49.615  1.00 38.03           C 
+%ATOM     20  OP2   A 0  11      20.863 146.760 101.535  1.00 65.62           O
+%HETATM13211  OP1 1MA 0 628      40.887 106.997  94.641  1.00 24.89           O
+%HETATM91248  O   HOH     1      82.803  66.117  95.494  1.00 32.08           O
+%ATOM   3047  C6    C A 141A     98.940 267.136 -49.615  1.00 38.03           C
 
 ATOM_TYPE  = strtrim(cellstr(T(k,1:6)));
 ATOMNUMBER = str2num(T(k,7:11));
