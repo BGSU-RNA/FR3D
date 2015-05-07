@@ -83,6 +83,7 @@ if isempty(UseFile) && CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.c
     end
   catch
     fprintf('zReadCIFAtoms: Unable to use cifatom_writing.py to convert .cif file to .cifatoms file\n');
+    UseFile = [PDBID '.cif'];
   end
 end
 
