@@ -89,12 +89,11 @@ end
 
 DataSize = 1000;                       % keep track of how much space is allocated, allocate more as needed
 
-if ~isempty(UseFile),
+if ~isempty(UseFile) && exist(UseFile),
   c = 1;                               % line counter
   if Verbose > 0,
-    fprintf('zReadCIFAtoms: Reading %s\n', Filename);
+    fprintf('zReadCIFAtoms: Reading %s\n', UseFile);
   end
-
   fid = fopen(UseFile,'r');
   header = 1;
   headerlines = 0;
