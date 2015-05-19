@@ -27,8 +27,12 @@ A = {' N9' ' C4' ' N3' ' N1' ' C6' ' N6' ' C8' ' C5' ' C2' ' N7' ' H2' ' H8' ' H
 C = {' N1' ' C2' ' O2' ' N3' ' C4' ' N4' ' C6' ' C5' ' H1' ' H6' ' H5' '1H4' '2H4'};
 G = {' N9' ' C4' ' N3' ' N1' ' C6' ' O6' ' C8' ' C5' ' C2' ' N7' ' N2' ' H1' ' H8' ' H9' '1H2' '2H2'};
 U = {' N1' ' C2' ' O2' ' N3' ' C4' ' O4' ' C6' ' C5' ' H5' ' H1' ' H3' ' H6'};
-S = {' C1*' ' C2*' ' O2*' ' C3*' ' O3*' ' C4*' ' O4*' ' C5*' ' O5*' ' P  ' ' O1P' ' O2P'};
+AA= {'N' 'C' 'N' 'N' 'C' 'N' 'C' 'C' 'C' 'N' 'H' 'H' 'H' 'H' 'H'};
+CA= {'N' 'C' 'O' 'N' 'C' 'N' 'C' 'C' 'H' 'H' 'H' 'H' 'H'};
+GA= {'N' 'C' 'N' 'N' 'C' 'O' 'C' 'C' 'C' 'N' 'N' 'H' 'H' 'H' 'H' 'H'};
+UA= {'N' 'C' 'O' 'N' 'C' 'O' 'C' 'C' 'H' 'H' 'H' 'H'};
 S = {' C1*' ' C2*' ' O2*' ' C3*' ' O3*' ' C4*' ' O4*' ' C5*' ' O5*' ' P  ' ' OP1' ' OP2'};
+SA= {'C' 'C' 'O' 'C' 'O' 'C' 'O' 'C' 'O' 'P' 'O' 'O'};
 
 A = strrep(A,'*','''');
 C = strrep(C,'*','''');
@@ -50,7 +54,8 @@ SugarReorder = [10 11 12 9 8 6 7 4 5 2 3 1];
     L = L + 30*[x y z];
     fprintf(fid, '%8.3f', L);
     fprintf(fid, '%6.2f', 1);
-    fprintf(fid, '%6.2f\n', 99.99);
+    fprintf(fid, '%6.2f', 99.99);
+    fprintf(fid, '           %c\n',SA{j});
     a = a + 1;
   end
   s = length(NT.Fit(:,1));
@@ -73,7 +78,15 @@ SugarReorder = [10 11 12 9 8 6 7 4 5 2 3 1];
       L = L + 30*[x y z];                        % shift 20 Angstroms
       fprintf(fid, '%8.3f', L);                  % write atom location
       fprintf(fid, '%6.2f', 1);
-      fprintf(fid, '%6.2f\n', 99.99);
+      fprintf(fid, '%6.2f', 99.99);
+      switch NT.Code,
+        case 1, fprintf(fid,'           %c\n', AA{j});
+        case 2, fprintf(fid,'           %c\n', CA{j});
+        case 3, fprintf(fid,'           %c\n', GA{j});
+        case 4, fprintf(fid,'           %c\n', UA{j});
+        case 5, fprintf(fid,'           %c\n', NT.AtomName{j});  % modified
+        case 6, fprintf(fid,'           %c\n', NT.AtomName{j});  % missing base atom(s)
+      end
       a = a + 1;
     end
   end

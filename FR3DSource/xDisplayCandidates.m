@@ -281,7 +281,7 @@ if ShowNavWindow > 0,
   axis([1 Limit+1 1 Limit+1]);
 end
 
-while stop == 0,                            
+while stop == 0,
 
  if ShowNavWindow > 0,
   % ---------------------------------------- Display table of discrepancies
@@ -346,7 +346,7 @@ while stop == 0,
 	end
 
   if N == 2 && exist('xMutualIDI') == 2,              % 2-NT candidates
- 
+
 	  figure(98)
 	  ax = axis;
 	  clf
@@ -614,6 +614,10 @@ while stop == 0,
       end
       Search = SearchT;
 
+      if exist('xListCandidatesByID'),
+        xListCandidatesByID(Search);
+      end
+
     case 12                                     % sort by centrality
 
       if (Display(1).Centrality == 1) && (min(Limit*2,L) > Limit),
@@ -628,7 +632,7 @@ while stop == 0,
 %      [z,j] = sort(sum(Search.Disc));           % sort by average discrepancy
       S.AvgDisc  = z / (Limit - 1);             % average discrep among these
       p(1:Limit) = j;
-      p((Limit+1):L) = (Limit+1):L;      
+      p((Limit+1):L) = (Limit+1):L;
       q(p) = 1:L;
 %      Search = xSortByCentrality(File(FIndex),Search,Level,UsingFull);
       Order = 4;
@@ -662,7 +666,7 @@ while stop == 0,
 
         % go through all candidates, see if there are two of each, or three of each, if so, double or triple the limit, then order by similarity, then go through and keep just the first instance of each distinct candidate.
 
-        SeenOnce = zeros(1,length(p));          % 
+        SeenOnce = zeros(1,length(p));          %
         SortedCand = Search.Candidates(p,:);
         SortedCand(:,1:N) = sort(SortedCand(:,1:N),2);  % sort indices
         CandDist = zDistance(double(SortedCand));
@@ -702,7 +706,7 @@ while stop == 0,
 
         r = p(1:m);
         r = r(q);
-        
+
         p(1:m) = r;                             % re-order distinct instances
 
         q(p) = 1:L;
@@ -756,7 +760,7 @@ while stop == 0,
       if abs(pt(1,1)-pt(1,2)) > Limit/20,           % clicked off the diagonal
         Search.Marked = 0 * Search.Marked;      % unmark all candidates
         a = sort(pt(1,[1 2]));
-        j = p(max(1,floor(a(1))):min(L,floor(a(2))));      % 
+        j = p(max(1,floor(a(1))):min(L,floor(a(2))));      %
         Search.Marked(j) = ones(1,length(j));   % select these candidates
       else                                      % clicked near the diagonal
         newn = max(min(floor(pt(1,1)),L),1);
@@ -765,7 +769,7 @@ while stop == 0,
 
     case 17
       deg = -20*pi/180;
-      Display(1).rotation = Display(1).rotation * [cos(deg) 0 sin(deg); 0 1 0; (-sin(deg)) 0 cos(deg)]; 
+      Display(1).rotation = Display(1).rotation * [cos(deg) 0 sin(deg); 0 1 0; (-sin(deg)) 0 cos(deg)];
 
     case 18                                     % quit Display
       if exist('fidOUT','var')
@@ -1013,7 +1017,7 @@ function PlotMotif(File,Search,Query,Display,i)
       end
 
       D = zDistance(c,a);
-      [i,j,k] = find(D);                          % 
+      [i,j,k] = find(D);                          %
       w = find(k <= Display(1).neighborhood(8));                            % within 8 Angstroms
 
   %  	try
@@ -1031,7 +1035,7 @@ function PlotMotif(File,Search,Query,Display,i)
 
   set(gcf,'Name',strrep(Title,'\_','_'));
 
-  if isfield(Search,'AvgDisc'),   
+  if isfield(Search,'AvgDisc'),
     xlabel(['Candidate ',int2str(n),' of ',int2str(s),'   Average discrepancy from others ', num2str(Search.AvgDisc(n))]);
   elseif Query.Geometric > 0,
     xlabel(['Candidate ',int2str(n),' of ',int2str(s),'   Discrepancy ',...
@@ -1069,7 +1073,7 @@ function  DisplayTable(File,Search,Query,Display,i)
     n       = Display(i).n;
     f       = Search.Candidates(n,N+1);
     Indices = double(Search.Candidates(n,1:N));
-    
+
     if isfield(Search,'AvgDisc'),
       fprintf('Average discrepancy from others %6.4f', Search.AvgDisc(n));
     elseif Query.Geometric > 0,
@@ -1184,7 +1188,7 @@ else
       NextNearbyAtomState = 'Do not show amino acids';
     end
 
-    Buttons = {... 
+    Buttons = {...
               NextColorState, ...                                % 1
               NextBackboneState, ...                             % 2
               NextLabelBasesState, ...                           % 3
