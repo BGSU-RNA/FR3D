@@ -31,7 +31,7 @@ end
 
 if Query.Geometric == 1,
   Query.NumNT = length(Query.NTList);
-end  
+end
 
 % ------------------------------- Determine number of nucleotides if symbolic
 
@@ -116,7 +116,7 @@ end
 % ---------------------------------------------------------------------
 
 if Query.Geometric == 1,                    % model comes from a file
-    
+
   if ~isfield(Query,'Diagonal'),
     if ~isfield(Query,'LocWeight'),
       Query.LocWeight = ones(1,Query.NumNT);
@@ -137,9 +137,9 @@ if Query.Geometric == 1,                    % model comes from a file
   % --------- basic parameters for the model
 
 
-  % Modified by Anton on 5/18/2011 
+  % Modified by Anton on 5/18/2011
   % If the Indices have been set up manually, then use it.
-  % Neede when the query has nts from multiple models and zIndexLookUp
+  % Needed when the query has nts from multiple models and zIndexLookUp
   % fails.
     if isfield(Query,'IndicesManual')             %Anton 5/18/2011
         Query.Indices = Query.IndicesManual;      %Anton 5/18/2011
@@ -151,7 +151,7 @@ if Query.Geometric == 1,                    % model comes from a file
           else
             Query.Indices  = zIndexLookup(File,Query.NTList);
           end
-                       
+
     end  %Anton 5/18/2011
 
   if isfield(Query,'NT'),
@@ -167,7 +167,7 @@ end
 
 % --------- Interpret model mask
 
-% For nucleotide i, the vector Query.OKCodes{i} has 0's and 1's 
+% For nucleotide i, the vector Query.OKCodes{i} has 0's and 1's
 % which tell which nucleotide codes (A=1, C=2,...) meet the mask
 
 if isfield(Query,'Mask'),
@@ -196,7 +196,7 @@ end
 
 % --------- Interpret model diagonal (mask and weights)
 
-% For nucleotide i, the vector Query.OKCodes{i} has 0's and 1's 
+% For nucleotide i, the vector Query.OKCodes{i} has 0's and 1's
 % which tell which nucleotide codes (A=1, C=2,...) meet the mask
 
 if isfield(Query,'Diagonal'),
@@ -218,7 +218,7 @@ end
 
 % --------- Make edge matrix antisymmetric and numeric
 
-% 1-AA  2-CA  3-GA  4-UA  5-AC  6-CC  7-GC  8-UC 
+% 1-AA  2-CA  3-GA  4-UA  5-AC  6-CC  7-GC  8-UC
 % 9-AG 10-CG 11-GG 12-UG 13-AU 14-CU 15-GU 16-UU
 
 RevPair = [1 5 9 13 2 6 10 14 3 7 11 15 4 8 12 16];  % exchange AC for CA etc.
@@ -320,7 +320,7 @@ if Query.Geometric > 0,
                                         % weights sum to Query.NumNT
   Query.SSCutoff  =(Query.NumNT^2)*(Query.RelCutoff^2)*cumsum(Query.LocWeight);
                                   % cutoffs for first 1, 2, 3, ... nucleotides
-  
+
   Query = xPrecomputeForDiscrepancy(Query);
 
   Query.Distance = zMutualDistance(Query.Centers,Inf);
@@ -472,7 +472,7 @@ if isfield(Query,'MaxDiffVector'),
     k(i) = 1:Query.NumNT;
 
     Query.MaxDiffMat = Query.MaxDiffMat(k,k); % re-order matrix of differences
-  end    
+  end
 end
 
 % --------- implement mindiff screening for a mindiff vector
@@ -499,7 +499,7 @@ if isfield(Query,'MinDiffVector'),
     k(i) = 1:Query.NumNT;
 
     Query.MinDiffMat = Query.MinDiffMat(k,k); % re-order matrix of differences
-  end    
+  end
 end
 
 end  % if isfield(Query,NumNT)
