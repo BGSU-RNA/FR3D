@@ -70,7 +70,7 @@ end
 if isempty(UseFile) && CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.cifatoms')),
   try
     status = 1;
-    if ~isempty(strfind(pwd,'zirbel')),
+    if ~isempty(strfind(pwd,'zzirbel')),
       fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in %s\n',[PDBID '.cifatoms']);
       [status,result] = system(['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
     else
