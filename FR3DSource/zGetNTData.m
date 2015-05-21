@@ -289,13 +289,8 @@ for f=1:length(Filenames),
   end
 
   if ~isfield(File,'Info') || ~isfield(File.Info,'ExpTechnique') || isempty(File.Info.ExpTechnique),
-%    try
-      File = zGetPDBInfo(File);          % get resolution and other info
-      SaveCode = 1;
-%    catch
-%      File.Info.None = 'something went wrong when retrieving information about this PDB file';
-%      disp('Something went wront when retrieving information about this PDB file');
-%    end
+    File = zGetPDBInfo(File);          % get resolution and other info
+    SaveCode = 1;
   end
 
 
