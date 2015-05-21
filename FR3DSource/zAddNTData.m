@@ -45,7 +45,7 @@ end
 FullList = {};
 
 for j=1:length(Filenames),
-  FullList = [FullList; zReadPDBList(Filenames{j},1)];
+  FullList = [FullList zReadPDBList(Filenames{j},1)];
 end
 
 % ----------------------------------------- Skip some files
@@ -73,7 +73,7 @@ if length(FullList) > 0,
             i = strmatch(lower(FullList{f}), LoadedFiles, 'exact');
             if isempty(i),                                  % if PDB not loaded,
                 NewF = zGetNTData(FullList{f},ReadCode,Verbose); %   load it
-                
+
                 if ReadCode ~= 3,
                     if F == 0,
                         clear File
