@@ -5,7 +5,7 @@
 
 % File = zFindBasepairExemplars('http://rna.bgsu.edu/rna3dhub/nrlist/download/current/4.0A/csv')
 
-function [File] = zFindBasepairExemplars(NRSetID,File)
+% function [File] = zFindBasepairExemplars(NRSetID,File)
 
 tic
 
@@ -40,18 +40,15 @@ end
 % 2013-10-19 removed Curated_2J01_cHS_GA_Exemplar
 
 Verbose = 1;                     % Verbose = 1 tells it to show distance graphs
-ViewCurated = 0;                 % ViewCurated = 1 stops to review each curated pair
-ViewInstancesOfModeledPairs = 0; % Stop when an instance of a formerly modeled pair is found
+ViewCurated = 0;                 % ViewCurated = 1 stops to review each curated pair, but *only* curated pairs
+ViewInstancesOfModeledPairs = 1; % Stop when an instance of a formerly modeled pair is found
 LMax    = 500;                   % maximum number of pairs to consider in each class
 UseCrystalSymmetries = 1;        % use .pdb1 files?
+VerifyCutoffs = 1;               % stop after each motif group to interactively view instances
 
 % Pair codes:  1-AA 5-AC 6-CC 7-GC 9-AG 11-GG 13-AU 14-CU 15-GU 16-UU
 
-pcodes = [6 7 13 14 15];
-pcodes = [6 14 15 16];
-pcodes = [6 7 9 11 13 14 15 16];    % pair codes to work on
-pcodes = [1 5];
-pcodes = [7 9 11 13 14 15 16 1 5 6];    % pair codes to work on
+pcodes = [9 11 13 14 15 16 1 5 6 7 ];    % pair codes to work on
 
 load(['PairExemplars'],'Exemplar');       % load previous exemplars
 
@@ -71,7 +68,7 @@ for c1 = 1:4,
    end
 end
 
-% load('PairExemplars_Old','Exemplar');   % load last established 
+% load('PairExemplars_Old','Exemplar');   % load last established
 
 OldExemplar = Exemplar;                 % for when no instances are found
 
@@ -98,7 +95,7 @@ if ~exist('File'),                           % if no molecule data is loaded,
 else
   [File,SIndex] = zAddNTData(NRList,0,File,1); % add PDB data if needed
   File = File(SIndex);
-end                       
+end
 
 % ------------------------------------------ Omit .pdb1, .pdb2 files?
 
@@ -114,7 +111,7 @@ if UseCrystalSymmetries == 0,
   File = File(j);
 end
 
-% ------------------------------------------- Gather resolution information and sort
+% ------------------------------------------- Gather resolution information and sort files high res to low res
 
 for f = 1:length(File),
   if ~isempty(File(f).Info.Resolution),
@@ -132,12 +129,19 @@ Res = Res(i);
 S = S(i);
 
 % ------------------------------------------ Load modeled basepairs
+% Note:  If the file names in Model_list.pdb end with .pdb, it will load the pdb file, which is slow
+%        If they do not end with .pdb, it will read .mat files, if they exist, but if they don't, it will look for .cif files, which it won't find
 
 if ~exist('ModelFile'),                        % if no molecule data is loaded,
   [ModelFile,SIndex] = zAddNTData('Model_list',0,[],1);   % load PDB data
 else
   [ModelFile,SIndex] = zAddNTData('Model_list',0,ModelFile,1);
-end                       
+end
+
+for i = 1:length(ModelFile),
+  ModelFile(i).Info.ExpTechnique = 'Modeled';
+  zSaveNTData(ModelFile(i));
+end
 
 ModelFile = ModelFile(SIndex);
 
@@ -147,7 +151,12 @@ if ~exist('CuratedFile'),                      % if no molecule data is loaded,
   [CuratedFile,SIndex] = zAddNTData('Curated_list',0,[],1);   % load PDB data
 else
   [CuratedFile,SIndex] = zAddNTData('Curated_list',0,CuratedFile,1);
-end                       
+end
+
+for i = 1:length(ModelFile),
+  CuratedFile(i).Info.ExpTechnique = 'Modeled';
+  zSaveNTData(CuratedFile(i));
+end
 
 CuratedFile = CuratedFile(SIndex);
 
@@ -161,7 +170,7 @@ end
 
 for j = 1:length(pcodes),            % run through all pair codes specified
  pc = pcodes(j);                     % current paircode
-
+fprintf('Current paircode is %2d\n',pc);
  CLE = CL(:,1,pc);                   % class limits for this paircode
  CLE = CLE(find(CLE));               % leave out empty entries
  CLE = CLE(find(abs(CLE) < 20));     % leave out stacking
@@ -221,7 +230,7 @@ for j = 1:length(pcodes),            % run through all pair codes specified
 
     Exemplar(row,pc).Count = 0;
 
-    if length(List) > 0,               % instances of this category are found
+    if length(List) > 0,               % instances of this category are found in 3D structures now
       Exemplar(row,pc).Count = length(List(:,1));
 
       fprintf('FYI, found %5d instances of %2s %4s class %5.1f\n', length(List), Pairs{pc}, zEdgeText(CLE(row),Decimal,pc), CLE(row));
@@ -296,8 +305,8 @@ for j = 1:length(pcodes),            % run through all pair codes specified
     [PD,ID,i,k] = zOrderPairs(File,List,LMax,Verbose); % order by centrality
 
     rs = sum(PD);
-    gg = Res(List(i(1:min(end,80)),3))';
-    hh = rs(i(1:min(end,80)))';
+    gg = Res(List(i(1:min(end,LMax)),3))';
+    hh = rs(i(1:min(end,LMax)))';
     kk = 1+(((1:length(hh)))/length(rs))';          % rank among instances
 
     % the chosen instance minimizes the product of resolution, mean distance to other instances, and rank among instances
@@ -357,7 +366,7 @@ for j = 1:length(pcodes),            % run through all pair codes specified
       end
     end
 
-    if 0 > 1,
+    if VerifyCutoffs > 0,
       figure(1)
       close
       figure(1)
@@ -455,7 +464,7 @@ for j = 1:length(pcodes),            % run through all pair codes specified
     Exemplar(row,pc).AngleWeight  = [1 1];
     Exemplar(row,pc).LDiscCutoff  = Inf;
    end
-  end 
+  end
 
   if LMax >= 500 && ViewCurated == 0,
     save([pwd filesep 'FR3DSource' filesep 'PairExemplars'],'Exemplar'); % Matlab version 7 only
