@@ -1,4 +1,4 @@
-% zIndexLookup(File,Num,Chain) finds the base index for base having nucleotide 
+% zIndexLookup(File,Num,Chain) finds the base index for base having nucleotide
 % number Num and, if specified, Chain
 % Num can be a cell array of N nucleotide numbers
 % Any entry of that cell array can use the notation '1830:1835' for a range
@@ -14,6 +14,13 @@ function [ind,allchains] = zIndexLookup(File,Num,Chain,Verbose)
 
 if nargin < 3,
   for k = 1:length(Num),
+    Chain{k} = '';
+  end
+end
+
+if length(Chain) < length(Num),
+  fprintf('zIndexLookup:  Warning, fewer chain identifiers than nucleotide identifiers\n');
+  for k = (length(Chain)+1):length(Num),
     Chain{k} = '';
   end
 end
@@ -61,7 +68,7 @@ for k = 1:length(Numb),
     a = strfind(Numb{k},'(');
     b = strfind(Numb{k},')');
     Chai{k} = Numb{k}(a(1)+1:b(1)-1);     % extract chain
-    if length(a) == 1,                    % one chain specified      
+    if length(a) == 1,                    % one chain specified
       Numb{k} = [Numb{k}(1:a(1)-1) Numb{k}(b(1)+1:end)];
     elseif length(a) == 2,                % range with two chains specified
       Numb{k} = [Numb{k}(1:a(1)-1) Numb{k}(b(1)+1:a(2)-1)];
@@ -84,7 +91,7 @@ for k = 1:length(Numb),
 end
 
 ind = [];
-  
+
 % if File is a text string (filename), load the file
 
 if strcmp(class(File),'char'),
