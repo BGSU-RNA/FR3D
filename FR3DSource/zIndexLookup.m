@@ -18,13 +18,6 @@ if nargin < 3,
   end
 end
 
-if length(Chain) < length(Num),
-  fprintf('zIndexLookup:  Warning, fewer chain identifiers than nucleotide identifiers\n');
-  for k = (length(Chain)+1):length(Num),
-    Chain{k} = '';
-  end
-end
-
 if nargin < 4,
   Verbose = 1;
 end
@@ -36,6 +29,17 @@ end
 if strcmp(class(Chain),'char'),
   Chain = {Chain};
 end
+
+if length(Chain) < length(Num),
+  fprintf('zIndexLookup:  Warning, fewer chain identifiers than nucleotide identifiers\n');
+  File
+  Num
+  Chain
+  for k = (length(Chain)+1):length(Num),
+    Chain{k} = '';
+  end
+end
+
 
 % split multiple specifications into separate cells
 
