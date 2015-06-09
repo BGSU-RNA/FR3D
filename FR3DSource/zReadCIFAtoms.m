@@ -95,9 +95,9 @@ if ~isempty(UseFile) && exist(UseFile),
     fprintf('zReadCIFAtoms: Reading %s\n', UseFile);
   end
   fid = fopen(UseFile,'r');
+  StartHeader = 0;                       % keep track of whether any header lines have been found yet
   header = 1;
   headerlines = 0;
-  header = 1;
   fieldcounter = 0;
   row = 1;
   UnitIDField = [];
@@ -106,10 +106,11 @@ if ~isempty(UseFile) && exist(UseFile),
   Line = fgetl(fid);
   while ischar(Line) && header == 1,
     headerlines = headerlines + 1;
-    if any(strfind(Line,'ATOM') == 1) || any(strfind(Line,'HETATM') == 1),                % line starts with ATOM or HETATM
+    if StartHeader > 0 && any(strfind(Line,'ATOM') > 0) || any(strfind(Line,'HETATM') > 0),   % line contains ATOM or HETATM
       header = 0;                                    % header is over
     end
     if ~isempty(strfind(Line,'_atom_site.')),
+      StartHeader = 1;
       fieldcounter = fieldcounter + 1;
       switch strrep(Line,' ',''),
       case '_atom_site.group_PDB'
@@ -203,15 +204,19 @@ if ~isempty(UseFile) && exist(UseFile),
     end
   end
 
-  D = whos();
-  fprintf('%12d\n',sum(cat(1,D.bytes)));
+  if Verbose > 0,
+    D = whos();
+    fprintf('Bytes before reading:  %12d\n',sum(cat(1,D.bytes)));
+  end
 
   fid = fopen(UseFile);
   A = textscan(fid,format,'headerlines',headerlines);
   fclose(fid);
 
-  D = whos();
-  fprintf('%12d\n',round(sum(cat(1,D.bytes))));
+  if Verbose > 0,
+    D = whos();
+    fprintf('Bytes  after reading:  %12d\n',round(sum(cat(1,D.bytes))));
+  end
 
   i = 1;
 
@@ -220,8 +225,10 @@ if ~isempty(UseFile) && exist(UseFile),
   end
   NumLines = i-1;
 
-  D = whos();
-  fprintf('%12d\n',round(sum(cat(1,D.bytes))));
+  if Verbose > 0,
+    D = whos();
+    fprintf('%12d\n',round(sum(cat(1,D.bytes))));
+  end
 
   fprintf('zReadCIFAtoms: Found %d lines of ATOM data\n',NumLines);
 
@@ -236,8 +243,10 @@ if ~isempty(UseFile) && exist(UseFile),
   P             = [A{fieldtocolumn(XCoordField)}(1:NumLines) A{fieldtocolumn(YCoordField)}(1:NumLines) A{fieldtocolumn(ZCoordField)}(1:NumLines)];
   ModelNum      = A{fieldtocolumn(ModelNumberField)}(1:NumLines);
 
-  D = whos();
-  fprintf('%12d\n',sum(cat(1,D.bytes)));
+  if Verbose > 0,
+    D = whos();
+    fprintf('Bytes after storing: %12d\n',sum(cat(1,D.bytes)));
+  end
 
   fprintf('zReadCIFAtoms: Defined most variables to pass back\n');
 
@@ -259,8 +268,10 @@ if ~isempty(UseFile) && exist(UseFile),
 
   Readable = 1;
 
-  D = whos();
-  fprintf('%12d\n',sum(cat(1,D.bytes)));
+  if Verbose > 0,
+    D = whos();
+    fprintf('Bytes at the end: %12d\n',sum(cat(1,D.bytes)));
+  end
 
 else
   fprintf('zReadCIFAtoms: File %s was not found\n', Filename);
