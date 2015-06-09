@@ -210,6 +210,12 @@ Display(1).p         = r;
 Display(1).MaxDiff   = MaxDiff;
 Display(1).MaxInsert = maxinsert;
 
+if N == 2,
+  Display(1).AtOrigin  = 1;           % put pairs in a standard orientation
+else
+  Display(1).AtOrigin = 0;
+end
+
 % ---------------------------- determine which conserved columns are on the same strand
 % ---------------------------- number the columns by strand number
 
@@ -262,12 +268,17 @@ i        = 1;                              % current window
 nn       = 1;                              % current candidate
 
 PlotMotif(File,Search,Query,Display,i);    % graph in display window i
+
 if Octave == 0,
   rotate3d on
 end
 axis off
 DisplayTable(File,Search,Query,Display,i)
 drawnow
+
+if N == 2,                                 % helpful for viewing basepairs
+  view(2)
+end
 
 % ------------------------------- display menu -----------------------------
 
@@ -457,17 +468,17 @@ while stop == 0,
 
    if N == 2 && exist('xMutualIDI') == 2,              % 2-NT candidates
 
-   Search = xMutualIDI(File,Search,Limit); % calculate some discrepancies
+     Search = xMutualIDI(File,Search,Limit); % calculate some discrepancies
 
-   for ii=1:L,
-     f = Search.Candidates(ii,N+1);          % file number
-     b = '';
-     for j = 1:min(4,N),
-       b = [b File(f).NT(Search.Candidates(ii,j)).Base];
-     end
-     n = File(f).NT(Search.Candidates(ii,1)).Number;
-     n = sprintf('%4s',n);
-     if Search.Query.Geometric > 0,
+     for ii=1:L,
+       f = Search.Candidates(ii,N+1);          % file number
+       b = '';
+       for j = 1:min(4,N),
+         b = [b File(f).NT(Search.Candidates(ii,j)).Base];
+       end
+       n = File(f).NT(Search.Candidates(ii,1)).Number;
+       n = sprintf('%4s',n);
+       if Search.Query.Geometric > 0,
          if isfield(Search,'AvgDisc'),
            d = sprintf('%6.4f',Search.AvgDisc(ii));
          else
@@ -476,7 +487,7 @@ while stop == 0,
        else
          d = sprintf('%5d',Search.Discrepancy(ii)); % orig candidate number
        end
-     Search.Lab{ii} = [b n ' ' File(f).Filename];
+       Search.Lab{ii} = [b n ' ' File(f).Filename];
      end
    end
  end
@@ -493,7 +504,13 @@ while stop == 0,
         fprintf('Increased display limit to %d; calculating more discrepancies\n',Limit);
         drawnow
         Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
-        p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
+
+        if ~isempty(strfind(pwd,'zirbel')),
+          p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
+        else
+          p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
+        end
+
         p((Limit+1):L) = (Limit+1):L;
         q(p) = 1:L;                             % inverse permutation
       elseif q(n) + 1 > L,                      % q(n) is display order
@@ -897,6 +914,10 @@ function PlotMotif(File,Search,Query,Display,i)
 
   if exist('amal.txt','file') > 0 && N == 3,
      VP.AtOrigin = 2;
+  end
+
+  if ~isempty(strfind(pwd,'zirbel')) && N == 2 && Display(1).AtOrigin == 1,
+     VP.AtOrigin = 1;
   end
 
   OrigIndices = Indices;

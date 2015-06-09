@@ -56,17 +56,17 @@ function [PD,ID,i,k] = zOrderPairs(File,List,LMax,Verbose)
     fprintf(' %4d coplanar. ', sum(diag(PD) == 0));
   end
 
-    PD = PD + PD';
-    ID = ID + ID';
+  PD = PD + PD';
+  ID = ID + ID';
 
-    rs = sum(PD);
-    [y,i] = sort(rs);                          % choose the one at the center
+  rs = sum(PD);                              % total geometric discrepancy to all other instances
+  [y,i] = sort(rs);                          % sort by centrality
 
-    qs = sum(ID);
-    [z,k] = sort(qs);
+  qs = sum(ID);                              % total isodiscrepancy to all other instances
+  [z,k] = sort(qs);                          % sort by centrality
 
-    f = List(i(1),3);
+  f = List(i(1),3);
 
-    if Verbose > 0,
-      fprintf('Coplanar value of exemplar is %7.4f\n', full(File(f).Coplanar(List(i(1),1),List(i(1),2))));
-    end
+  if Verbose > 0,
+    fprintf('Coplanar value of exemplar is %7.4f\n', full(File(f).Coplanar(List(i(1),1),List(i(1),2))));
+  end
