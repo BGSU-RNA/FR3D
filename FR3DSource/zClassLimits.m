@@ -6,7 +6,7 @@
 % The subcategories have decimal parts.
 % For decimal parts smaller than 0.5, the same hydrogen bonds will be checked
 % as for the main category.
-% For decimal parts 0.5 and larger, no hydrogen bonds will be checked 
+% For decimal parts 0.5 and larger, no hydrogen bonds will be checked
 
 function [ClassLimits, CurrentVersion] = zClassLimits;
 
@@ -107,10 +107,10 @@ ClassLimits(1:s(1),1:s(2),6) = B;                      % CC is paircode 6
 
 % GC pairs (paircode 7) ------------------------------------------------------
 
-B =    [  1    5.6  9.0  2.8  6.9 -3.0  3.0 -1.1 -0.7   45   90];  % cis WC-WC 
+B =    [  1    5.6  9.0  2.8  6.9 -3.0  3.0 -1.1 -0.7   45   90];  % cis WC-WC
 B = [B;[  1.1  5.4  6.3  6.6  7.6 -3.0  3.0 -1.1 -0.7   70  110]]; % cis WC-WC
 B = [B;[  2    6.0  8.3  4.2  6.4 -3.0  3.0  0.6  1.1  190  220]]; % tr  WC-WC CLZ 2010-07-15
-B = [B;[  3   -4.8 -2.1  4.5  8.0 -3.0  3.0  0.7  1.1  245  -50]]; % cis WC-H 
+B = [B;[  3   -4.8 -2.1  4.5  8.0 -3.0  3.0  0.7  1.1  245  -50]]; % cis WC-H
 B = [B;[  4   -1.9 -0.7  7.6  8.8 -3.0  3.0 -1.1 -0.7  135  175]]; % tr  H-WC
 B = [B;[  5    4.2  5.2 -6.3 -5.3 -3.0  3.0 -1.1 -0.6   30   60]]; % cis WC-S
 B = [B;[ -5    6.5  7.6  4.0  5.4 -3.0  3.0 -1.1 -0.7   15   40]]; % cis S-WC
@@ -141,7 +141,7 @@ B = [B;[  3    6.7  7.8  4.4  5.4 -3.0  3.0  0.7  1.1   70  100]]; % cis WC-H OK
 B = [B;[  3.1  4.4  5.4  7.0  8.3 -3.0  3.04  0.7  1.1   75  110]]; % cis WC-H
 B = [B;[ -3   -6.0 -4.9  6.5  7.8 -3.0  3.0  0.7  1.1  250  -80]]; % cis H-WC
 B = [B;[  4    4.3  5.4  7.2  8.5 -3.0  3.02 -1.1 -0.7  155  185]]; % tr  H-WC
-B = [B;[  5    3.7  4.7  6.9  8.7 -3.0  3.0 -1.1 -0.5   15   65]]; % cis WC-S 
+B = [B;[  5    3.7  4.7  6.9  8.7 -3.0  3.0 -1.1 -0.5   15   65]]; % cis WC-S
 B = [B;[ -5    6.6  8.6 -4.8 -2.8 -3.0  3.0 -1.1 -0.5  -90   -5]]; % cis S-WC - Jesse 10_11_07
 B = [B;[  6    0.0  4.0  7.7  9.3 -3.0  3.0  0.6  1.1  260  -45]]; % tr  WC-S  Expanded 2010-11-27 CLZ
 %B = [B;[  6.1  6.3  7.8  6.4  8.5 -3.0  3.0  0.7  1.1  220  265]]; % tr  WC-S CLZ removed 2010-07-15; doesn't contribute enough, confuses triples
@@ -244,28 +244,38 @@ ClassLimits(1:s(1),1:s(2),14) = B;                      % CU is paircode 14
 
 % GU pairs (paircode 15) ------------------------------------------------------
 
-B =    [  1    5.0  6.9  6.0  7.5 -3.0  3.0 -1.1 -0.7   50   90];  % cis WC-WC
+B =    [  1    5.0  7.1  6.0  7.5 -3.0  3.0 -1.1 -0.7   45   90];  % cis WC-WC, x widened, angle widened 2015-05-29 CLZ
 B = [B;[  1.1  3.9  5.0  6.7  7.8 -3.0  3.0 -1.1 -0.7   50  100]]; % cis WC-WC
 B = [B;[  1.2  5.5  7.5  4.7  6.0 -3.0  3.0 -1.1 -0.7   50   90]]; % cis WC-WC
-B = [B;[  2    2.8  3.9  7.1  9.1 -3.4  3.0  0.7  1.1  180  215]]; % tr  WC-WC
-B = [B;[ -3   -6.1 -5.1  2.7  3.4 -3.0  3.0  0.7  1.1  -65  -35]]; % cis H-WC
+%B = [B;[  2    2.8  3.9  7.1  9.1 -3.4  3.0  0.7  1.1  180  215]]; % tr  WC-WC
+B = [B;[  2    2.6  5.2  7.1  9.0 -3.4  3.0  0.7  1.1  180  206]]; % tr  WC-WC, x extended right and left, y top reduced, angle tightened 2015-05-29 CLZ
+%B = [B;[ -3   -6.1 -5.1  2.7  3.4 -3.0  3.0  0.7  1.1  -65  -35]]; % cis H-WC
+B = [B;[ -3   -6.1 -4.6  2.7  4.4 -3.0  3.0  0.7  1.1  -65  -35]]; % cis H-WC, x extended right, y extended up 2015-05-29 CLZ
 B = [B;[  4    5.1  7.9  6.5  8.2 -3.0  3.0 -1.1 -0.7  145  180]]; % tr  WC-H
-B = [B;[ -4   -5.8 -4.8  5.1  6.1 -3.0  3.0 -1.1 -0.7  180  210]]; % tr  H-WC
-B = [B;[  5    6.1  7.8  4.0  5.9 -3.0  3.0 -1.1 -0.7   15   40]]; % cis WC-S
+%B = [B;[ -4   -5.8 -4.8  5.1  6.1 -3.0  3.0 -1.1 -0.7  180  210]]; % tr  H-WC, x shifted right, angle extended left 2015-05-29 CLZ
+B = [B;[ -4   -5.6 -3.8  5.1  6.1 -3.0  3.0 -1.1 -0.7  170  210]]; % tr  H-WC, x shifted right, angle extended left 2015-05-29 CLZ
+%B = [B;[  5    6.1  7.8  4.0  5.9 -3.0  3.0 -1.1 -0.7   15   40]]; % cis WC-S
+B = [B;[  5    6.6  7.9  4.0  5.9 -3.0  3.0 -1.1 -0.7    5   45]]; % cis WC-S, x shifted to the right, ang extended left, right 2015-05-29 CLZ
 B = [B;[  5.1  7.0  8.5  3.2  4.7 -3.0  3.0 -1.1 -0.7   40   55]]; % cis WC-S
 B = [B;[  5.2  7.7  8.7  3.7  4.8 -3.0  3.0 -1.1 -0.7   65   95]]; % cis WC-S
-B = [B;[ -5    2.8  3.8 -4.8 -3.8 -3.1  3.0 -1.1 -0.7  -65  -35]]; % cis S-WC
-B = [B;[  6    4.9  7.5  5.1  7.6 -3.0  3.0  0.7  1.1  235  -80]]; % tr  WC-S
-B = [B;[ -6    6.6  8.1 -3.7 -1.7 -3.0  3.0  0.7  1.1  115  155]]; % tr  S-WC
+%B = [B;[ -5    2.8  3.8 -4.8 -3.8 -3.1  3.0 -1.1 -0.7  -65  -35]]; % cis S-WC
+B = [B;[ -5    2.8  3.9 -5.0 -4.0 -3.1  3.0 -1.1 -0.7  -60  -25]]; % cis S-WC, ang shifted right, y shifted down, x extended right 2015-05-29 CLZ
+%B = [B;[  6    4.9  7.5  5.1  7.6 -3.0  3.0  0.7  1.1  235  -80]]; % tr  WC-S
+B = [B;[  6    4.5  7.1  5.1  7.6 -3.0  3.0  0.7  1.1  235  -75]]; % tr  WC-S, x shifted left, angle widened right 2015-05-30 CLZ
+%B = [B;[ -6    6.6  8.1 -3.7 -1.7 -3.0  3.0  0.7  1.1  115  155]]; % tr  S-WC
+B = [B;[ -6    6.6  7.8 -3.4 -1.9 -3.0  3.0  0.7  1.1  125  155]]; % tr  S-WC, narrowed considerably to eliminate "pair" with stacked A in between 2015-06-03 CLZ
 B = [B;[ -9    2.8  5.8 -6.2 -4.3 -3.0  3.0  0.7  1.1  -50    0]]; % cis H-S
 B = [B;[ -9.1  8.0  9.2 -4.7 -3.7 -3.0  3.0  0.7  1.1  10    50]]; % cis H-S
 B = [B;[ -9.2  5.6  6.4 -5.3 -4.3 -3.0  3.0  0.7  1.1  10    50]]; % cis H-S
 B = [B;[-10    8.4 10.1 -3.7 -1.0 -3.0  3.0 -1.1 -0.7   60  100]]; % tr  S-H
-B = [B;[ 11    1.6  4.1 -8.7 -5.9 -3.0  3.0 -1.1 -0.7  230  -70]]; % cSs
+%B = [B;[ 11    1.6  4.1 -8.7 -5.9 -3.0  3.0 -1.1 -0.7  230  -70]]; % cSs
+B = [B;[ 11    1.6  4.1 -8.7 -7.2 -3.0  3.0 -1.1 -0.7  230  260]]; % cSs, vertical reduced, ang tightened right to eliminate stacked version of basepair 2015-06-03 CLZ
 B = [B;[-11    5.7  7.5 -3.6 -1.9 -3.0  3.0 -1.1 -0.7  255  -50]]; % csS
 B = [B;[-11.1  4.3  5.2 -4.0 -3.0 -3.0  3.0 -1.1 -0.7  230  260]]; % csS
-B = [B;[ 12    8.1  8.9 -1.7  0.2 -3.0  3.0  0.7  1.1  180  220]]; % tSs
-B = [B;[ 13    7.5  9.2  5.6  7.5 -3.0  3.0 -1.1 -0.7  110  145]]; % bifurcated
+%B = [B;[ 12    8.1  8.9 -1.7  0.2 -3.0  3.0  0.7  1.1  180  220]]; % tSs
+B = [B;[ 12    7.9  8.8 -1.8 -0.2 -3.0  3.0  0.7  1.1  175  215]]; % tSs, shifted down and left, ang moved left 2015-06-08 CLZ
+%B = [B;[ 13    7.5  9.2  5.6  7.5 -3.0  3.0 -1.1 -0.7  110  145]]; % bifurcated
+B = [B;[ 13    7.7  9.5  4.7  7.3 -3.0  3.0 -1.1 -0.7  105  140]]; % bifurcated, extended down and right, ang move left 2015-06-08 CLZ
 
 B = [B;[ 25   -5.4 -3.7  1.6  3.3 -3.0  3.0 -1.1 -0.7  125  165]]; % motif
 
