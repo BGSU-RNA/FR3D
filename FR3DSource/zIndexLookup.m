@@ -62,11 +62,14 @@ for k = 1:length(Num),
   t = t + 1;
 end
 
-% check for chain indicated in parentheses
+% check for chain indicated in parentheses or with underscore
 
 for k = 1:length(Numb),
-  if Numb{k}(1) == '(' || Numb{k}(1) == '_',         % chain only
-    Chai{k} = Numb{k}(2);                            % extract the chain
+  if Numb{k}(1) == '_',                              % chain only
+    Chai{k} = Numb{k}(2:end);                        % extract the chain
+    Numb{k} = '#';                                   % special code
+  elseif Numb{k}(1) == '(',                          % chain only
+    Chai{k} = Numb{k}(2:(end-1));                    % extract the chain
     Numb{k} = '#';                                   % special code
   elseif ~isempty(strfind(Numb{k},'(')),
     a = strfind(Numb{k},'(');
@@ -104,11 +107,11 @@ if strcmp(class(File),'char'),
 end
 
 Numbers = {};
+Chains = {};
 for k = 1:length(File.NT),
   Numbers{k} = File.NT(k).Number;
+  Chains{k} = File.NT(k).Chain;
 end
-
-%Numbers = cat(1,{File.NT(:).Number});     % won't work in Octave
 
 allchains = [];
 
@@ -138,7 +141,7 @@ for k = 1:length(Numb)                      % loop through nucleotide numbers
 
     for j = 1:length(p),
       for jj = 1:length(q),
-        if File.NT(p(j)).Chain == File.NT(q(jj)).Chain,
+        if strcmp(File.NT(p(j)).Chain, File.NT(q(jj)).Chain),
           ch{c} = File.NT(p(j)).Chain;
           c = c + 1;
         end
@@ -149,7 +152,7 @@ for k = 1:length(Numb)                      % loop through nucleotide numbers
       allchains{j} = ch;
     end
   elseif Numb{k}(1) == '#',
-    ind = find(cat(2,File.NT.Chain) == Chai{k});
+    ind = find(ismember(Chains,Chai{k}));
   elseif strcmpi(Numb{k},'all'),
     ind = 1:length(File.NT);                  % all nucleotides
   elseif any(Numb{k}(1) == 'bdefhijklmnopqrstvwxyz') && isfield(File.NT(1),'Hierarchy'),
@@ -219,45 +222,47 @@ end
 %-------------------------------------------------------------------------
 function [ind] = LookUpOne(File,Numbers,N,Chain,Verbose)
 
-    if any(N(1) == 'ACGU'),
-      N = N(2:end);
+  % strip off base identifier and ignore
+
+  if any(N(1) == 'ACGU'),
+    N = N(2:end);
+  end
+
+  % later, add the ability to infer the chain from the base specified
+
+  ind = [];
+  p = find(ismember(Numbers,N));
+  if length(p) == 0,
+    if Verbose > 0,
+      fprintf('Could not find nucleotide %s in %s\n',N,File.Filename);
     end
-
-    % later, add the ability to infer the chain from the base specified
-
-    ind = [];
-    p = find(ismember(Numbers,N));
-    if length(p) == 0,
+  elseif length(p) == 1 && length(Chain) == 0, % one match, no chain specified
+    ind = [ind p];
+  elseif length(p) > 1 && length(Chain) == 0,% two matches, no chain specified
+    ind = [ind p];
+    if Verbose > 0,
+      fprintf('Multiple matches found for %s in %s, consider specifying a chain\n', N, File.Filename);
+    end
+    for a = 1:length(ind),
       if Verbose > 0,
-        fprintf('Could not find nucleotide %s in %s\n',N,File.Filename);
-      end
-    elseif length(p) == 1 && length(Chain) == 0, % one match, no chain specified
-      ind = [ind p];
-    elseif length(p) > 1 && length(Chain) == 0,% two matches, no chain specified
-      ind = [ind p];
-      if Verbose > 0,
-        fprintf('Multiple matches found for %s in %s, consider specifying a chain\n', N, File.Filename);
-      end
-      for a = 1:length(ind),
-        if Verbose > 0,
-          fprintf('Nucleotide %s%s Chain %5s Index %5d\n', File.NT(ind(a)).Base, File.NT(ind(a)).Number, File.NT(ind(a)).Chain, ind(a));
-        end
-      end
-    elseif length(Chain) > 0,                    % chain specified
-      c = 0;
-      for j = 1:length(p),
-        if strcmp(File.NT(p(j)).Chain,Chain),
-          ind = [ind p(j)];
-          c = c + 1;
-        end
-      end
-      if c == 0,
-        if Verbose > 0,
-          fprintf('Could not find nucleotide %s in chain %s in %s\n',N,Chain,File.Filename);
-        end
-      elseif c > 1,
-        if Verbose > 0,
-          fprintf('Multiple matches found for %s in chain %s in %s\n', N,Chain,File.Filename);
-        end
+        fprintf('Nucleotide %s%s Chain %5s Index %5d\n', File.NT(ind(a)).Base, File.NT(ind(a)).Number, File.NT(ind(a)).Chain, ind(a));
       end
     end
+  elseif length(Chain) > 0,                    % chain specified
+    c = 0;
+    for j = 1:length(p),
+      if strcmp(File.NT(p(j)).Chain,Chain),
+        ind = [ind p(j)];
+        c = c + 1;
+      end
+    end
+    if c == 0,
+      if Verbose > 0,
+        fprintf('Could not find nucleotide %s in chain %s in %s\n',N,Chain,File.Filename);
+      end
+    elseif c > 1,
+      if Verbose > 0,
+        fprintf('Multiple matches found for %s in chain %s in %s\n', N,Chain,File.Filename);
+      end
+    end
+  end
