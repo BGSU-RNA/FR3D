@@ -70,7 +70,7 @@ end
 if isempty(UseFile) && CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.cifatoms')),
   try
     status = 1;
-    if ~isempty(strfind(pwd,'zzirbel')),
+    if ~isempty(strfind(pwd,'zirbel')),
       fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in %s\n',[PDBID '.cifatoms']);
       [status,result] = system(['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
     else
@@ -136,9 +136,6 @@ if ~isempty(UseFile) && exist(UseFile),
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.label_asym_id'
-        ChainField = fieldcounter;
-        fieldtocolumn(fieldcounter) = ColumnsToKeep;
-        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.label_entity_id'
       case '_atom_site.label_seq_id'
       case '_atom_site.pdbx_PDB_ins_code'
@@ -171,6 +168,9 @@ if ~isempty(UseFile) && exist(UseFile),
         ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.auth_comp_id'
       case '_atom_site.auth_asym_id'
+        ChainField = fieldcounter;
+        fieldtocolumn(fieldcounter) = ColumnsToKeep;
+        ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.auth'
       case '_atom_id'
       case '_atom_site.pdbx_PDB_model_num'
