@@ -14,6 +14,6 @@ b       =  zeros(3,1);         % b will be perpendicular to axis
 b(i(2)) =  axis(i(3));         % use the largest entries in axis
 b(i(3)) = -axis(i(2));
 
-angle = acos((b'*R*b) / (b'*b)) * sign(det([b R*b axis]));     
+angle = real(acos((b'*R*b) / (b'*b)) * sign(det([b R*b axis])));
                                % angle of rotation, signed by rotation
                                % sense relative to axis of rotation
