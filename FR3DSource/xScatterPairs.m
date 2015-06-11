@@ -23,7 +23,6 @@ else
   dotsize = 18;
 end
 
-% ---------------------------------------------
 % --------------------------------------------- Collect basic data
 
 Candidates = Search.Candidates;
