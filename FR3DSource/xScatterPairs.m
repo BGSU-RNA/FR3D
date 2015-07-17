@@ -192,15 +192,18 @@ while Stop == 0,
 
   switch ViewParam.Color,
     case 1, ColorAxis =  [min(Color) max(Color)];
-    case 2,
-      if max(Color) - min(Color) < 1,
-        ColorAxis =  [min(Color) max(Color)];
+    case 2,                                        % color by interaction
+      cc = mod(abs(Color),100);
+unique(cc)
+
+      if max(cc) - min(cc) < 1,
+        ColorAxis =  [min(Color) max(Color)];      % accentuate colors
       else
-        ColorAxis =  [1 12];
+        ColorAxis =  [1 12];                       % color by paircode
       end
     case 3, ColorAxis =  [15 19];
     case 4, ColorAxis =  [-12 30];
-    case 5, ColorAxis =  [1 16];
+    case 5, ColorAxis =  [1 16];                       % color by paircode
     case 6, ColorAxis =  [min(Color) max(Color)];      % color by angle
     case 7, ColorAxis =  [min(Color) max(Color)];
     case 8, ColorAxis =  [-1.1 1.1];                   % third comp of normal
@@ -429,7 +432,7 @@ while Stop == 0,
 
     %----------------------------------------------------- Plot angle and normal
 
-    if ViewParam.Color > 1,
+    if any(ViewParam.Color == [6 7 8 9 11 13 14 15 16]),
       figure(ViewParam.FigNum + 2)
       clf
       figure(ViewParam.FigNum + 2)
@@ -444,7 +447,7 @@ while Stop == 0,
         case  8, title('Histogram of third component of normal vector');
         case  9, title('Histogram of distance'); % Color(k) = p.Distances(1);
         case 11, title('Histogram of stacking overlap'); % Color(k) = p.StackingOverlap;
-        case 12, title('Histogram of interaction code'); % Color(k) = p.Edge;
+        case 12, title('Histogram of mark'); % Color(k) = p.Edge;
         case 13, title('Histogram of perpendicual displacement'); % Color(k) = p.Displ(1);
         case 14, title('Histogram of parallel displacement'); % Color(k) = p.Displ(2);
         case 15, title('Histogram of vertical displacement'); % Color(k) = p.Displ(3);
@@ -523,8 +526,8 @@ while Stop == 0,
           end
   case  5, ViewParam.Color = 6;
   case  6, ViewParam.Color = 5;
-  case  7, ViewParam.Color = 2;
-  case  8, ViewParam.Color = 12;
+  case  7, ViewParam.Color = 2;          % color by paircode
+  case  8, ViewParam.Color = 12;         % color by mark
   case  9, ViewParam.Color = 13;
   case 10, ViewParam.Color = 14;
   case 11, ViewParam.Color = 15;
