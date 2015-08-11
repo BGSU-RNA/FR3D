@@ -53,6 +53,16 @@ if exist(Filename),
 elseif exist([PDBID '.cif']),                           % .cif file found
   CIFDownloaded = 1;
 else                                                    % no .cif file found
+  if ~(exist('PDBFiles') == 7),        % if directory doesn't yet exist
+    mkdir('PDBFiles');
+  end
+  path(path,[pwd filesep 'PDBFiles']);
+
+  if ~(exist('PrecomputedData') == 7),        % if directory doesn't yet exist
+    mkdir('PrecomputedData');
+  end
+  path(path,[pwd filesep 'PrecomputedData']);
+
   try
     if Verbose > 0,
       fprintf('zReadCIFAtoms: Attempting to download %s.cif from PDB\n', PDBID);
@@ -74,7 +84,7 @@ if isempty(UseFile) && CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.c
       fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in %s\n',[PDBID '.cifatoms']);
       [status,result] = system(['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
     else
-      fprintf('zReadCIFAtoms: You can modify zReadCIFAtoms to specify where to find cifatom_writing.py to produce .cifatoms file.\n');
+%      fprintf('zReadCIFAtoms: You can modify zReadCIFAtoms to specify where to find cifatom_writing.py to produce .cifatoms file.\n');
     end
     if status == 0,
       UseFile = [PDBID '.cifatoms'];
