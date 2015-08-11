@@ -17,7 +17,7 @@ VP.LabelSugar= 0;
 VP.az        = 51;
 VP.el        = 14;
 VP.LineStyle = '-';              % default - thick solid lines
-VP.LineThickness = 2;          
+VP.LineThickness = 2;
 VP.AtOrigin  = 0;                % rotate all so first is at origin
 VP.AATitle     = 0;                % title with amino acid numbers, filename
 VP.Grid      = 1;                % add a grid to the graph
@@ -68,6 +68,10 @@ end
 
 if isfield(ViewParam,'Color'),
   VP.Color = ViewParam.Color;
+end
+
+if isfield(ViewParam,'NumberColor'),
+  VP.NumberColor = ViewParam.NumberColor;
 end
 
 if isfield(ViewParam,'AtOrigin'),
@@ -217,8 +221,6 @@ else
   grid off
 end
 
-rotate3d on
-
 if VP.WritePDB == 1,
   if VP.AtOrigin > 0,
     v = fix(VP.AtOrigin);
@@ -286,7 +288,7 @@ if VP.Animate == 1,
       end
       zPlotOneAARotated(File.AA(k),VP,R,S);
     end
-  
+
     Title = strcat(File.AA(Indices(1)).Unit,File.AA(Indices(1)).Number);
     for j=2:length(Indices),
       nt = File.AA(Indices(j));
@@ -298,13 +300,13 @@ if VP.Animate == 1,
     else
       FN = '';
     end
-  
+
     Title = strcat(Title,[' ' strrep(FN,'_','\_')]);
-  
+
     axis equal
     axis([-maxradius maxradius -maxradius maxradius minheight maxheight]);
     set(gca,'TickLength',[0 0]);
-    grid off  
+    grid off
 %    axis off
     view(0,0);
     drawnow
