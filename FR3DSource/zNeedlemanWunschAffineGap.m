@@ -19,7 +19,7 @@ if nargin < 5,
     ti = -4;     % transition
     tv = -4;     % transversion
     MatchScore = [match tv ti tv; tv match tv ti; ti tv match tv; tv ti tv match];
-  else    
+  else
     MatchScore = -Inf * ones(L,L);           % only allow exact matches
     for i = 1:L,
       MatchScore(i,i) = 1;
@@ -33,7 +33,7 @@ if nargin < 3,
 else
   GapOpen = -GapOpen;
   GapExtend = -GapExtend;
-end  
+end
 
 % ------------------------- convert sequences to numeric
 
@@ -154,12 +154,12 @@ while i > 1 || j > 1,
     s1     = [S(i) s1];
     s2     = [T(j) s2];
 
-  case 4,
+  case 4
     j  = j - 1;
     s1 = ['-' s1];
     s2 = [T(j) s2];
 
-  case 5,
+  case 5
     while Point(i,j) == 5,
       j  = j - 1;
       s1 = ['-' s1];
@@ -174,13 +174,3 @@ while i > 1 || j > 1,
 end
 
 matches = sum(s1 == s2);
-
-if 0 > 1,
-  a = min(10,A+1);
-  b = min(10,B+1);
-  % fprintf
-  Max(1:a,1:b)
-  Point(1:a,1:b)
-  MaxLeft(1:a,1:b)
-  MaxAbove(1:a,1:b)
-end
