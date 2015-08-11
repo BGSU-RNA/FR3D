@@ -28,7 +28,7 @@ else
   LS = '-';
 end
 
-if isfield(ViewParam,'LineThickness'),   
+if isfield(ViewParam,'LineThickness'),
   LT = ViewParam.LineThickness;
   if strcmp(class(NT),'char'),
     LT = str2num(LT);
@@ -55,7 +55,7 @@ else
   LabelAtoms = 0;
 end
 
-if isfield(ViewParam,'Label'), 
+if isfield(ViewParam,'Label'),
   Label = ViewParam.Label;
 elseif LB > 0,
   Label = [NT.Base NT.Number];
@@ -75,12 +75,12 @@ end
 
 switch NT.Code
   case 1,
-    col = [1 0 0];   % A is red 
+    col = [1 0 0];   % A is red
   case 2,
     col = [1 0.8 0]; % C is yellow
   case 3,
     col = [0 1 0];   % G is green
-  case 4, 
+  case 4,
     col = [0 0 1];   % U is blue
   case 5,
     col = [155 48 255]/255; % modified are purple
@@ -99,6 +99,8 @@ end
 if isfield(ViewParam,'NumberColor'),
   if length(ViewParam.NumberColor) == 3,
     numcol = ViewParam.NumberColor;
+  else
+    numcol = col;
   end
 elseif isfield(ViewParam,'Color'),
   numcol = col;
@@ -119,7 +121,7 @@ end
 
 bc = gray;
 
-hold on 
+hold on
 
 switch NT.Code
 case 1,
@@ -219,7 +221,7 @@ if Sugar == 1,
        j = jj;
      end
    end
-   
+
 %   D = zDistance(NT.Sugar,NT.Fit);
 %   [i,j] = find(D == min(min(D)));% indices of nearest atoms
 
@@ -233,23 +235,23 @@ if Sugar == 1,
 
  if length(NT.Sugar(:,1)) == 13,   % for some reason, some have 9
 
-  k = [14 1 7 6 8 9 10 12]; 
+  k = [14 1 7 6 8 9 10 12];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   hold on
-  k = [11 10]; 
+  k = [11 10];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [6 4 5]; 
+  k = [6 4 5];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [4 2 3]; 
+  k = [4 2 3];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [2 1]; 
+  k = [2 1];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
 
   % connect backbone, if distance is small enough
   if norm(Z(13,1)-Z(10,1)) < 4 && CS > 0,       % O3' from previous nucleotide is known
     k = [10 13];
     plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  end  
+  end
 
   if LSugar > 0,
     A = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
@@ -259,16 +261,16 @@ if Sugar == 1,
   end
  elseif length(NT.Sugar(:,1)) == 12,   % for some reason, some have 9
 
-  k = [13 1 7 6 8 9 10 12]; 
+  k = [13 1 7 6 8 9 10 12];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
   hold on
-  k = [11 10]; 
+  k = [11 10];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [6 4 5]; 
+  k = [6 4 5];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [4 2 3]; 
+  k = [4 2 3];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [2 1]; 
+  k = [2 1];
   plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
 
   if LSugar > 0,
@@ -310,5 +312,5 @@ if ShowBeta > 0 && isfield(NT,'Beta'),
     end
   end
 end
-      
+
 
