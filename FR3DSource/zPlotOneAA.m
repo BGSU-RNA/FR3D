@@ -6,7 +6,7 @@ else
   LS = '-';
 end
 
-if isfield(ViewParam,'LineThickness'),   
+if isfield(ViewParam,'LineThickness'),
   LT = ViewParam.LineThickness;
 else
   LT = 2.0;                              % doesn't work for some reason!
@@ -45,7 +45,24 @@ end
 gray = 0.5*[1 1 1];
 
 col = [255 65 150]/255;
-col = [	205  	41  	144]/255;             % default
+col = [	205  	41  	144]/255;             % default, purple
+numcol = [0 0 0];
+
+if isfield(ViewParam,'Color'),
+  if length(ViewParam.Color) == 3,
+    col = ViewParam.Color;
+  end
+end
+
+if isfield(ViewParam,'NumberColor'),
+  if length(ViewParam.NumberColor) == 3,
+    numcol = ViewParam.NumberColor;
+  else
+    numcol = col;
+  end
+elseif isfield(ViewParam,'Color'),
+  numcol = col;
+end
 
 if AADisplay == 0,
   GroupOneColor = col;
@@ -81,7 +98,7 @@ end
 
 bc = gray;
 
-hold on 
+hold on
 
 X  = AA.Loc;
 
@@ -128,8 +145,11 @@ if isfield(AA,'Unit') && isfield(AA,'Atom'),
   end
 
   if LB > 0,
-    text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,[AA.Unit AA.Number],'fontweight','bold','FontSize',LB);
-  %  text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,[AA.Unit AA.Number],'fontweight','bold','FontSize',LB);
+    if isfield(ViewParam,'NumberColor') || isfield(ViewParam,'Color'),
+      text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,[AA.Unit AA.Number],'fontweight','bold','FontSize',LB,'Color',numcol);
+    else
+      text(X(1,1)+0.5,X(1,2),X(1,3)+0.5,[AA.Unit AA.Number],'fontweight','bold','FontSize',LB);
+    end
   end
 
   if LabelAtoms > 0,
