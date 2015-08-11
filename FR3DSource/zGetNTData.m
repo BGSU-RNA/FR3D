@@ -329,7 +329,7 @@ for f=1:length(Filenames),
   Saved = 0;
 
   if (ReadCode > 0) || (ClassifyCode > 0) || (SaveCode > 0),
-    zUpdatePDBInfo(File);
+%    zUpdatePDBInfo(File);
     zSaveNTData(File,Verbose);
     Saved = 1;
   end
