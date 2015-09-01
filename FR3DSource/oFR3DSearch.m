@@ -1,11 +1,11 @@
-% oFR3DSearch conducts the search given in xSpecifyQuery in the PDB files 
+% oFR3DSearch conducts the search given in xSpecifyQuery in the PDB files
 % listed in zFileNameList
 
 % Change the list of PDB files to be searched by editing zFileNameList
 % Change the query by editing oSpecifyQuery
 
 % The result of running xFR3DSearch is a variable Search with these fields:
-%   
+%
 %    .Query                     % a description of the search parameters
 %    .Filenames                 % names of files that were searched
 %    .TotalTime                 % how much time the search took
@@ -63,7 +63,7 @@ end
 % ------------------------------------------- Construct details of search ---
 
 if isfield(Query,'Filename'),                % if query motif is from a file
-  [File,QIndex] = zAddNTData(Query.Filename,0,File);  
+  [File,QIndex] = zAddNTData(Query.Filename,0,File);
                                            % load data for Query, if needed
   Query = xConstructQuery(Query,File(QIndex)); % preliminary calculations
 else
@@ -71,7 +71,7 @@ else
 end
 
 clear Search
-Search.SaveName = [datestr(now,31) '-' Query.Name];  
+Search.SaveName = [datestr(now,31) '-' Query.Name];
                                   % use date and time to identify this search
 
 
@@ -99,7 +99,6 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
       dmin = ceil(max(max(File(i).Distance)));
     end
 
-
     if ((ceil(Query.DistCutoff) > dmin) || Query.BorderSSActive > 0) && (File(i).NumNT > 0),
       File(i) = zFR3DDistances(File(i),Query);
     end
@@ -124,12 +123,12 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
        if (Query.ExcludeOverlap > 0) && (length(Discrepancy) > 0) ...
          && (Query.NumNT >= 2),
 
-         [C, D] = xReduceOverlap(Candidates,Discrepancy); 
+         [C, D] = xReduceOverlap(Candidates,Discrepancy);
                                                      % quick reduction in number
 
-         [Candidates, Discrepancy] = xExcludeOverlap(C,D,1000); 
+         [Candidates, Discrepancy] = xExcludeOverlap(C,D,1000);
                                                     % find top 400 distinct ones
-         [Candidates, Discrepancy] = xExcludeRedundantCandidates(File(SIndex),Candidates,Discrepancy); 
+         [Candidates, Discrepancy] = xExcludeRedundantCandidates(File(SIndex),Candidates,Discrepancy);
 
          if Verbose > 0,
            fprintf('Removed highly overlapping candidates, kept %d\n', length(Candidates(:,1)));
@@ -138,8 +137,8 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
 
      elseif Query.NumNT > 2,
 
-      if (Query.ExcludeOverlap > 0) 
-        [Candidates] = xExcludeRedundantCandidates(File(SIndex),Candidates); 
+      if (Query.ExcludeOverlap > 0)
+        [Candidates] = xExcludeRedundantCandidates(File(SIndex),Candidates);
         if Verbose > 0,
           fprintf('Removed candidates from redundant chains, kept %d\n', length(Candidates(:,1)));
         end
@@ -152,8 +151,8 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
       Discrepancy = (1:length(Candidates(:,1)))';% helps identify candidates
      else
 
-      if (Query.ExcludeOverlap > 0) 
-        [Candidates] = xExcludeRedundantCandidates(File(SIndex),Candidates); 
+      if (Query.ExcludeOverlap > 0)
+        [Candidates] = xExcludeRedundantCandidates(File(SIndex),Candidates);
         if Verbose > 0,
           fprintf('Removed candidates from redundant chains, kept %d\n', length(Candidates(:,1)));
         end
