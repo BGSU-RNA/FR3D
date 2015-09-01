@@ -62,12 +62,12 @@ ClassLimits(1:s(1),1:s(2),1) = B;                      % AA is paircode 1
 
 % AC pairs (paircode 5) ------------------------------------------------------
 
-B =    [  1    4.35 7.0  5.4  8.5 -3.0  3.0 -1.1 -0.7   45  100];  % cis WC-WC
+B =    [  1    4.35 7.0  5.5  8.5 -3.0  3.0 -1.1 -0.7   45  100];  % cis WC-WC
 %B = [B;[  1.1  6.4  7.8  4.3  6.0 -3.0  3.0 -1.1 -0.7   50   80]]; % cis WC-WC adjusted 2010-07-13 renamed 2010-07-18 removed 2010-11-04 with Neocles
 B = [B;[  1.5  8.0  9.9  1.5  4.0 -3.0  3.0 -1.1 -0.7   50   78]]; % cis WC-WC  adjusted 2010-07-13 renamed 2010-07-18
-B = [B;[  2    3.0  4.5  7.8  9.3 -3.0  3.0  0.7  1.1  180  230]]; % tr  WC-WC  Expanded, angle tightened 2011-07-27 CLZ
+B = [B;[  2    3.0  4.7  7.8  9.3 -3.0  3.0  0.7  1.1  180  230]]; % tr  WC-WC  Expanded, angle tightened 2011-07-27 CLZ; Expanded right 2015-08-15 CLZ
 B = [B;[ -4   -3.1 -0.2  6.9  9.2 -3.0  3.0 -1.1 -0.6  135  175]]; % tr   H-WC  Expanded 2010-07-13, Expanded a bit 2011-07-27
-B = [B;[ -4.1 -4.0 -2.5  5.8  7.2 -3.0  3.0 -1.1 -0.8  150  180]]; % tr   H-WC
+B = [B;[ -4.1 -4.2 -2.5  5.5  6.8 -3.0  3.0 -1.1 -0.8  150  175]]; % tr   H-WC  Shifted down and left, angle tightened right 2015-08-16 CLZ
 B = [B;[  5    3.0  6.1  6.5  9.0 -3.0  3.0 -1.1 -0.5   10   54]]; % cis WC-S
 B = [B;[  5.1  2.0  3.0  8.6  9.4 -3.0  3.0 -1.1 -0.7   50   85]]; % cis WC-S   Adjusted a lot 2011-07-28 CLZ
 B = [B;[  5.2  5.5  7.2  5.6  7.2 -3.0  3.0 -1.1 -0.6  -50   50]]; % cis WC-S   Added 2011-07-28 CLZ
