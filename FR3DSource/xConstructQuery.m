@@ -113,6 +113,10 @@ if (Query.Geometric == 0) && ~isfield(Query,'Diameter'),
   Query.Diameter = 30;
 end
 
+if ~isfield(Query,'BorderSSActive'),
+  Query.BorderSSActive = 0;
+end
+
 % ---------------------------------------------------------------------
 
 if Query.Geometric == 1,                    % model comes from a file
@@ -301,7 +305,6 @@ if isfield(Query,'Edges'),
     end
   end
 
-  Query.BorderSSActive = 0;
   [s,t] = size(Query.Flank);
   for a = 1:s,
     for b = 1:t,
