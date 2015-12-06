@@ -505,7 +505,7 @@ while stop == 0,
         drawnow
         Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
 
-        if ~isempty(strfind(pwd,'zirbel')),
+        if ~isempty(strfind(pwd,'zzirbel')),
           p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
         else
           p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
@@ -663,7 +663,13 @@ while stop == 0,
       		fprintf('Ordering by similarity\n');
           zFlushOutput;
       	end
-        p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
+
+        if ~isempty(strfind(pwd,'zirbel')),
+          p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
+        else
+          p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
+        end
+
         p((Limit+1):L) = (Limit+1):L;
       else
         p = 1;
