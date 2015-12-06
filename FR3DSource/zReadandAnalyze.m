@@ -167,7 +167,7 @@ if ~isempty(ATOMNUMBER),
 
       if strcmp(UnitName,'A'),
         for k = min(j):max(j),
-          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || isempty(VERSION{k}),
+          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || strcmp(VERSION{k},'?') || isempty(VERSION{k}),
             switch ATOMNAME{k},
               case 'N9',      Loc( 1,:) = P(k,:);
               case 'C4',      Loc( 2,:) = P(k,:);
@@ -204,7 +204,7 @@ if ~isempty(ATOMNUMBER),
         n = n + 1;
       elseif strcmp(UnitName,'C') || strcmp(UnitName,'C+'),
         for k = min(j):max(j),
-          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || isempty(VERSION{k}),
+          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || strcmp(VERSION{k},'?') || isempty(VERSION{k}),
             switch ATOMNAME{k},
               case 'N1',      Loc( 1,:) = P(k,:);
               case 'C2',      Loc( 2,:) = P(k,:);
@@ -241,7 +241,7 @@ if ~isempty(ATOMNUMBER),
         n = n + 1;
       elseif strcmp(UnitName,'G'),
         for k = min(j):max(j),
-          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || isempty(VERSION{k}),
+          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || strcmp(VERSION{k},'?') || isempty(VERSION{k}),
             switch ATOMNAME{k},
               case 'N9',      Loc( 1,:) = P(k,:);
               case 'C4',      Loc( 2,:) = P(k,:);
@@ -278,7 +278,7 @@ if ~isempty(ATOMNUMBER),
         n = n + 1;
       elseif strcmp(UnitName,'U') || strcmp(UnitName,'+U'),
         for k = min(j):max(j),
-          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || isempty(VERSION{k}),
+          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || strcmp(VERSION{k},'?') || isempty(VERSION{k}),
             switch ATOMNAME{k},
               case 'N1',      Loc( 1,:) = P(k,:);
               case 'C2',      Loc( 2,:) = P(k,:);
