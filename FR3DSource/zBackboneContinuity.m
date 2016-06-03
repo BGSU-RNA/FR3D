@@ -20,8 +20,8 @@ for f = 1:length(File),
     b = File(f).NT(i-1).Sugar(5,:);     % O3 of previous NT
     c = File(f).NT(i-1).Sugar(3,:);     % O2 of previous NT
 
-    x = norm(a-b);
-    y = norm(a-c);
+    x = norm(a-b);                      % P-O3 distance
+    y = norm(a-c);                      % P-O2 distance
 
     if x < 2  && x < y,
       File(f).Covalent(i-1,i) = 1;
@@ -29,7 +29,7 @@ for f = 1:length(File),
     elseif y < 2,
       File(f).Covalent(i-1,i) = 2;
       File(f).Covalent(i,i-1) = -2;
-    else 
+    else
       j = find(File(f).Distance(i-1,:));     % nucleotides somewhat near i-1
       for k = 1:length(j),
         a = File(f).NT(j(k)).Sugar(10,:);      % phosphorus of current NT
