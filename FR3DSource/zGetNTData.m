@@ -275,7 +275,7 @@ for f=1:length(Filenames),
   end
 
   if ~isfield(File,'Flank') || ClassifyCode > 0,
-    File = xFlankingPairs(File);
+    File = zBorderSS(File);                      % identify single-stranded regions
   end
 
   if ~isfield(File,'Redundant') || ~isfield(File,'LongestChain') || ClassifyCode > 0,
