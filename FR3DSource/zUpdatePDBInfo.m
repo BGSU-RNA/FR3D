@@ -64,7 +64,7 @@ File.NT(LC(1)).Chain
 % n(i,9)    Number of cWW basepairs in structure
 % n(i,10)   Number of non-cWW basepairs in structure
 
-  save(['FR3DSource' filesep 'PDBInfo.mat'],'n','t'); % Matlab version 7
+  save(which(['FR3DSource' filesep 'PDBInfo.mat']),'n','t'); % Matlab version 7
   fprintf('zUpdatePDBInfo:  Updated PDBInfo.mat\n');
 end
 
