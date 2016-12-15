@@ -56,20 +56,20 @@ for k=1:length(Pair)
         case  7, Text{k+1} = [Text{k+1} sprintf('%7.2f',p.Normal(1))];
         case  8, Text{k+1} = [Text{k+1} sprintf('%7.2f',p.Normal(2))];
         case  9, Text{k+1} = [Text{k+1} sprintf('%7.2f',p.Normal(3))];
-        case 10, Text{k+1} = [Text{k+1} sprintf('%6.1f',p.Ang)];
+        case 10, Text{k+1} = [Text{k+1} sprintf('%6.1f',p.AngleInPlane)];   % changed from angle of rotation to angle in plane 2016-11-11 CLZ
         case 11, Text{k+1} = [Text{k+1} sprintf('%8.2f',p.C1pC1p)];
         case 12, Text{k+1} = [Text{k+1} sprintf('%7.2f',p.Gap)];
         case 13, Text{k+1} = [Text{k+1} sprintf('%8.2f',p.MinDist)];
 %        case 14, Text{k+1} = [Text{k+1} sprintf('%8.2f',p.Class)];
-        case 14, Text{k+1} = [Text{k+1} sprintf('%8s',zEdgeText(p.Class))];
-        case 16, 
+        case 14, Text{k+1} = [Text{k+1} sprintf('%8s',zEdgeText(p.Class,1))];
+        case 16,
           if p.Distances(1) > 999,
             Text{k+1} = [Text{k+1} '  None'];
           else
 %            Text{k+1} = [Text{k+1} sprintf('%7.2f',p.Classes(1))];
-            Text{k+1} = [Text{k+1} sprintf('%7s',zEdgeText(p.Classes(1)))];
+            Text{k+1} = [Text{k+1} sprintf('%7s',zEdgeText(p.Classes(1),1))];
           end
-        case 17, 
+        case 17,
           if p.Distances(1) > 999,
             Text{k+1} = [Text{k+1} '   '];
           else

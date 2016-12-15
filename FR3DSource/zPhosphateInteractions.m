@@ -53,7 +53,7 @@ end
 
     % Categories 18 and 19 are internal to FR3D.  They are displayed 8BPh, 4BPh
 
-% ------------------------------ temporary cutoffs! 
+% ------------------------------ temporary cutoffs!
 
 CarbonDist    = 4.0;                           % max massive - oxygen distance
 nCarbonDist   = 5;                           % near category
@@ -70,7 +70,7 @@ DL([7 8 9])  = CarbonDist;
 nDL([4 6 11]) = nNitrogenDist;
 nDL([7 8 9])  = nCarbonDist;
 
-% ------------------------------ temporary cutoffs! 
+% ------------------------------ temporary cutoffs!
 
 CarbonDist    = 4.0;                           % max massive - oxygen distance
 nCarbonDist   = 5;                           % near category
@@ -126,7 +126,7 @@ for f = 1:length(File),
 
   File(f).BasePhosphate = sparse([],[],[],File(f).NumNT,File(f).NumNT);
 
-  % -------- First screening of base pairs ----------------------------------- 
+  % -------- First screening of base pairs -----------------------------------
 
   DistCutoff = 16;                              % max distance for interaction
                                                 % screen by C-C distance
@@ -207,7 +207,7 @@ for f = 1:length(File),
 
         if ((Angle(n) > AL) && (Dist(n) < DL(m(mm)))) % true BPh pair
           g = [g e(mm)];              % assign a non-near class.
-          w = [w pp(n)];              % record which oxygen it is 
+          w = [w pp(n)];              % record which oxygen it is
           T = [T; [f i(k) j(k) e(mm) pp(n)]];
         else
           g = [g e(mm) + 100];        % > 100 means "near"
@@ -328,7 +328,7 @@ for f = 1:length(File),
        if Verbose > 1,
          if ~isempty(DT),
            D = [D; [DT g(1)*ones(length(DT(:,1)),1)]];
-         end 
+         end
        end
 
      end

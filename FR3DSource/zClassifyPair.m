@@ -26,7 +26,7 @@ if nargin < 4,
 end
 
 % Paircode list
-% 1-AA  2-CA  3-GA  4-UA  5-AC  6-CC  7-GC  8-UC 
+% 1-AA  2-CA  3-GA  4-UA  5-AC  6-CC  7-GC  8-UC
 % 9-AG 10-CG 11-GG 12-UG 13-AU 14-CU 15-GU 16-UU
 
   paircode = 4*(N2.Code-1) + N1.Code;           % AA is 1, CA is 2, etc.
@@ -62,7 +62,7 @@ end
 
     % if AA, CC, GG, or UU and no interaction or a near interaction, recheck
 
-    if (abs(Pair.Class) >= 30) && (M1.Code == M2.Code) && (Force == 0),  
+    if (abs(Pair.Class) >= 30) && (M1.Code == M2.Code) && (Force == 0),
       M2 = N1;                               % reverse roles of nucleotides
       M1 = N2;
       s  = -1;
