@@ -25,12 +25,6 @@ else
   end
 end
 
-for m = 1:length(Param(:,1)),
-  if (Param(m,2) == 7) || ((Param(m,2) == 10) && (abs(Param(m,1)) < 14)),
-    Param(m,1) = -Param(m,1);
-  end
-end
-
 List = [];
 Class = [];
 
