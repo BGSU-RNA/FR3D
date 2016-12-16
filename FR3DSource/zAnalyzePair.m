@@ -62,10 +62,10 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
 
   Pair.MinDist = min(min(zDistance(N1.Fit,N2.Fit)));
 
-  if isfield(N1,'UseAngleInPlane'),
-    a = zCheckCutoffs(Pair.Displ,Pair.Normal,Pair.AngleInPlane,Pair.Gap,CL(:,:,Pair.Paircode));
+  if isfield(N1,'UseAngleInPlane') && N1.UseAngleInPlane == 0,
+    a = zCheckCutoffs(Pair.Displ,Pair.Normal,Pair.Ang,Pair.Gap,CL(:,:,Pair.Paircode));  % for comparison with historical
   else
-    a = zCheckCutoffs(Pair.Displ,Pair.Normal,Pair.Ang,Pair.Gap,CL(:,:,Pair.Paircode));
+    a = zCheckCutoffs(Pair.Displ,Pair.Normal,Pair.AngleInPlane,Pair.Gap,CL(:,:,Pair.Paircode));
   end
                                            % find possible classifications
 
@@ -377,17 +377,14 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
       % -------------------- If close enough to an exemplar, mark it as a near pair
 
       if (Pair.Distances(1) < 0.7) && (Pair.Normal(3) * Exemplar(ff(1),gg(1)).R(3,3) > 0), % same flip
-        b = a-fix(a);                          % extract decimal code for reason
         c = Pair.Classes(1);
-        a = sign(c) * (100 + abs(c) + b/1000);
+        a = sign(c) * (100 + abs(c));
       elseif (Pair.Distances(2) < 0.7) && (Pair.Normal(3) * Exemplar(ff(2),gg(2)).R(3,3) > 0), % same flip
-        b = a-fix(a);                          % extract decimal code for reason
         c = Pair.Classes(2);
-        a = sign(c) * (100 + abs(c) + b/1000);
+        a = sign(c) * (100 + abs(c));
       elseif (Pair.Distances(3) < 0.7) && (Pair.Normal(3) * Exemplar(ff(3),gg(3)).R(3,3) > 0), % same flip
-        b = a-fix(a);                          % extract decimal code for reason
         c = Pair.Classes(3);
-        a = sign(c) * (100 + abs(c) + b/1000);
+        a = sign(c) * (100 + abs(c));
       end
     end
   end
