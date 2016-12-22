@@ -1,6 +1,6 @@
-% xDiscrepancy(Model,Cand) calculates the discrepancy between Model and 
+% xDiscrepancy(Model,Cand) calculates the discrepancy between Model and
 % Cand, which is an array of NT's.
-% One must take the square root and divide by the number of nucleotides after.
+% One must take the square root and divide by the number of nucleotides after, when you have more than 2 nucleotides
 % As soon as the discrepancy exceeds Model.RelCutoff, the calculation stops.
 % The current sum is returned as a negative discrepancy, shifted to
 % record when the calculation stopped.
@@ -22,7 +22,7 @@ if (L == 2),
 
   v    = Model.AngleWeight(1);
 
-  Disc = (sqrt(t1*t1' + (v^2)*ang1^2) + sqrt(t2*t2' + (v^2)*ang2^2))/4;
+  Disc = (sqrt(t1*t1' + (v^2)*ang1^2) + sqrt(t2*t2' + (v^2)*ang2^2))/(4*sqrt(2));
 
   if (Disc > Model.LDiscCutoff),
     Disc = -1;
@@ -37,12 +37,12 @@ else
   CMean = Model.LocWeight * CandiCenters / Model.NumNT;
 
   CC = CandiCenters - ones(L,1) * CMean;  % subtract mean
-  
+
   R = zBestRotation(CC, MWC);             % candidate onto model
-  
+
   S = Model.LocWeight * sum(((MCC - CC*R').^2)')';  % distances between centers
   n = 1;                                    % nucleotide number for angles
-  
+
   while (S <= Model.LDiscCutoff) && (n <= L),
     ang = zAngleOfRotation(R*Cand(n).Rot*(Model.NT(n).Rot)');
     S   = S + (ang^2)*Model.AngleWeight(n)^2;
@@ -57,4 +57,4 @@ else
 
 end
 
-Disc = real(Disc);                            % sometimes not real, even 
+Disc = real(Disc);                            % sometimes not real, even
