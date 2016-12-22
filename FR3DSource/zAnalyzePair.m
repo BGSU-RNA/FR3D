@@ -362,7 +362,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
   % ----------------- If no classification yet and nearest exemplar is near enough, record as near basepair
 
   if (fix(a) == 30),
-    if abs(Pair.Gap) < 1.9 && Pair.MinDist < 4 && Pair.Gap + Pair.MinDist < 5,  % shave down the near category
+    if abs(Pair.Gap) < 1.9 && Pair.MinDist < 4 && Pair.Gap + Pair.MinDist < 5.7,  % shave down the near category
 
       % --------------------------- check hydrogen bonds if nearest exemplar
       % --------- is a basepair, even if this pair is far from that exemplar
@@ -376,13 +376,13 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
 
       % -------------------- If close enough to an exemplar, mark it as a near pair
 
-      if (Pair.Distances(1) < 0.7) && (Pair.Normal(3) * Exemplar(ff(1),gg(1)).R(3,3) > 0), % same flip
+      if (Pair.Distances(1) < 1.4) && (Pair.Normal(3) * Exemplar(ff(1),gg(1)).R(3,3) > 0), % same flip
         c = Pair.Classes(1);
         a = sign(c) * (100 + abs(c));
-      elseif (Pair.Distances(2) < 0.7) && (Pair.Normal(3) * Exemplar(ff(2),gg(2)).R(3,3) > 0), % same flip
+      elseif (Pair.Distances(2) < 1.4) && (Pair.Normal(3) * Exemplar(ff(2),gg(2)).R(3,3) > 0), % same flip
         c = Pair.Classes(2);
         a = sign(c) * (100 + abs(c));
-      elseif (Pair.Distances(3) < 0.7) && (Pair.Normal(3) * Exemplar(ff(3),gg(3)).R(3,3) > 0), % same flip
+      elseif (Pair.Distances(3) < 1.4) && (Pair.Normal(3) * Exemplar(ff(3),gg(3)).R(3,3) > 0), % same flip
         c = Pair.Classes(3);
         a = sign(c) * (100 + abs(c));
       end
