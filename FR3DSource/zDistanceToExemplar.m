@@ -26,32 +26,31 @@ e = find(cat(2,Exemplar(:,pc).Class) == c);
 
 if ~isempty(e),
   E = Exemplar(e(1),pc);
-  d = sqrt(xDiscrepancyFast(E,[M1 M2]))/2;
+  d = xDiscrepancyFast(E,[M1 M2]);
   if M1.Code == M2.Code,
-    d = min(d,sqrt(xDiscrepancyFast(E,[M2 M1]))/2);
+    d = min(d,xDiscrepancyFast(E,[M2 M1]));
   end
 elseif M1.Code == M2.Code,
   e = find(cat(2,Exemplar(:,pc).Class) == -c);
   E = Exemplar(e(1),pc);
-  d = sqrt(xDiscrepancyFast(E,[M1 M2]))/2;
+  d = xDiscrepancyFast(E,[M1 M2]);
   if M1.Code == M2.Code,
-    d = min(d,sqrt(xDiscrepancyFast(E,[M2 M1]))/2);
+    d = min(d,xDiscrepancyFast(E,[M2 M1]));
   end
 elseif any(abs(fix(c)) == [1 2 7 8 11 12]),    % symmetric pairs cWW, tWW, etc.
   e = find(cat(2,Exemplar(:,pc).Class) == -c); % might have been coded with the negative
   E = Exemplar(e(1),pc);
-  d = sqrt(xDiscrepancyFast(E,[M1 M2]))/2;
+  d = xDiscrepancyFast(E,[M1 M2]);
   if M1.Code == M2.Code,
-    d = min(d,sqrt(xDiscrepancyFast(E,[M2 M1]))/2);
+    d = min(d,xDiscrepancyFast(E,[M2 M1]));
   end
 else
   e = find(fix(cat(2,Exemplar(:,pc).Class)) == fix(c));
   if ~isempty(e),
     E = Exemplar(e(1),pc);
-    d = sqrt(xDiscrepancyFast(E,[M1 M2]))/2;
+    d = xDiscrepancyFast(E,[M1 M2]);
   else
     fprintf('zDistanceToExemplar: Pair %s%4s - %s%4s %s distance Inf to exemplar\n', M1.Base,M1.Number,M2.Base,M2.Number, zEdgeText(c));
     d = Inf;
   end
 end
-

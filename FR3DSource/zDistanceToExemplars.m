@@ -11,7 +11,7 @@ for j = 1:length(Exemplar(:,pc)),
   E = Exemplar(j,pc);
   if ~isempty(Exemplar(j,pc).Class),
     c(k) = E.Class;
-    d(k) = sqrt(xDiscrepancyFast(E,[NT1 NT2]))/2;
+    d(k) = xDiscrepancyFast(E,[NT1 NT2]);
     f(k) = j;
     g(k) = pc;
   else
