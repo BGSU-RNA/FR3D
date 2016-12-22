@@ -1,4 +1,4 @@
-% xDiscrepancy(Model,Cand) calculates the discrepancy between Model and 
+% xDiscrepancy(Model,Cand) calculates the discrepancy between Model and
 % Cand, which is an array of NT's.
 % As soon as the discrepancy exceeds Model.RelCutoff, the calculation stops.
 % The current sum is returned as a negative discrepancy, shifted to
@@ -67,6 +67,8 @@ end
 
 % ------------------------------ Calculate discrepancy
 
+denom = 4*sqrt(2);
+
 if (L == 2) && (length(LocationWeight == L)),     % two-nucleotide motif
 
   ModelR  = Model(2).Rot' * Model(1).Rot;
@@ -84,7 +86,7 @@ if (L == 2) && (length(LocationWeight == L)),     % two-nucleotide motif
 
   v    = AngleWeight(1);
 
-  Disc = (sqrt(t1*t1' + (v^2)*ang1^2) + sqrt(t2*t2' + (v^2)*ang2^2))/4;
+  Disc = (sqrt(t1*t1' + (v^2)*ang1^2) + sqrt(t2*t2' + (v^2)*ang2^2))/denom;
   Dc = Disc;
 
   R = eye(2);                               % not really how to rotate them
@@ -104,13 +106,13 @@ elseif (length(LocationWeight) == L), % more than two nucleotides, use bases
   CC = CandiCenters - ones(L,1) * CMean;  % subtract mean
 
   R = zBestRotation(CC, diag(LocationWeight)*MCC);      % candidate onto model
-  
+
   S = LocationWeight * sum(((MCC - CC*R').^2)')';  % distances between centers
   Sc= S;                                    % corrected for base flips
 
   n = 1;                                    % nucleotide number for angles
   v = 4 * AngleWeight.^2;                   % precompute a little
-  
+
   while (n <= L),
     angbytwo = acos(min(1,sqrt(trace(R*Cand(n).Rot*(Model(n).Rot)')+1)/2));
     A(n) = angbytwo;
@@ -140,14 +142,14 @@ else                              % account for phosphorus location as well
 
   CMean = LocationWeight * CandiCenters / (2*L);
   CC = CandiCenters - ones(2*L,1) * CMean;  % subtract mean
-  
+
   R = zBestRotation(CC, diag(LocationWeight)*MCC);      % candidate onto model
-  
+
   S = LocationWeight * sum(((MCC - CC*R').^2)')';  % distances between centers
 
   n = 1;                                    % nucleotide number for angles
   v = 4 * AngleWeight.^2;                   % precompute a little
-  
+
   while (n <= L),
     angbytwo = acos(min(1,sqrt(trace(R*Cand(n).Rot*(Model(n).Rot)')+1)/2));
     A(n) = angbytwo;
