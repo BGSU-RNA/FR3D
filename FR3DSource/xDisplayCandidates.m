@@ -347,7 +347,7 @@ while stop == 0,
   map = colormap;
   map = map((end-8):-1:8,:);
   colormap(map);
-  caxis([0 0.8]);
+  caxis([0 1.4]);
 
   if Octave == 0,
 	  colorbar('location','eastoutside');
