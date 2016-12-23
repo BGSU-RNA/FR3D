@@ -13,14 +13,14 @@ if (nargin < 2) || (length(Lab) == 0),
   end
   W = 1;
   NoLabel = 1;
-end  
+end
 
 if nargin < 3,
   W = length(Lab{1});
   for i = 1:s,
     W = min(length(Lab{i}),W);
   end
-end  
+end
 
 if nargin < 4,
   pp = [];
