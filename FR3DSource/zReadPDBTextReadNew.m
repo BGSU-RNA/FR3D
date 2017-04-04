@@ -11,8 +11,11 @@ if exist(Filename),
   try
     T = textread(Filename,'%80c');
   catch
-    T = [];
     fid = fopen(Filename,'r');             % make all lines 80 characters
+    nlines = fskipl(fid, Inf);
+    frewind(fid);
+    T = repmat(char(0), nlines, 80);;
+    nline = 1;
     if fid > 0
       L = '';
       while ischar(L),
@@ -24,7 +27,7 @@ if exist(Filename),
           elseif a > 80,
             L = L(1:80);
           end
-          T = [T; L];
+          T(nline++,:) = L;
         end
       end
     end
