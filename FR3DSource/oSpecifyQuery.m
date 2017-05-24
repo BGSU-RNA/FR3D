@@ -56,6 +56,15 @@
   oFR3DSearch
   return
 
+% cSS basepairs
+
+  clear Query              % remove any previous Query parameters
+  Query.Name           = 'All cSS basepairs';
+  Query.Edges{1,2}     = 'csS CC GC UU';
+  Query.SearchFiles    = {'1S72','2AW7','3u5h','488d'};
+  oFR3DSearch
+  return
+
 % AG tHS basepairs
   clear Query              % remove any previous Query parameters
   Query.Name           = 'AG tHS basepairs';
