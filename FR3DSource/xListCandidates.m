@@ -99,10 +99,10 @@ if any(WheretoOutput == [1 2 5]),
       Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
     end
   end
-  
+
   c = 'Configuration                                      ';
   Text{t} = [Text{t} sprintf(' %s', c(1:N))];
-  
+
   for i=1:N,
     for j=(i+1):N,
       Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
@@ -132,13 +132,13 @@ if any(WheretoOutput == [1 2 5]),
       Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
     end
   end
-  
-end   
+
+end
 
 if N == 2,
   Text{t} = [Text{t} sprintf(' Pair data')];
 end
-  
+
 % -------------------------------------- list candidates
 
 for i=1:min(s,NumToOutput),
@@ -158,14 +158,18 @@ for i=1:min(s,NumToOutput),
   end
 
   for j=1:N,
-    Text{i+t} = [Text{i+t} sprintf('%3s',File(f).NT(Indices(j)).Base)];    
-    Text{i+t} = [Text{i+t} sprintf('%5s',File(f).NT(Indices(j)).Number)];    
+    Text{i+t} = [Text{i+t} sprintf('%3s',File(f).NT(Indices(j)).Base)];
+    Text{i+t} = [Text{i+t} sprintf('%5s',File(f).NT(Indices(j)).Number)];
   end
 
   Text{i+t} = [Text{i+t} ' '];
 
   for j=1:N,
-    Text{i+t} = [Text{i+t} sprintf('%s',File(f).NT(Indices(j)).Chain)];
+    cc = File(f).NT(Indices(j)).Chain;
+    if length(cc) > 2,
+      cc = cc(1:2);
+    end
+    Text{i+t} = [Text{i+t} sprintf('%2s',cc)];  % give 2 spaces for each chain, keeps things aligned, not too wide
   end
 
   if isfield(Search,'GroupLabel'),
@@ -181,9 +185,9 @@ for i=1:min(s,NumToOutput),
         Text{i+t} = [Text{i+t} sprintf('%6s', zEdgeText(File(f).Edge(Indices(k),Indices(j)),1,C1,C2))];
       end
     end
-    
+
     Text{i+t} = [Text{i+t} sprintf(' ')];
-    
+
     for k=1:length(Indices),
       if isfield(File(f).NT(1),'glycosidicbondorientation'),
         Text{i+t} = [Text{i+t} sprintf('%c', File(f).NT(Indices(k)).glycosidicbondorientation(1))];
@@ -191,7 +195,7 @@ for i=1:min(s,NumToOutput),
         Text{i+t} = [Text{i+t} '-'];
       end
     end
-    
+
     for k=1:length(Indices),
       for j=(k+1):length(Indices),
         Text{i+t} = [Text{i+t} sprintf('%6d', abs(double(Indices(k))-double(Indices(j))))];
@@ -224,7 +228,7 @@ for i=1:min(s,NumToOutput),
     end
 
   end
-    
+
   if N == 2,                        % special treatment for basepairs
 
     CP(i) = norm(File(f).NT(Candidates(i,1)).Sugar(1,:) - ...
