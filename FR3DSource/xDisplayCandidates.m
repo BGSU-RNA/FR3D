@@ -428,7 +428,12 @@ while stop == 0,
     k=menu(MenuTitle,Buttons);
   end
 
-  ii=gcf;                                 % get current active figure
+  currfig = gcf;
+  try
+    ii = currfig.Number;
+  catch
+      ii=gcf;                                 % get current active figure
+  end
   if (abs(ii) > length(Display)) || (ii == 0), % other window active?
     ii = i;
   end
@@ -505,7 +510,7 @@ while stop == 0,
         drawnow
         Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
 
-        if ~isempty(strfind(pwd,'zzirbel')),
+        if ~isempty(strfind(pwd,'zirbel')),
 %          p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
           p(1:Limit) = OLO(Search.Disc(1:Limit,1:Limit),'average');
         else
