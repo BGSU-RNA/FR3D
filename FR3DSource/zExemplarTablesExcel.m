@@ -21,9 +21,11 @@ Lett = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 % ---------------------------------------------- Write 16x16 tables
 
-xlswrite('c:\IsoDiscrepancyTables2.xls',TT);
+ExcelFilename = [pwd filesep 'IsoDiscrepancyTables2.xlsx'];
+
+xlswrite(ExcelFilename,TT);
 Excel = actxserver('Excel.Application');
-Excel.Workbooks.Open('c:\IsoDiscrepancyTables2.xls');
+Excel.Workbooks.Open(ExcelFilename);
 
 [c,d] = size(TT);
 for i = 1:c,
@@ -50,9 +52,11 @@ Excel.Visible=1;
 
 % ---------------------------------------------- Write 4x4 tables
 
-xlswrite('c:\IsoDiscrepancyTables3.xls',UU);
+ExcelFilename = [pwd filesep 'IsoDiscrepancyTables3.xlsx'];
+
+xlswrite(ExcelFilename,UU);
 Excel = actxserver('Excel.Application');
-Excel.Workbooks.Open('c:\IsoDiscrepancyTables3.xls');
+Excel.Workbooks.Open(ExcelFilename);
 
 [c,d] = size(UU);
 for i = 1:c,

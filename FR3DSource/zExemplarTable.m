@@ -225,9 +225,9 @@ if Verbose > 1,
        FN = ['Exemplars' filesep zEdgeText(E.Class,Subcat,E.NT1.Code,E.NT2.Code) '_' E.NT1.Base E.NT2.Base '_exemplar.png'];
        saveas(gcf,FN,'png');
 
-       [X,map] = imread(FN);
-       Y = X(67:810,150:1100,:);
-       imwrite(Y,FN);
+%       [X,map] = imread(FN);
+%       Y = X(67:810,150:1100,:);
+%       imwrite(Y,FN);
 
        % ------------------------------ plot glycosidic bonds
 
