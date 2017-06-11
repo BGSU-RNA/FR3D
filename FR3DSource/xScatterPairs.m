@@ -13,7 +13,7 @@ if nargin < 4,
   ViewParam.FigNum = 7;
   ViewParam.Normal = 0;
   ViewParam.ClassLimits = 1;
-  ViewParam.Color = 1;
+  ViewParam.Color = 1;                            % color by position in list
   ViewParam.Octave = 0;
 end
 
@@ -29,7 +29,7 @@ Candidates = Search.Candidates;
 [L,t] = size(Candidates);
 N     = t - 1;                                     % number of nucleotides
 File  = Search.File;
-CL    = zClassLimits;                              % read ClassLimits matrix
+CL = zClassLimits;
 
 if isfield(ViewParam,'Order'),
   ppp = ViewParam.Order;
@@ -140,6 +140,8 @@ while Stop == 0,
     end
   end
 
+  Reclassify = 0;                                      % no need to do it again
+
   %---------------------------------------------- Set the colors for the points
 
   if Recolor > 0,
@@ -166,7 +168,7 @@ while Stop == 0,
           end
         case {2, 3, 4}, Color(k) = p.Edge;
         case  5, Color(k) = p.Paircode;
-        case  6, Color(k) = p.Ang;
+        case  6, Color(k) = p.AngleInPlane;
         case  7, Color(k) = p.Gap;
         case  8, Color(k) = p.Normal(3);
         case  9, Color(k) = p.Distances(1);
@@ -194,8 +196,6 @@ while Stop == 0,
     case 1, ColorAxis =  [min(Color) max(Color)];
     case 2,                                        % color by interaction
       cc = mod(abs(Color),100);
-unique(cc)
-
       if max(cc) - min(cc) < 1,
         ColorAxis =  [min(Color) max(Color)];      % accentuate colors
       else
@@ -222,9 +222,9 @@ unique(cc)
     ColorAxis(2) = ColorAxis(2) + 0.001;
   end
 
-    %---------------------------------------------- Plot displacements
+  %---------------------------------------------- Plot displacements
 
-    if Replot > 0,
+  if Replot > 0,
 
     figure(ViewParam.FigNum)
     clf
@@ -314,42 +314,42 @@ unique(cc)
 
     if exist('centercenter.txt','file') > 0,
 
-    figure(44)
-    clf
+      figure(44)
+      clf
 
-    %set(gcf,'Renderer','OpenGL');     % fast rotation
-    %set(gcf,'Renderer','zbuffer')
-    %set(gcf,'Renderer','painters')
+      %set(gcf,'Renderer','OpenGL');     % fast rotation
+      %set(gcf,'Renderer','zbuffer')
+      %set(gcf,'Renderer','painters')
 
-    for k = 1:length(Pair),                              % Loop through pairs
-      p      = Pair(k);
-      c(k)   = Color(k);
-      e(k,:) = -p.CenterCenter;                           % center-center vector
+      for k = 1:length(Pair),                              % Loop through pairs
+        p      = Pair(k);
+        c(k)   = Color(k);
+        e(k,:) = -p.CenterCenter;                           % center-center vector
 
-      if ViewParam.Normal == 1,
-        v = p.Normal/3;                                      % add normal vector
-        plot3([e(k,1) e(k,1)+v(1)], [e(k,2) e(k,2)+v(2)], [e(k,3) e(k,3)+v(3)], 'b');
-        hold on
+        if ViewParam.Normal == 1,
+          v = p.Normal/3;                                      % add normal vector
+          plot3([e(k,1) e(k,1)+v(1)], [e(k,2) e(k,2)+v(2)], [e(k,3) e(k,3)+v(3)], 'b');
+          hold on
+        end
       end
+
+      scatter3(e(:,1),e(:,2),e(:,3),dotsize*ones(size(c)),c,'filled')
+
+      if max(modcode) == min(modcode),                 % all have same first base
+        zPlotStandardBase(modcode,0,1);                % plot center at the origin
+        Lett = 'ACGU';
+        Title =[Lett(modcode) ' base center at the origin, center of second base shown by dots'];
+      else
+        Title = ['center of second base shown by dots'];
+      end
+      view(2)
+      axis equal
     end
 
-    scatter3(e(:,1),e(:,2),e(:,3),dotsize*ones(size(c)),c,'filled')
-
-    if max(modcode) == min(modcode),                 % all have same first base
-      zPlotStandardBase(modcode,0,1);                % plot center at the origin
-      Lett = 'ACGU';
-      Title =[Lett(modcode) ' base center at the origin, center of second base shown by dots'];
-    else
-      Title = ['center of second base shown by dots'];
-    end
-    view(2)
-    axis equal
-    end
-
-    %----------------------------------------------------- Plot angle and normal
-    figure(ViewParam.FigNum + 1)
+    %----------------------------------------------------- Plot angle in the plane and normal
+    figure(ViewParam.FigNum + 2)
     clf
-    figure(ViewParam.FigNum + 1)
+    figure(ViewParam.FigNum + 2)
     clf
 
     %set(gcf,'Renderer','OpenGL');
@@ -363,11 +363,11 @@ unique(cc)
 
       c = Color(k);
 
-      scatter3(mod(p.Ang+cut,360)-cut,p.Normal(3),p.Gap,dotsize,c,'filled')
+      scatter3(mod(p.AngleInPlane+cut,360)-cut,p.Normal(3),p.Gap,dotsize,c,'filled')
       hold on
     end
 
-    xlabel('Angle of rotation (in degrees)');
+    xlabel('Angle of rotation in the plane (in degrees)');
     ylabel('Vertical component of normal');
     zlabel('Gap');
     title('');

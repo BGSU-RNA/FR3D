@@ -38,20 +38,35 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
   Pair.RotAx    = ax';
   Pair.Ang      = ang;
 
-  Pair.PlaneAng = acos(abs(N1.Rot(:,3)'*N2.Rot(:,3)))*57.29577951308232; 
+  Pair.PlaneAng = acos(abs(N1.Rot(:,3)'*N2.Rot(:,3)))*57.29577951308232;
                                              % angle between planes
+
+  % Calculate angle to rotate glycosidic bond of N2 counterclockwise in the plane to align with glycosidic of N1
+  AngleInPlane = atan2(ro(2,2),ro(2,1))*57.29577951308232 - 90;
+
+  if AngleInPlane <= -90,
+    AngleInPlane = AngleInPlane + 360;
+  end
+
+%fprintf('zAnalyzepair:  Angles %8.4f  %8.4f\n', Pair.Ang, AngleInPlane);
+
+  Pair.AngleInPlane = AngleInPlane;
 
   Lim(2,:) = [15 13 16 12];     % total number of atoms, including hydrogen
 
-  d = zDistance(N2.Fit(1:Lim(2,N2.Code),:), N1.Center); 
+  d = zDistance(N2.Fit(1:Lim(2,N2.Code),:), N1.Center);
                                            % distances to base 1 center
-  [y,m] = min(d);                          % identify the closest atom
-  m = m(1);                                % in case of a tie, use the first
-  Pair.Gap = N1.Rot(:,3)'*(N2.Fit(m,:)-N1.Center)';% height above plane of 1
+  [sorteddistances,sortedindices] = sort(d);
+
+  Pair.Gap = min(abs(N1.Rot(:,3)'*(N2.Fit(sortedindices(1:3),:)-ones(3,1)*N1.Center)'));
 
   Pair.MinDist = min(min(zDistance(N1.Fit,N2.Fit)));
 
-  a = zCheckCutoffs(Pair.Displ,Pair.Normal,Pair.Ang,Pair.Gap,CL(:,:,Pair.Paircode));
+  if isfield(N1,'UseAngleInPlane') && N1.UseAngleInPlane == 0,
+    a = zCheckCutoffs(Pair.Displ,Pair.Normal,Pair.Ang,Pair.Gap,CL(:,:,Pair.Paircode));  % for comparison with historical
+  else
+    a = zCheckCutoffs(Pair.Displ,Pair.Normal,Pair.AngleInPlane,Pair.Gap,CL(:,:,Pair.Paircode));
+  end
                                            % find possible classifications
 
   % ------------------------ check for coplanarity
@@ -74,7 +89,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
 
     if (dot1 < 0.3381) && (dot2 < 0.3381) && (dot3 > 0.7757),
 
-      d = zDistance(N1.Fit(1:Lim(2,N1.Code),:), N2.Center); 
+      d = zDistance(N1.Fit(1:Lim(2,N1.Code),:), N2.Center);
                                            % distances to base 2 center
       [y,m] = min(d);                      % identify the closest atom
       m = m(1);                            % in case of a tie, use the first
@@ -124,7 +139,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
         dot3Val = 1;
       elseif -dot3 < -0.8835,           % 90th percentile
         dot3Val = 1+(-dot3-(-0.9509))*(-7.4217); % Anton 7/15/2011. For compatibility with octave
-%         dot3Val = 1+(-dot3--0.9509)*(-7.4217);        
+%         dot3Val = 1+(-dot3--0.9509)*(-7.4217);
       elseif -dot3 < -0.7757,           % 97th percentile
         dot3Val = 0.5+(-dot3-(-0.8835))*(-4.6390);  % Anton 7/15/2011. For compatibility with octave
 %         dot3Val = 0.5+(-dot3--0.8835)*(-4.6390);
@@ -148,16 +163,6 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
       % Between these, it decreases linearly
 
       Pair.Coplanar = min([Gap1Val Gap2Val dot1Val dot2Val dot3Val MinDistVal]);
-
-if 10 < 1,
-  Pair.Coplanar
-  clf
-  F.NT(1) = N1;
-  F.NT(2) = N2;
-  F.Filename = '--';
-  zDisplayNT(F);
-  pause
-end
 
     end
   end
@@ -212,6 +217,7 @@ end
   if (abs(a)<14) && (abs(a) - fix(abs(a)) < 0.5),% standard planar interaction
     if (length(Pair.Hydrogen) > 0),             % there are h-bonds to check
       goodhydrogens = 0;                        % count good bonds
+      gh = 0;
       for h = 1:length(Pair.Hydrogen),
         if isempty(Pair.Hydrogen(h).Angle),     % no hydrogen present
           if Pair.Hydrogen(h).Distance <= 4.5,  % heavy-heavy length < 4.5
@@ -250,17 +256,17 @@ end
         elseif (a == 9) && (Pair.Paircode == 6)              % CC cHS
           gh = 1;
         end
-     
+
         if goodhydrogens < gh,
           a = 30.3;                              % reject this pair
         end
       end
+      if Verbose > 2,
+        fprintf('Classification is %7.2f.  %d good hydrogens required, %d found.\n', a, gh, goodhydrogens);
+      end
     end
   end
 
-  if Verbose > 2,
-    fprintf('Classification is %7.2f.  %d good hydrogens required, %d found.\n', a, gh, goodhydrogens);
-  end
 
   % ------------ If not base pairing, check for stacking
 
@@ -279,7 +285,7 @@ end
       Pair.StackingOverlap = -max(SO1,SO2);
     end
 
-    % ---------- Provisional stacking category  
+    % ---------- Provisional stacking category
 
     if Pair.Displ(3) > 0,
       if Pair.Normal(3) > 0,
@@ -313,7 +319,7 @@ end
        a = aa;
     elseif (cond(1)+cond(5) > 0) && (cond(6) > 0) && (cond(3) > 0) && cond(7) > 0,
        a = aaa;
-    end          
+    end
   end
 
   % ----------- If classified as stacking, is there really overlap?
@@ -340,47 +346,47 @@ end
     end
   end
 
-  % ----------------- Record nearest basepair exemplar if no classification yet
+  % -------------------------- find distance to nearest exemplar, for basepairs or nothing yets
 
-  if (fix(a) == 30) && abs(Pair.Gap) < 2.25 && Pair.MinDist < 4.75,
+  Pair.Classes   = 99 * ones(1,3);               % for consistency across different pairs
+  Pair.Distances = 99999999 * ones(1,3);
 
-    % -------------------------- find distance to nearest exemplar
-
+  if fix(a) == 30 || abs(a) < 16,
     if ~isempty(Exemplar),
       [c,d,ff,gg,h] = zDistanceToExemplars(Exemplar,N1,N2);
       Pair.Classes   = c(1:3);
       Pair.Distances = d(1:3);
-    else
-      Pair.Classes   = 99 * ones(1,3);
-      Pair.Distances = 99999999 * ones(1,3);
     end
+  end
 
-    % --------------------------- check hydrogen bonds if nearest exemplar
-    % --------- is a basepair, even if this pair is far from that exemplar
+  % ----------------- If no classification yet and nearest exemplar is near enough, record as near basepair
 
-    if (abs(a) >= 14) && (abs(Pair.Classes(1)) < 14),
-      aa = abs(Pair.Classes(1));
-      if aa - fix(aa) < 0.5,                       % usual hydrogen bonds
-        Pair.Hydrogen = zCheckHydrogen(N1,N2,fix(Pair.Classes(1)));
+  if (fix(a) == 30),
+    if abs(Pair.Gap) < 1.9 && Pair.MinDist < 4 && Pair.Gap + Pair.MinDist < 5.7,  % shave down the near category
+
+      % --------------------------- check hydrogen bonds if nearest exemplar
+      % --------- is a basepair, even if this pair is far from that exemplar
+
+      if (abs(a) >= 14) && (abs(Pair.Classes(1)) < 14),
+        aa = abs(Pair.Classes(1));
+        if aa - fix(aa) < 0.5,                       % usual hydrogen bonds
+          Pair.Hydrogen = zCheckHydrogen(N1,N2,fix(Pair.Classes(1)));
+        end
+      end
+
+      % -------------------- If close enough to an exemplar, mark it as a near pair
+
+      if (Pair.Distances(1) < 1.4) && (Pair.Normal(3) * Exemplar(ff(1),gg(1)).R(3,3) > 0), % same flip
+        c = Pair.Classes(1);
+        a = sign(c) * (100 + abs(c));
+      elseif (Pair.Distances(2) < 1.4) && (Pair.Normal(3) * Exemplar(ff(2),gg(2)).R(3,3) > 0), % same flip
+        c = Pair.Classes(2);
+        a = sign(c) * (100 + abs(c));
+      elseif (Pair.Distances(3) < 1.4) && (Pair.Normal(3) * Exemplar(ff(3),gg(3)).R(3,3) > 0), % same flip
+        c = Pair.Classes(3);
+        a = sign(c) * (100 + abs(c));
       end
     end
-
-    if (Pair.Distances(1) < 0.8) && (Pair.Normal(3) * Exemplar(ff(1),gg(1)).R(3,3) > 0), % same flip
-      b = a-fix(a);                          % extract decimal code for reason
-      c = Pair.Classes(1);
-      a = sign(c) * (100 + abs(c) + b/1000);
-    elseif (Pair.Distances(2) < 0.8) && (Pair.Normal(3) * Exemplar(ff(2),gg(2)).R(3,3) > 0), % same flip
-      b = a-fix(a);                          % extract decimal code for reason
-      c = Pair.Classes(2);
-      a = sign(c) * (100 + abs(c) + b/1000);
-    elseif (Pair.Distances(3) < 0.8) && (Pair.Normal(3) * Exemplar(ff(3),gg(3)).R(3,3) > 0), % same flip
-      b = a-fix(a);                          % extract decimal code for reason
-      c = Pair.Classes(3);
-      a = sign(c) * (100 + abs(c) + b/1000);
-    end
-  else
-    Pair.Classes   = 99 * ones(1,3);
-    Pair.Distances = 99999999 * ones(1,3);
   end
 
   % ------------------------ store the classification
@@ -389,23 +395,6 @@ end
 
   % ------------------------ store the edge information
 
-  % reverse classification for GC and CG pairs, but why, exactly????
+  Pair.Edge = Pair.Class;
 
-  if ((Pair.Paircode == 7) || (Pair.Paircode == 10)) && (mod(abs(Pair.Class),100) < 14),
-    Pair.Edge = -Pair.Class;
-  else
-    Pair.Edge = Pair.Class;
-  end
-
-  Pair.EdgeText = zEdgeText(Pair.Edge,1,Pair.Paircode);  % ever used?
-
-
-if 0 > 1,
-  File = zAddNTData('3i8i');
-  load('PairExemplars','Exemplar');
-  CL = zClassLimits;  
-  N1 = File.NT(zIndexLookup(File,'1981'));
-  N2 = File.NT(zIndexLookup(File,'758'));
-  Displ = (N2.Fit(1,:)-N1.Fit(1,:)) * N1.Rot;   % vector shift from 1 to 2
-  p = zAnalyzePair(N1,N2,CL,Exemplar,Displ,3)
-end
+  Pair.EdgeText = zEdgeText(Pair.Edge,1,Pair.Paircode);

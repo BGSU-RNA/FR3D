@@ -347,7 +347,7 @@ while stop == 0,
   map = colormap;
   map = map((end-8):-1:8,:);
   colormap(map);
-  caxis([0 0.8]);
+  caxis([0 1.4]);
 
   if Octave == 0,
 	  colorbar('location','eastoutside');
@@ -428,7 +428,12 @@ while stop == 0,
     k=menu(MenuTitle,Buttons);
   end
 
-  ii=gcf;                                 % get current active figure
+  currfig = gcf;
+  try
+    ii = currfig.Number;
+  catch
+      ii=gcf;                                 % get current active figure
+  end
   if (abs(ii) > length(Display)) || (ii == 0), % other window active?
     ii = i;
   end
@@ -505,8 +510,9 @@ while stop == 0,
         drawnow
         Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
 
-        if ~isempty(strfind(pwd,'zzirbel')),
-          p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
+        if ~isempty(strfind(pwd,'zirbel')),
+%          p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
+          p(1:Limit) = OLO(Search.Disc(1:Limit,1:Limit),'average');
         else
           p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
         end
@@ -665,7 +671,8 @@ while stop == 0,
       	end
 
         if ~isempty(strfind(pwd,'zirbel')),
-          p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
+%          p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
+          p(1:Limit) = OLO(Search.Disc(1:Limit,1:Limit),'average');
         else
           p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
         end
@@ -758,7 +765,7 @@ while stop == 0,
       ViewParam.Normal = 0;
       ViewParam.ClassLimits = 1;
       ViewParam.Order = p;
-      ViewParam.Color = 1;
+      ViewParam.Color = 2;                      % color by interaction; formerly 1, color by position in list
       ViewParam.Octave = Octave;
       p = xScatterPairs(Search,1,2,ViewParam);
       q(p) = 1:L;
@@ -1109,6 +1116,10 @@ function  DisplayTable(File,Search,Query,Display,i)
       fprintf('Candidate #%d of %d', Search.Discrepancy(n), length(Search.Candidates(:,1)));  % integer is cand num
     end
 
+    if Search.Marked(n) == 1;
+      fprintf('Marked\n');
+    end
+
     if max(Display(1).neighborhood) > 0,
       Indices = sort([Indices xNeighborhood(File(f),Indices,Display(1).neighborhood,Display(1).strandnumber)]);
     end
@@ -1121,7 +1132,9 @@ function  DisplayTable(File,Search,Query,Display,i)
     if isfield(File(f),'BaseRibose'),
       zBaseRiboseTable(File(f),double(Indices));
     end
+
     drawnow
+
 
 % -------------------------------------------------- Select subset of search
 

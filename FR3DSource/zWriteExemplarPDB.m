@@ -25,7 +25,7 @@ if Separate == 0,                        % write all in one single file
     for row = 1:length(Exemplar(:,pc)),
 
       E = Exemplar(row,pc);
-  
+
       if ~isempty(E.NT1),
 
         R = E.NT1.Rot;
@@ -60,7 +60,7 @@ else                                       % write to separate PDB files
     for row = 1:length(Exemplar(:,pc)),
 
       E = Exemplar(row,pc);
-  
+
       if ~isempty(E.NT1),
         WriteOneExemplar(E,pc,efid,tfid);
       end
@@ -172,8 +172,10 @@ end
 
 % simple form for Jesse's online database of exemplars
 
-fprintf(efid,'%5s %s%s %s%5s %s%5s %9s %5s %4.1f %5d %4.1f %6.2f %s %s %s\n', ET, E.NT1.Base, E.NT2.Base, E.NT1.Base, E.NT1.Number, E.NT2.Base, E.NT2.Number, E.Status, E.Source, CP, E.Count, abs(E.Class), E.Resolution, FN, E.NT1ID, E.NT2ID);
-fprintf(tfid,'%s\t%s%s\t%s%s\t%s%s\t%s\t%s\t%0.1f\t%d\t%0.1f\t%0.2f\t%s\t%s\t%s\n', ET, E.NT1.Base, E.NT2.Base, E.NT1.Base, E.NT1.Number, E.NT2.Base, E.NT2.Number, E.Status, E.Source, CP, E.Count, abs(E.Class), E.Resolution, FN, E.NT1ID, E.NT2ID);
+E.Status = '';
 
-fprintf('%5s %s%s %s%5s %s%5s %9s %5s %4.1f %5d %4.1f %6.2f %s %s %s\n', ET, E.NT1.Base, E.NT2.Base, E.NT1.Base, E.NT1.Number, E.NT2.Base, E.NT2.Number, E.Status, E.Source, CP, E.Count, abs(E.Class), E.Resolution, FN, E.NT1ID, E.NT2ID);
+fprintf(efid,'%5s %s%s %s%5s %s%5s %9s %5s %4.1f %5d %4.1f %6.2f %s %s %s\n', ET, E.NT1.Base, E.NT2.Base, E.NT1.Base, E.NT1.Number, E.NT2.Base, E.NT2.Number, E.Status, E.Source, CP, E.Count, abs(E.Class), E.Resolution, FN, E.NT1.ID, E.NT2.ID);
+fprintf(tfid,'%s\t%s%s\t%s%s\t%s%s\t%s\t%s\t%0.1f\t%d\t%0.1f\t%0.2f\t%s\t%s\t%s\n', ET, E.NT1.Base, E.NT2.Base, E.NT1.Base, E.NT1.Number, E.NT2.Base, E.NT2.Number, E.Status, E.Source, CP, E.Count, abs(E.Class), E.Resolution, FN, E.NT1.ID, E.NT2.ID);
+
+fprintf('%5s %s%s %s%5s %s%5s %9s %5s %4.1f %5d %4.1f %6.2f %s %s %s\n', ET, E.NT1.Base, E.NT2.Base, E.NT1.Base, E.NT1.Number, E.NT2.Base, E.NT2.Number, E.Status, E.Source, CP, E.Count, abs(E.Class), E.Resolution, FN, E.NT1.ID, E.NT2.ID);
 

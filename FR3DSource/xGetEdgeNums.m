@@ -75,10 +75,10 @@ EdgeStr{17} = 'cSS';
 BPequiv{17} = [11 -11];
 
 EdgeStr{18} = 'cSs';
-BPequiv{18} = [11];
+BPequiv{18} = [-11];
 
 EdgeStr{19} = 'csS';
-BPequiv{19} = [-11];
+BPequiv{19} = [11];
 
 EdgeStr{20} = 'tSS';
 BPequiv{20} = [12 -12];

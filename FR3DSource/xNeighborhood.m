@@ -1,5 +1,6 @@
 % xNeighborhood(File,Indices,v,MaxDiff,MaxInsert) returns Indices plus indices "near"
 % the given indices, in a way determined by the vector v
+% v must have 8 entries
 
 function [NewIndices] = xNeighborhood(File,Indices,v,strandnumber)
 
