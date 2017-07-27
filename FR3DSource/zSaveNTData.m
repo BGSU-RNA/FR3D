@@ -24,9 +24,6 @@ for f=1:length(Files),
     end
 
     [pathstr, name, ext] = fileparts(File.Filename); % Anton 5/30/2010
-pathstr
-name
-ext
 
     if length(pathstr) == 0,                      % no path specified, so save in default location
       if ~(exist('PrecomputedData','dir')),        % if directory doesn't yet exist
@@ -40,8 +37,8 @@ ext
       if ~exist(pathstr,'dir'),
         mkdir(pathstr);
         path(path,pathstr);
-      end   
-   
+      end
+
       save([pathstr filesep upper(name) '.mat'],'File','-v6');  % Anton 5/30/2010, Anton 7/21/2011, Zirbel 2014/12/06 added upper()
       if Verbose > 0,
         fprintf('Saved %s in %s\n', [name '.mat'], pathstr);

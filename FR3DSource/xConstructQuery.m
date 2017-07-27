@@ -291,7 +291,9 @@ if isfield(Query,'Edges'),
         Query.BaseRibose{j,i}     = BR2;
         Query.ExcludeBaseRibose{i,j} = EBR1;
         Query.ExcludeBaseRibose{j,i} = EBR2;
+        Query.Flank{i,j}           = Flank;    % added 2017-07-05
         Query.Flank{j,i}           = Flank;
+        Query.Range{i,j}           = Range;    % added 2017-07-05
         Query.Range{j,i}           = Range;
         Query.Coplanar{j,i}        = Coplanar;
         Query.OKBB{i,j}      = ReqBB;

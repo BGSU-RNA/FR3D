@@ -43,7 +43,13 @@ end
 
 % ----------------------------------------- Load PDB files if needed --------
 
-if length(Filenames) > 100,
+FullList = {};
+
+for j=1:length(Filenames),
+    FullList = [FullList zReadPDBList(Filenames{j},1)];
+end
+
+if length(FullList) > 100,
   KeepAA = 0;
   fprintf('xFR3DSearch:  Note that because mmCIF files can have so many amino acids, Matlab can run out of memory.\n');
   fprintf('Accordingly, amino acids are being stripped out of the files to keep memory usage lower\n');
@@ -53,10 +59,10 @@ end
 
 if ~exist('File'),                           % if no molecule data is loaded,
   fprintf('Loading 3D structure files\n');
-  [File,SIndex] = zAddNTData(Filenames,0,[],Verbose);   % load PDB data
+  [File,SIndex] = zAddNTData(Filenames,0,[],Verbose,KeepAA);   % load PDB data
 else
   fprintf('Loading 3D structure files if necessary\n');
-  [File,SIndex] = zAddNTData(Filenames,0,File,Verbose); %add PDB data if needed
+  [File,SIndex] = zAddNTData(Filenames,0,File,Verbose,KeepAA); %add PDB data if needed
 end                       % SIndex tells which elements of File to search
 
 % ------------------------------------------- Store actual filenames
@@ -71,7 +77,7 @@ end
 % ------------------------------------------- Construct details of search ---
 
 if isfield(Query,'Filename'),                % if query motif is from a file
-  [File,QIndex] = zAddNTData(Query.Filename,0,File);
+  [File,QIndex] = zAddNTData(Query.Filename,0,File,KeepAA);
                                            % load data for Query, if needed
   Query = xConstructQuery(Query,File(QIndex)); % preliminary calculations
 else

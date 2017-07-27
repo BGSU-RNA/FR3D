@@ -86,8 +86,8 @@ for i=1:N,
   Text{t} = [Text{t} sprintf('%7d ', i)];
 end
 
-c = 'Chains                                             ';
-Text{t} = [Text{t} sprintf('%s', c(1:N))];
+c = 'Chains                                                                                    ';
+Text{t} = [Text{t} sprintf('%s', c(1:(2*N)))];  % pad with spaces
 
 if isfield(Search,'GroupLabel'),
   Text{t} = [Text{t} ' Group    '];
@@ -274,6 +274,35 @@ for i=1:min(s,NumToOutput),
   if WheretoOutput == 7,
     Text{i+t} = [Text{i+t} ' ' File(f).Info.Source ' | ' File(f).Info.Descriptor];
   end
+
+  if ~isempty(strfind(pwd,'zirbel')),
+    Text{i+t} = [Text{i+t} ' http://rnatest.bgsu.edu/rna3dhub/display3D/unitid/'];
+    for j = 1:N,
+      Text{i+t} = [Text{i+t} File(f).NT(Indices(j)).ID];
+      if j < N,
+        Text{i+t} = [Text{i+t} ','];
+      end
+    end
+  end
+
+  if ~isempty(strfind(pwd,'zirbel')),
+    Text{i+t} = [Text{i+t} ' http://rna.bgsu.edu/r3d-2-msa?units='];
+
+%    Text{i+t} = [Text{i+t} File(f).NT(Indices(1)).ID ':' File(f).NT(Indices(3)).ID ','];
+%    Text{i+t} = [Text{i+t} File(f).NT(Indices(4)).ID ':' File(f).NT(Indices(6)).ID '&aid=1'];
+
+    Text{i+t} = [Text{i+t} File(f).NT(Indices(3)).ID ',' File(f).NT(Indices(6)).ID '&aid=1'];
+
+    if 0 > 1,
+      for j = 1:N,
+        Text{i+t} = [Text{i+t} File(f).NT(Indices(j)).ID];
+        if j < N,
+          Text{i+t} = [Text{i+t} ','];
+        end
+      end
+    end
+  end
+
 end
 
 % -------------------------------------- Additional notifications and info
