@@ -49,10 +49,10 @@ for j=1:length(Filenames),
     FullList = [FullList zReadPDBList(Filenames{j},1)];
 end
 
-if length(FullList) > 100,
+if length(FullList) > 100 || length(File) > 100,
   KeepAA = 0;
-  fprintf('xFR3DSearch:  Note that because mmCIF files can have so many amino acids, Matlab can run out of memory.\n');
-  fprintf('Accordingly, amino acids are being stripped out of the files to keep memory usage lower\n');
+  fprintf('oFR3DSearch:  Note that because mmCIF files can have so many amino acids, Matlab can run out of memory.\n');
+  fprintf('oFR3DSearch:  Accordingly, amino acids are being stripped out of the files to keep memory usage lower\n');
 else
   KeepAA = 1;
 end
