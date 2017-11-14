@@ -290,10 +290,9 @@ for i=1:min(s,NumToOutput),
 
 %    Text{i+t} = [Text{i+t} File(f).NT(Indices(1)).ID ':' File(f).NT(Indices(3)).ID ','];
 %    Text{i+t} = [Text{i+t} File(f).NT(Indices(4)).ID ':' File(f).NT(Indices(6)).ID '&aid=1'];
+%    Text{i+t} = [Text{i+t} File(f).NT(Indices(3)).ID ',' File(f).NT(Indices(6)).ID '&aid=1'];
 
-    Text{i+t} = [Text{i+t} File(f).NT(Indices(3)).ID ',' File(f).NT(Indices(6)).ID '&aid=1'];
-
-    if 0 > 1,
+    if 10 > 1,
       for j = 1:N,
         Text{i+t} = [Text{i+t} File(f).NT(Indices(j)).ID];
         if j < N,

@@ -187,6 +187,13 @@ for ii=1:L,
       d = sprintf('%5d',Search.Discrepancy(ii)); % orig candidate number
     end
   Search.Lab{ii} = [File(f).Filename n ' ' b];
+
+  if N == 2 && ~isempty(strfind(pwd,'zirbel')),
+    ei = Search.Candidates(ii,1);
+    ej = Search.Candidates(ii,2);
+    et = strtrim(zEdgeText(File(f).Edge(ei,ej)));
+    Search.Lab{ii} = [Search.Lab{ii} sprintf('%+5s',et)];
+  end
 end
 
 % ----------------------------- find maximum gap between candidate nucleotides

@@ -2,7 +2,7 @@
 % File = zLoadIFE('4V4Q|1|CA')
 % File = zLoadIFE('4V4Q|1|CA+4V4Q|1|DB')
 
-function [File] = zLoadIFE(Filename,ReadCode,Verbose)
+function [File] = zLoadIFE(Filename,ReadCode,Verbose,File)
 
 if nargin < 2,
   ReadCode = 0;
@@ -14,7 +14,10 @@ end
 
 IFE = zStringSplit(Filename,'+');             % split multiple chains in the IFE
 a = zStringSplit(IFE{1},'|');                 % split by divider for filename, model, etc.
-File = zGetNTData(a{1},ReadCode,Verbose);     % load the whole 3D structure file
+
+if nargin < 4,
+  File = zGetNTData(a{1},ReadCode,Verbose);     % load the whole 3D structure file
+end
 
 if length(a) > 1,                              % a model or chain is specified
   keep = zeros(1,length(File.NT));             % 0 means not to keep a nucleotide
