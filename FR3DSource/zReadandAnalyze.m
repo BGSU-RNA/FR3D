@@ -24,8 +24,6 @@
 
 function [File] = zReadandAnalyze(Filename,Verbose)
 
-Verbose = 1;
-
 [pathstr, name, extension] = fileparts(Filename);
 PDBID = name;
 
@@ -47,8 +45,14 @@ end
 if ~isempty(strfind(lower(extension),'.pdb')),
   [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(Filename,Verbose);
   CoordinateFile = Filename;
+  if Verbose > 0,
+    fprintf('zReadandAnalyze: Read PDB file\n');
+  end
 else
   [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms(Filename,Verbose);
+  if Verbose > 0,
+    fprintf('zReadandAnalyze: Read CIF file\n');
+  end
 end
 
 if ~isempty(ATOMNUMBER),
