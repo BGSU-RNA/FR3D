@@ -43,6 +43,14 @@ end
 
 % ----------------------------------------- Load PDB files if needed --------
 
+if length(Filenames) > 100,
+  KeepAA = 0;
+  fprintf('xFR3DSearch:  Note that because mmCIF files can have so many amino acids, Matlab can run out of memory.\n');
+  fprintf('Accordingly, amino acids are being stripped out of the files to keep memory usage lower\n');
+else
+  KeepAA = 1;
+end
+
 if ~exist('File'),                           % if no molecule data is loaded,
   fprintf('Loading 3D structure files\n');
   [File,SIndex] = zAddNTData(Filenames,0,[],Verbose);   % load PDB data

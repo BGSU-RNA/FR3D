@@ -38,7 +38,7 @@ for i=1:s,
   end
 
   if (mod(i,round(s/10)) == 0) && (Verbose > 0)
-    fprintf(' %d', fix((s-i)*toc/i)); 
+    fprintf(' %d', fix((s-i)*toc/i));
     zFlushOutput;
   end
 end
@@ -49,7 +49,9 @@ if Verbose > 0,
 end
 
 Candidates  = Candidates(1:count,:);
-Discrepancy = sqrt(Discrepancy(1:count,1))/Model.NumNT;
+if N > 2,
+  Discrepancy = sqrt(Discrepancy(1:count,1))/Model.NumNT;
+end
 
 [y,i]       = sort(Discrepancy);                    % sort by discrepancy
 Candidates  = Candidates(i,:);

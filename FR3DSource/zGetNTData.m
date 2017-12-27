@@ -34,13 +34,11 @@ end
 for f=1:length(Filenames),
   Filename = Filenames{f};
 
-  PDBID = strrep(upper(Filename),'.MAT','');
-  PDBID = strrep(PDBID,'.CIFATOMS','');
-  PDBID = strrep(PDBID,'.CIF','');
-  PDBID = strrep(PDBID,'-CIF','');
-  PDBID = strrep(PDBID,'.PDB','');
+  [pathstr, name, extension] = fileparts(Filename);
 
-  MatFile = [PDBID '.mat'];                                 % load this file if it exists
+  PDBID = name;
+
+  MatFile = [PDBID '.mat'];
 
   ClassifyCode = 0;
   SaveCode     = 0;
@@ -54,30 +52,38 @@ for f=1:length(Filenames),
 
   clear File
 
-  if ~isempty(strfind(upper(Filename),'.PDB')),
+  if ~isempty(strfind(upper(extension),'.PDB')) || ~isempty(strfind(upper(extension),'.CIF')) || ~isempty(strfind(upper(extension),'.CIFATOMS')), 
     File = zReadandAnalyze(Filename);
     ReadCode = 4;
   else
 
     if ReadCode == 4,
-      File = zReadandAnalyze(Filename,Verbose);               % read text file; trust that its filename is correct; this is the only way to use original .cif file
-      File.Filename = PDBID;
+      File = zReadandAnalyze(Filename,Verbose);               % read text file; trust that its filename is correct
+      File.Filename = Filename;
       ClassifyCode = 1;                                       % need to classify interactions
       ReadText = 1;                                           % read the text file of coordinates
     end
 
-    if ReadCode < 4,                                          % try to load a .mat file; faster
-      try
-        load(MatFile,'File','-mat');
-      catch
+    if ReadCode < 4,
+      if length(pathstr) == 0,                  % try to load a .mat file; faster
         try
-          load([lower(PDBID) '.mat'],'File','-mat');
+          load(MatFile,'File','-mat');                          % read from Matlab path
         catch
           try
-            load(PDBID,'File','-mat');
+            load([lower(PDBID) '.mat'],'File','-mat');
           catch
-            ReadCode = 5;                                     % failed to load a mat file, now look for a text file to read
+            try
+              load(PDBID,'File','-mat');
+            catch
+              ReadCode = 5;                                     % failed to load a mat file, now look for a text file to read
+            end
           end
+        end
+      else
+        try
+          load(Filename,'File','-mat');
+        catch
+          fprintf('zGetNTData: Unable to load %s\n',Filename);
         end
       end
     end

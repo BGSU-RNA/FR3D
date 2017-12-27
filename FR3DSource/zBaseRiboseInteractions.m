@@ -84,7 +84,7 @@ for f = 1:length(File),
 
   File(f).BaseRibose = sparse([],[],[],File(f).NumNT,File(f).NumNT);
 
-  % -------- First screening of base pairs ----------------------------------- 
+  % -------- First screening of base pairs -----------------------------------
 
   DistCutoff = 16;                              % max distance for interaction
                                                 % screen by C-C distance
@@ -164,7 +164,7 @@ for f = 1:length(File),
 
         if ((Angle(n) > AL) && (Dist(n) < DL(m(mm)))) % true BPh pair
           g = [g e(mm)];              % assign a non-near class.
-          w = [w pp(n)];              % record which oxygen it is 
+          w = [w pp(n)];              % record which oxygen it is
           T = [T; [f i(k) j(k) e(mm) pp(n)]];
         else
           g = [g e(mm) + 100];        % > 100 means "near"
@@ -286,7 +286,7 @@ for f = 1:length(File),
        if Verbose > 1,
          if ~isempty(DT),
            D = [D; [DT g(1)*ones(length(DT(:,1)),1)]];
-         end 
+         end
        end
 
      end

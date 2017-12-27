@@ -20,41 +20,35 @@
 %  Shift    Best shift from standard to observed locations
 %  Fit      Best fit of observed locations to standard base locations
 
-function [File] = zReadandAnalyze(PDBFilename,Verbose)
+% Filename may contain a path to the file; stripping away the path and extension leaves a potential PDB identifier
+
+function [File] = zReadandAnalyze(Filename,Verbose)
 
 Verbose = 1;
 
-if ~isempty(strfind(lower(PDBFilename),'cifatoms')),
-  Filename = strrep(PDBFilename,'.cifatoms','-CIF.mat');
-else
-  i = strfind(PDBFilename,'.');
-  if ~isempty(i),
-    Filename = PDBFilename(1:(i(end)-1));
-  else
-    Filename = PDBFilename;
-  end
-end
+[pathstr, name, extension] = fileparts(Filename);
+PDBID = name;
 
 if nargin < 2,
   Verbose = 1;
 end
 
-% read PDBFilename ----------------------------------------------------
+% read Filename ----------------------------------------------------
 
 Stop = 0;
 
 if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading'], 'dir') == 7,
-  if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading' filesep PDBFilename], 'file') == 2,
+  if exist([pwd filesep 'PDBFiles' filesep 'Trouble reading' filesep PDBID], 'file') == 2,
     Stop = 1;
-    fprintf('zReadandAnalyze is skipping %s because it appeared in FR3D/PDBFiles/Trouble Reading\n', PDBFilename);
+    fprintf('zReadandAnalyze is skipping %s because it appeared in FR3D/PDBFiles/Trouble Reading\n', PDBID);
   end
 end
 
-if ~isempty(strfind(lower(PDBFilename),'.pdb')),
-  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(PDBFilename,Verbose);
-  CoordinateFile = PDBFilename;
+if ~isempty(strfind(lower(extension),'.pdb')),
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(Filename,Verbose);
+  CoordinateFile = Filename;
 else
-  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms(PDBFilename,Verbose);
+  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms(Filename,Verbose);
 end
 
 if ~isempty(ATOMNUMBER),
@@ -71,7 +65,7 @@ if ~isempty(ATOMNUMBER),
   P = [P BETA];                           % include beta factors with positions to make it easier to assign them to atoms
 
   if Readable == 0,
-    fprintf('zReadandAnalyze was unable to read the PDB file %s\n',PDBFilename);
+    fprintf('zReadandAnalyze was unable to read the PDB file %s\n',Filename);
     fprintf('Please move it to FR3D/PDBFiles/Trouble Reading.\n');
   end
 
@@ -432,7 +426,7 @@ if ~isempty(ATOMNUMBER),
 
   % Fill in fields of File ----------------------------------------------------
 
-  File.PDBFilename = CoordinateFile;
+  File.Filename = CoordinateFile;
   File.Filename  = Filename;
   File.NT        = NT(1:NumNT);
   File.NumNT     = NumNT;
@@ -461,7 +455,7 @@ if ~isempty(ATOMNUMBER),
 
 else
 
-  fprintf('zReadandAnalyze: Could not open file %s\n', PDBFilename);
+  fprintf('zReadandAnalyze: Could not open file %s\n', Filename);
   NumNT = 0;
   File.Filename = Filename;
   File.NT        = [];

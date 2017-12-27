@@ -1,19 +1,30 @@
-% zAddNTData(Filenames,ReadCode,File,Verbose,PDBStart) reads RNA structure
-% data files, if
-% necessary, so that all molecules listed in Filenames are present in File.
+% [File,Index] = zAddNTData(Filenames,ReadCode,File,Verbose,KeepAA) reads RNA structure
+% data files, if necessary, so that all molecules listed in Filenames are present in File.
 % The parameter Index is a non-redundant list of indices of File
 % corresponding to names in Filenames.
+% When a file is read for the first time, a binary file is saved with the same filename and extension .mat.
+% The default is to look for Filename in the PrecomputedData folder in the current directory.
+% If not found there, the default is to look for a .cif file in the PDBFiles folder in the current directory,
+% and the resulting binary .mat file is stored in the PrecomputedData folder in the current directory.
+% If a full path is given as part of Filename, that path will be searched first for the .mat file, then .cif,
+% and the resulting .mat file will be written to that path with the same filename.
+% If Filename includes the extension .pdb or .cif, that file is used instead of the .mat file.
 
 % ReadCode = 0 : load .mat files
 % ReadCode = 1 : load .mat files and reclassify
 % ReadCode = 3 : load, but do not append to File (for reclassification)
 % ReadCode = 4 : read .pdb file and reclassify
 
-% F = zAddNTData('AllFiles_list',3,[],1);
-% F = zAddNTData('AllFiles_list',3,[],1,'back');
 % F = zAddNTData('NonRedundant_2008_02_21_list',0,[],1);
+% F = zAddNTData('http://rna.bgsu.edu/rna3dhub/nrlist/download/2.108/4.0A/csv',0,[],1,0)  % download representative set and use it
+% F = zAddNTData('http://rna.bgsu.edu/rna3dhub/nrlist/download/current/4.0A/csv',0,[],1,0)  % download representative set and use it
 
-function [File,Index] = zAddNTData(Filenames,ReadCode,File,Verbose,PDBStart)
+% F = zAddNTData('1S72')
+% F = zAddNTData('C:\Users\zirbel\Documents\FR3D\PrecomputedData\1S72')
+
+% KeepAA is 1 one by default, but when set to 0, the amino acid field is removed from each file, reducing memory usage significantly
+
+function [File,Index] = zAddNTData(Filenames,ReadCode,File,Verbose,KeepAA)
 
 if nargin < 2,
     ReadCode = 0;                           % default is to read .mat files
@@ -21,6 +32,10 @@ end
 
 if nargin < 4,
     Verbose = 0;
+end
+
+if nargin < 5,
+    KeepAA = 1;
 end
 
 LoadedFiles = {};
@@ -45,23 +60,7 @@ end
 FullList = {};
 
 for j=1:length(Filenames),
-  FullList = [FullList zReadPDBList(Filenames{j},1)];
-end
-
-% ----------------------------------------- Skip some files
-
-if nargin == 5,
-    if strcmp(PDBStart,'back') == 1,
-        FullList = FullList(end:-1:1);
-    else
-        keep = [];
-        for j=1:length(FullList),
-            if issorted([lower(PDBStart(1:4)); lower(FullList{j}(1:4))],'rows'),
-                keep = [keep j];
-            end
-        end
-        FullList = FullList(keep);
-    end
+    FullList = [FullList zReadPDBList(Filenames{j},1)];
 end
 
 % ----------------------------------------- Read PDB files
@@ -72,8 +71,11 @@ if length(FullList) > 0,
         if ~isempty(FullList{f}),
             i = strmatch(lower(FullList{f}), LoadedFiles, 'exact');
             if isempty(i),                                  % if PDB not loaded,
-                NewF = zGetNTData(FullList{f},ReadCode,Verbose); %   load it
-
+                NewF = zLoadIFE(FullList{f},ReadCode,Verbose);
+%                NewF = zGetNTData(FullList{f},ReadCode,Verbose); %   load it
+                if KeepAA == 0,
+                    NewF = rmfield(NewF,'AA');
+                end
                 if ReadCode ~= 3,
                     if F == 0,
                         clear File
@@ -92,11 +94,14 @@ if length(FullList) > 0,
                 F = length(File);
                 k = length(LoadedFiles);
                 LoadedFiles{k+1} = FullList{f};
-                Index(f) = F;                           %   point to it
+                Index(f) = F;                           % point to it
             else                                        % but if PDB has been loaded
-                Index(f) = i(1);                        %   point to first instance
-                if length(File(i(1)).NT) == 0,
-                    NewF = zGetNTData(File(Index(f)).Filename,ReadCode,Verbose);
+                Index(f) = i(1);                        % point to first instance
+                if length(File(i(1)).NT) == 0,          % no nucleotides in the file for some reason
+                    NewF = zLoadIFE(File(Index(f)).Filename,ReadCode,Verbose);
+                    if KeepAA == 0,
+                        NewF = rmfield(NewF,'AA');
+                    end
                     if ReadCode ~= 3,
                         File(Index(f)) = NewF;
                         clear NewF;

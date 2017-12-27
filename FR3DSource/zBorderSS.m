@@ -1,6 +1,6 @@
 % xBorderSS identifies nucleotides which border a single-stranded region by making nested canonical cWW basepairs
 
-function [File] = xBorderSS(File,Verbose)
+function [File] = zBorderSS(File,Verbose)
 
 if nargin < 2,
   Verbose = 0;
@@ -115,10 +115,10 @@ if File.NumNT > 0,
     bb = b;                               % starting nucleotide
     c = cWWPartner(b);                    % basepairing partner of b
     if c+1 <= File.NumNT,                 % make sure we do not go past the end of the file
-      d = cWWPartner(c+1);                  % cWW partner of the next nucleotide after c, if any
-      while d > 0 && d ~= bb-1,              % if c+1 makes a nested cWW and we have not closed the loop,
-        H(c,c+1) = 1;
-        H(c+1,c) = 1;
+      d = cWWPartner(c+1);                % cWW partner of the next nucleotide after c, if any
+      while d > 0 && d ~= bb-1,           % if c+1 makes a nested cWW and we have not closed the loop,
+        H(c,c+1) = 1;                     % add a BorderSS relation between c and c+1
+        H(c+1,c) = 1;                     % add a BorderSS relation between c and c+1
         if Verbose > 0,
           fprintf('Adding %-16s - %-16s to BorderSS list, cWWs with %-16s and %-16s (difference of %5d)\n',File.NT(c).ID, File.NT(c+1).ID, File.NT(b).ID, File.NT(d).ID,b-d);
         end

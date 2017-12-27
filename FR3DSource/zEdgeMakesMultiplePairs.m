@@ -42,7 +42,7 @@ for f = 1:length(File),
         N1 = File(f).NT(i(k));
         N2 = File(f).NT(j(k));
         zShowInteractionTable(File(f),[ii jj kk]);
-        fprintf('Removing ncWW between %s %s%s and %s%s\n', File(f).Filename, N1.Base, N1.Number, N2.Base, N2.Number);
+        fprintf('zEdgeMakesMultiplePairs: Removing ncWW between %s %s%s and %s%s\n', File(f).Filename, N1.Base, N1.Number, N2.Base, N2.Number);
         figure(1)
         clf
         zDisplayNT(File(f),[ii jj kk]);
@@ -51,10 +51,10 @@ for f = 1:length(File),
       end
 
     end
-  end    
+  end
 
   if Verbose > 0 && length(i) > 0,
-    fprintf('Removed %4d ncWW from %4s, which is %7.2f%% of the original number\n', r, File(f).Filename, 100*r/length(i));
+    fprintf('zEdgeMakesMultiplePairs: Removed %4d ncWW from %4s, which is %7.2f%% of the original number\n', r, File(f).Filename, 100*r/length(i));
   end
 
   % ----------------------------- remove multiple basepairs
@@ -63,7 +63,7 @@ for f = 1:length(File),
   k = find(abs(e) < 2);             % cWW basepairs only
   i = i(k);
   j = j(k);
-  e = e(k);
+  e = fix(e(k));                    % use an integer for the basepair class
 
   u = zeros(size(e));
 
@@ -90,11 +90,11 @@ for f = 1:length(File),
         d(c) = zDistanceToExemplar(Exemplar,NT1,NT2,fix(File(f).Edge(i(a),j(c))));
 
         if b == 1 && NT1.Code == 2 && NT2.Code == 2,  % lousy CC pairs
-          d(c) = 1;
+%          d(c) = 1;
         end
 
         if Verbose > 0,
-          fprintf('Pair %s %s%5s_%s - %s%5s_%s %s %4.1f distance %7.4f to exemplar\n', File(f).Filename, NT1.Base,NT1.Number,NT1.Chain,NT2.Base,NT2.Number,NT2.Chain, zEdgeText(File(f).Edge(i(a),j(c))), full(File(f).Edge(i(a),j(c))), d(c));
+          fprintf('zEdgeMakesMultiplePairs: Pair %s %s%5s_%s - %s%5s_%s %s %4.1f distance %7.4f to exemplar\n', File(f).Filename, NT1.Base,NT1.Number,NT1.Chain,NT2.Base,NT2.Number,NT2.Chain, zEdgeText(File(f).Edge(i(a),j(c))), full(File(f).Edge(i(a),j(c))), d(c));
         end
       end
       m(a) = max(d);
@@ -121,7 +121,7 @@ for f = 1:length(File),
                                         % distance to exemplar of main class
 
           if b == 1 && NT1.Code == 2 && NT2.Code == 2,  % lousy CC pairs
-            d(c) = 1;
+%            d(c) = 1;
           end
 
         end
@@ -129,7 +129,7 @@ for f = 1:length(File),
           if d(c) > min(d),
             if Verbose > 1,
               NT2 = File(f).NT(j(c));
-              fprintf('Removing  %s%5s_%s - %s%5s_%s %s distance %7.4f to exemplar\n', NT1.Base,NT1.Number,NT1.Chain,NT2.Base,NT2.Number,NT2.Chain, zEdgeText(File(f).Edge(i(a),j(c))), d(c));
+              fprintf('zEdgeMakesMultiplePairs: Removing  %s%5s_%s - %s%5s_%s %s distance %7.4f to exemplar\n', NT1.Base,NT1.Number,NT1.Chain,NT2.Base,NT2.Number,NT2.Chain, zEdgeText(File(f).Edge(i(a),j(c))), d(c));
 
             end
             if Verbose > 2,
@@ -150,19 +150,11 @@ for f = 1:length(File),
             File(f).Edge(j(c),i(a)) = -e;
 
             if Verbose > 1,
-              fprintf('Now it is %s%5s_%s - %s%5s_%s %s distance %7.4f to exemplar\n', NT1.Base,NT1.Number,NT1.Chain,NT2.Base,NT2.Number,NT2.Chain, zEdgeText(File(f).Edge(i(a),j(c))), d(c));
+              fprintf('zEdgeMakesMultiplePairs: Now it is %s%5s_%s - %s%5s_%s %s distance %7.4f to exemplar\n', NT1.Base,NT1.Number,NT1.Chain,NT2.Base,NT2.Number,NT2.Chain, zEdgeText(File(f).Edge(i(a),j(c))), d(c));
             end
-
           end
-        end
-        if Verbose > 0,
-%          fprintf('\n');
         end
       end
     end
-  end  
-end
-
-if Verbose > 0,
-  fprintf('Removed %4d ncWW, which is %7.2f%% of the original number\n', rr, 100*rr/nn);
+  end
 end

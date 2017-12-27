@@ -28,10 +28,6 @@ if nargin < 4,
   Verbose = 2;
 end
 
-% fix spacing between subplots
-
-handles = zeros(4,4);
-
 % load exemplars -------------------------------------
 
 load([pwd filesep 'FR3DSource' filesep 'PairExemplars'],'Exemplar');
@@ -46,16 +42,12 @@ B(1).original = 0;
 Lab = [];
 Cat = [];
 
-% 1-AA  2-CA  3-GA  4-UA  5-AC  6-CC  7-GC  8-UC 
+% 1-AA  2-CA  3-GA  4-UA  5-AC  6-CC  7-GC  8-UC
 % 9-AG 10-CG 11-GG 12-UG 13-AU 14-CU 15-GU 16-UU
 
 for c = 1:length(Category),                % requested categories
-
-  % fix spacing between subplots
-  handles = zeros(4,4);
-
-  for c1 = 1:4,
-   for c2 = 1:4,
+  for c1 = 1:4,                              % loop through code of base 1
+   for c2 = 1:4,                             % loop through code of base 2
     pc  = 4*(c2-1)+c1;                       % current paircode
     for r = 1:length(Exemplar(:,1)),         % loop through rows of Exemplar
 
@@ -67,16 +59,16 @@ for c = 1:length(Category),                % requested categories
       end
 
       if ~isempty(E.NT1),                    % non-empty entry of Exemplar
-        Epc = 4*(E.NT2.Code-1)+E.NT1.Code;     % paircode of exemplar itself; some things are wrong!
+        Epc = 4*(E.NT2.Code-1)+E.NT1.Code;   % paircode of exemplar itself
 
-        if Epc ~= pc,
+        if Epc ~= pc,                        % should not happen
           fprintf('Paircode disagreement, %d versus %d in row %d\n', pc, Epc, r);
         end
 
         if  any(abs(E.Class) == Category(c)) || ...
            (any(fix(abs(E.Class)) == Category(c)) && (Subcat == 1)),
           if (E.Count >= 0) && Epc == pc,
-          
+
             [B,Lab,Cat] = AddExemplar(E,B,Lab,Cat,Subcat);
 
             % ------- in some symmetric families, produce the symmetric version
@@ -103,7 +95,7 @@ for c = 1:length(Category),                % requested categories
   end
 end
 
-% remove first exemplar --------------------
+% remove first exemplar, just a placeholder --------------------
 
 B   = B(2:end);
 Lab = Lab(2:end);
@@ -111,7 +103,7 @@ Cat = Cat(2:end);
 
 % specify parameters for viewing -------------------------------------------
 
-ViewParam.Mode      = 1; 
+ViewParam.Mode      = 1;
 ViewParam.Normal    = 1;
 ViewParam.ColorAxis = [-12 30];
 ViewParam.SortKeys  = [];
@@ -127,79 +119,91 @@ ViewParam.LabelBases= 8;                    % font size
 
 if Verbose > 1,
   for ca = 1:length(Category),
-    figure(30+fix(Category(ca)))
+    figure(30+fix(Category(ca)))             % clear figures now, alternate below
     clf
-    figure(fix(Category(ca)))
+    figure(fix(Category(ca)))                % for plotting basepars
     clf
     plotted = zeros(16,1);                   % keep track of which are plotted
-    for m = 1:length(B),
-     if (B(m).original == 1) && ((abs(B(m).Class) == Category(ca)) ...
+    for m = 1:length(B),                     % go through all stored exemplars
+      if (B(m).original == 1) && ((abs(B(m).Class) == Category(ca)) ...
         || ((abs(fix(B(m).Class)) == Category(ca)) && (Subcat == 1))),
 
         figure(fix(Category(ca)))
 
-        pc2 = B(m).subplot;
+        pc2 = B(m).subplot;                  % which subplot this goes in
         E   = B(m);
         % display the exemplar pair -----------------------------------------
 
-       ViewParam.Sugar = 0;
+        ViewParam.Sugar = 0;
 
-       if abs(E.Class - fix(E.Class)) == 0,
-         ViewParam.LineStyle = '-';
-         ViewParam.Sugar = 1;
-       elseif abs(E.Class - fix(E.Class)) > 0.29,
-         ViewParam.LineStyle = '.';
-       elseif abs(E.Class - fix(E.Class)) > 0.19,
-         ViewParam.LineStyle = ':';
-       elseif abs(E.Class - fix(E.Class)) > 0.09,
-         ViewParam.LineStyle = '--';
-       end
+        if abs(E.Class - fix(E.Class)) == 0,
+          ViewParam.LineStyle = '-';
+          ViewParam.Sugar = 1;
+        elseif abs(E.Class - fix(E.Class)) > 0.29,
+          ViewParam.LineStyle = '.';
+        elseif abs(E.Class - fix(E.Class)) > 0.19,
+          ViewParam.LineStyle = ':';
+        elseif abs(E.Class - fix(E.Class)) > 0.09,
+          ViewParam.LineStyle = '--';
+        end
 
-       ViewParam.LineStyle = '-';                  % make them all the same
+        ViewParam.LineStyle = '-';             % make them all the same
 
-      handles(E.NT1.Code,E.NT2.Code) = subplot(4,4,pc2);
-            
-      set(gca, 'LooseInset', get(gca,'TightInset'));
+        ha = subplot(4,4,pc2);            % tell where to plot this
+        p = get(ha, 'pos');
+        cp = 0.01;                             % change in percentage; don't go too big
+        p(1) = p(1) - cp;
+        p(2) = p(2) - cp;
+        p(3) = p(3) + 2*cp;
+        p(4) = p(4) + 2*cp;
+        set(ha, 'pos', p);
 
-       axis off
+        axis off
 
-       if plotted(pc2) > 0,
-         ViewParam.LabelBases = 0;                  % don't display now
-         xlab{pc2} = [xlab{pc2} ', ' num2str(E.Count)];  % append subcat count
-       else,
-         ViewParam.LabelBases = 8;                  % font size
-         xlab{pc2} = ['Count: ' num2str(E.Count)];
-         FN = E.Filename;
-         FN = strrep(FN,'CURATED_','');
-         FN = strrep(FN,'_EXEMPLAR','');
-         FN = FN(1:4);
-         FN = strrep(FN,'MODE','Model');
+        if plotted(pc2) > 0,
+          ViewParam.LabelBases = 0;                       % don't display now
+          xlab = [xlab ', ' num2str(E.Count)];  % append subcat count
+          Title{pc2} = [Title{pc2} ', ' num2str(E.Count)];
+        else
+          ViewParam.LabelBases = 8;                       % font size
+          xlab = ['Count: ' num2str(E.Count)];
 
-         Title{pc2} = [E.NT1.Base E.NT2.Base ' ' zEdgeText(E.Class,Subcat,E.NT1.Code,E.NT2.Code) ' ' FN ' '];
-         Title{pc2} = [Title{pc2} E.NT1.Base E.NT1.Number '-' E.NT2.Base E.NT2.Number];
-         CP = norm(E.NT1.Sugar(1,:) - E.NT2.Sugar(1,:));     % c1'-c1' dist
-         Title{pc2} = [Title{pc2} ' ' sprintf('%0.1f %d',CP,E.Count)];
-         Title{pc2} = strrep(Title{pc2},'  ',' ');
-       end
+          g = strfind(E.NT1.ID,'|');
+          if length(g) < 3,
+            FN = E.Filename;
+          else
+            FN = E.NT1.ID(1:(g(3)-1));
+          end
+          FN = strrep(FN,'CURATED_','');
+          FN = strrep(FN,'_EXEMPLAR','');
+          FN = strrep(FN,'MODE','Model');
 
-       F.NT(1) = E.NT1;
-       F.NT(2) = E.NT2;
-       F.Filename = E.Filename;
-       zDisplayNT(F,[1 2],ViewParam);
-       zPlotHydrogenBonds(E.NT1,E.NT2,E.HydrogenClass,E.NT1.Rot,E.NT1.Fit(1,:));
+          Title{pc2} = [E.NT1.Base E.NT1.Number '-' E.NT2.Base E.NT2.Number ' ' zEdgeText(E.Class,Subcat,E.NT1.Code,E.NT2.Code) ' ' FN ' '];
+          Title{pc2} = [Title{pc2} ' ' sprintf('%d',E.Count)];
+          Title{pc2} = strrep(Title{pc2},'  ',' ');
+        end
 
-       view(2)
-       grid off
-       axis equal
-       %axis tight
-       axis fill
-       xlabel(xlab{pc2});
+        F.NT(1) = E.NT1;
+        F.NT(2) = E.NT2;
+        F.Filename = E.Filename;
+        zDisplayNT(F,[1 2],ViewParam);
+        hold on
+        zPlotHydrogenBonds(E.NT1,E.NT2,E.HydrogenClass,E.NT1.Rot,E.NT1.Fit(1,:));
+
+        view(2)
+        grid off
+        axis equal
+        %axis tight
+        axis fill
+
+        ax = axis;
+%        text((ax(1)+ax(2))/2,ax(3)-0.1*(ax(4)-ax(3)),xlab,'fontsize',8,'horizontalalignment','center')
+%       xlabel(xlab);
 %       ylabel(Title{pc2},'fontsize',7);
-       title('');
-%       title(Title{pc2},'fontsize',7);
-
-       rotate3d on
-       plotted(pc2) = 1;
+%        title('');
+        title(Title{pc2},'fontsize',7);
+%        rotate3d on
+        plotted(pc2) = 1;
 
        % ------------------------------ plot and save each basepair separately
 
@@ -221,9 +225,9 @@ if Verbose > 1,
        FN = ['Exemplars' filesep zEdgeText(E.Class,Subcat,E.NT1.Code,E.NT2.Code) '_' E.NT1.Base E.NT2.Base '_exemplar.png'];
        saveas(gcf,FN,'png');
 
-       [X,map] = imread(FN);
-       Y = X(67:810,150:1100,:);
-       imwrite(Y,FN);
+%       [X,map] = imread(FN);
+%       Y = X(67:810,150:1100,:);
+%       imwrite(Y,FN);
 
        % ------------------------------ plot glycosidic bonds
 
@@ -245,7 +249,7 @@ if Verbose > 1,
 
        L1 = Lim(2,F.NT(1).Code);
        L2 = Lim(2,F.NT(2).Code);
- 
+
        if (F.NT(1).Code == 4 && F.NT(2).Code == 4 && Category(ca) == 1) || ...
           (F.NT(1).Code == 4 && F.NT(2).Code == 1 && Category(ca) == 4),
          V = ViewParam;
@@ -307,14 +311,13 @@ if Verbose > 1,
 
        title('');
        axis equal
-         
+
      end
     end
 
     % -------------------------------------- Save images of basepairs
 
     figure(fix(Category(ca)))
-%    squeeze_axes(handles)
     orient landscape
     saveas(gcf,['Isostericity' filesep zEdgeText(Category) '_basepairs.png'],'png')
     saveas(gcf,['Isostericity' filesep zEdgeText(Category) '_basepairs.pdf'],'pdf')
@@ -465,10 +468,10 @@ for i = 1:length(Lab),
     T{i+1,3} = [T{i+1,1} '_' T{i+1,2} '_2_Exemplar.pdb'];
   else
     T{i+1,3} = [T{i+1,1} '_' T{i+1,2} '_Exemplar.pdb'];
-  end    
+  end
   T{i+1,4} = E.Filename;
-  T{i+1,5} = E.NT1ID;
-  T{i+1,6} = E.NT2ID;
+  T{i+1,5} = E.NT1.ID;
+  T{i+1,6} = E.NT2.ID;
   T{i+1,7} = num2str(E.Count);
 
   Cate = strrep(Lab{p(i)}(8:12),'I',Catt);
@@ -622,36 +625,24 @@ end
 
 function [B,Lab,Cat] = AddExemplar(E,B,Lab,Cat,Subcat)
 
-m = length(B) + 1;
-
-pc = 4*(E.NT2.Code-1)+E.NT1.Code;                  % paircode
+m = length(B) + 1;                            % add to the end of the list
 
 E.HydrogenClass = E.Class;
 
-if (E.Class < 0),
+if (E.Class < 0),                             % switch base is in standard position
   T     = E.NT1;
   E.NT1 = E.NT2;
   E.NT2 = T;
-  T     = E.NT1ID;
-  E.NT1ID = E.NT2ID;
-  E.NT2ID = T;
+  T     = E.NT1.ID;
+  E.NT1.ID = E.NT2.ID;
+  E.NT2.ID = T;
   if E.NT1.Code ~= E.NT2.Code,
     E.Class = -E.Class;
   end
 end
 
-if (pc == 7),                                      % reverse GC pairs
-  T     = E.NT1;
-  E.NT1 = E.NT2;
-  E.NT2 = T;
-  T     = E.NT1ID;
-  E.NT1ID = E.NT2ID;
-  E.NT2ID = T;
-end
+E.subplot = 4*(E.NT1.Code-1)+E.NT2.Code;      % which subplot to put this in
 
-pc2 = 4*(E.NT1.Code-1)+E.NT2.Code;                 % paircode when reversed
-
-E.subplot = pc2;
 if ~isfield(E,'original'),
   E.original = 1;
 end
@@ -663,7 +654,7 @@ Lab{m} = [E.NT1.Base E.NT2.Base ' ' zEdgeText(E.Class,Subcat,E.NT1.Code,E.NT2.Co
 Cat{m} = upper(zEdgeText(E.Class,Subcat,E.NT1.Code,E.NT2.Code));
 
 
-return  
+return
 
 zExemplarTable(1,0,0,1);
 zExemplarTable(2,0,0,1);
@@ -687,7 +678,7 @@ zExemplarTable(7:12,3.5,0);
 
 % Neocles says:
 % Separate the 2 groups: Group I: cWW, cWS, tWH, cHH, tHS, cSS
-% Group II: tWW, tWS, cWH, tHH, cHS, tSS, 
+% Group II: tWW, tWS, cWH, tHH, cHS, tSS,
 
 zExemplarTable(1,0,1,1);
 zExemplarTable(2,0,1,1);

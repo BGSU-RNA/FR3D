@@ -37,22 +37,26 @@
 % Test with:  File = zAddNTData('2QBG.cifatoms')
 % Test with:  [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,BETA,UNITID,ModelNum,Readable,UseFile] = zReadCIFAtoms2('4V99.cifatoms')
 
+% Filename may contain a path to the file; stripping away the path and extension leaves a potential PDB identifier
+
 function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P,BETA,UNITID,ModelNum,Readable,UseFile] = zReadCIFAtoms(Filename,Verbose)
 
 Verbose = 1;
+
 CIFDownloaded = 0;
 UseFile = '';
 
-PDBID = strrep(upper(Filename),'.MAT','');
-PDBID = strrep(PDBID,'.CIFATOMS','');
-PDBID = strrep(PDBID,'.CIF','');
-PDBID = strrep(PDBID,'-CIF','');
+[pathstr, name, extension] = fileparts(Filename);
+PDBID = name;
 
-if exist(Filename),
+if exist(Filename),                    % file is found, either with a direct path, or on Matlab's path
   UseFile = Filename;
-elseif exist([PDBID '.cif']),                           % .cif file found
+elseif exist([PDBID '.cif']) && length(pathstr) == 0,     % .cif file found, not directed to a specific path
   CIFDownloaded = 1;
-else                                                    % no .cif file found
+  UseFile = [PDBID '.cif'];
+elseif length(pathstr) > 0,            % directed to a specific path, but no file found there; should download cif to there
+
+else                                   % no .cif file found
   if ~(exist('PDBFiles') == 7),        % if directory doesn't yet exist
     mkdir('PDBFiles');
   end
@@ -62,12 +66,23 @@ else                                                    % no .cif file found
     mkdir('PrecomputedData');
   end
   path(path,[pwd filesep 'PrecomputedData']);
+end
 
+if isempty(UseFile),
   try
     if Verbose > 0,
       fprintf('zReadCIFAtoms: Attempting to download %s.cif from PDB\n', PDBID);
+      drawnow
     end
-    c = urlread(['http://www.rcsb.org/pdb/files/' PDBID '.cif']);
+    if exist('webread'),
+      c = webread(['http://www.rcsb.org/pdb/files/' PDBID '.cif']);
+    else
+      c = urlread(['http://www.rcsb.org/pdb/files/' PDBID '.cif']);
+    end
+    if Verbose > 0,
+      fprintf('zReadCIFAtoms: Read the URL\n', PDBID);
+      drawnow
+    end
     fid = fopen(['PDBFiles' filesep PDBID '.cif'],'w');
     fprintf(fid,'%s\n',c);
     fclose(fid);
@@ -80,16 +95,20 @@ end
 if isempty(UseFile) && CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.cifatoms')),
   try
     status = 1;
-    if ~isempty(strfind(pwd,'zirbel')),
+    GetFR3DPythonLocation
+    if ~isempty(PythonLocation),
       fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in %s\n',[PDBID '.cifatoms']);
-      [status,result] = system(['python C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
+      [status,result] = system(['python ' PythonLocation 'cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
     else
-%      fprintf('zReadCIFAtoms: You can modify zReadCIFAtoms to specify where to find cifatom_writing.py to produce .cifatoms file.\n');
+      fprintf('zReadCIFAtoms: You can modify GetFR3DPythonLocation.m to specify where to find cifatom_writing.py to produce .cifatoms file.\n');
     end
     if status == 0,
       UseFile = [PDBID '.cifatoms'];
+      fprintf('zReadCIFAtoms: Produced a .cifatoms file\n');
     else
       UseFile = [PDBID '.cif'];
+      fprintf('zReadCIFAtoms: Was not able to produce a .cifatoms file\n');
+      fprintf('%s\n',result)
     end
   catch
     fprintf('zReadCIFAtoms: Unable to use cifatom_writing.py to convert .cif file to .cifatoms file\n');

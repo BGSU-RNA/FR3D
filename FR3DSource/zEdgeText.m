@@ -35,7 +35,7 @@ if length(e) == 1,
     case    8,    E = [E 'tHh']; EE = [EE 'tHH'];
     case    9,    E = [E 'cHS']; EE = [EE 'cHS'];
     case   10,    E = [E 'tHS']; EE = [EE 'tHS'];
-    case   11,    E = [E 'cSs']; EE = [EE 'cSS'];
+    case   11,    E = [E 'csS']; EE = [EE 'cSS'];
     case   12,    E = [E 'tSs']; EE = [EE 'tSS'];
     case   13,    E = [E 'bif']; EE = [EE 'bif'];
     case   14,    E = [E 'wat']; EE = [EE 'wat'];
@@ -50,7 +50,7 @@ if length(e) == 1,
     case   -8,    E = [E 'thH']; EE = [EE 'tHH'];
     case   -9,    E = [E 'cSH']; EE = [EE 'cSH'];
     case  -10,    E = [E 'tSH']; EE = [EE 'tSH'];
-    case  -11,    E = [E 'csS']; EE = [EE 'cSS'];
+    case  -11,    E = [E 'cSs']; EE = [EE 'cSS'];
     case  -12,    E = [E 'tsS']; EE = [EE 'tSS'];
     case  -13,    E = [E 'bif']; EE = [EE 'bif'];
     case  -14,    E = [E 'wat']; EE = [EE 'wat'];
@@ -73,7 +73,7 @@ if length(e) == 1,
     case  108,    E = [E 'ntHh']; EE = [EE 'ntHH'];
     case  109,    E = [E 'ncHS']; EE = [EE 'ncHS'];
     case  110,    E = [E 'ntHS']; EE = [EE 'ntHS'];
-    case  111,    E = [E 'ncSs']; EE = [EE 'ncSS'];
+    case  111,    E = [E 'ncsS']; EE = [EE 'ncSS'];
     case  112,    E = [E 'ntSs']; EE = [EE 'ntSS'];
     case  113,    E = [E 'nbif']; EE = [EE 'nbif'];
     case  114,    E = [E 'nRib']; EE = [EE 'nRib'];
@@ -87,7 +87,7 @@ if length(e) == 1,
     case -108,    E = [E 'nthH']; EE = [EE 'ntHH'];
     case -109,    E = [E 'ncSH']; EE = [EE 'ncSH'];
     case -110,    E = [E 'ntSH']; EE = [EE 'ntSH'];
-    case -111,    E = [E 'ncsS']; EE = [EE 'ncSS'];
+    case -111,    E = [E 'ncSs']; EE = [EE 'ncSS'];
     case -112,    E = [E 'ntsS']; EE = [EE 'ntSS'];
     case -113,    E = [E 'nbif']; EE = [EE 'nbif'];
     case -114,    E = [E 'nRib']; EE = [EE 'nRib'];
