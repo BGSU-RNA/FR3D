@@ -79,7 +79,7 @@ if isfield(Search,'AvgDisc'),
 elseif Query.Geometric > 0,
   Text{t} = [Text{t} sprintf('  Filename Discrepancy ')];
 else
-  Text{t} = [Text{t} sprintf('  Filename Number Nucl ')];
+  Text{t} = [Text{t} sprintf('  Filename Candidate   ')];
 end
 
 for i=1:N,
@@ -96,7 +96,7 @@ end
 if any(WheretoOutput == [1 2 5]),
   for i=1:N,
     for j=(i+1):N,
-      Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
+      Text{t} = [Text{t} sprintf('%6s', [num2str(i) '--' num2str(j)])];
     end
   end
 
@@ -105,7 +105,7 @@ if any(WheretoOutput == [1 2 5]),
 
   for i=1:N,
     for j=(i+1):N,
-      Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
+      Text{t} = [Text{t} sprintf('%6s', [num2str(i) '--' num2str(j)])];
     end
   end
 
@@ -113,7 +113,7 @@ if any(WheretoOutput == [1 2 5]),
   for i=1:N,
     for j=1:N,
       if j ~= i,
-        Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
+        Text{t} = [Text{t} sprintf('%6s', [num2str(i) '--' num2str(j)])];
       end
     end
   end
@@ -122,14 +122,14 @@ if any(WheretoOutput == [1 2 5]),
   for i=1:N,
     for j=1:N,
       if j ~= i,
-        Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
+        Text{t} = [Text{t} sprintf('%6s', [num2str(i) '--' num2str(j)])];
       end
     end
   end
 
   for i=1:N,
     for j=(i+1):N,
-      Text{t} = [Text{t} sprintf('%6s', [num2str(i) '-' num2str(j)])];
+      Text{t} = [Text{t} sprintf('%6s', [num2str(i) '--' num2str(j)])];
     end
   end
 
@@ -205,7 +205,11 @@ for i=1:min(s,NumToOutput),
     for k=1:length(Indices),
       for j=1:length(Indices),
         if j ~= k,
-         Text{i+t} = [Text{i+t} sprintf('%6s', zBasePhosphateText(File(f).BasePhosphate(Indices(k),Indices(j))))];
+         tt = zBasePhosphateText(File(f).BasePhosphate(Indices(k),Indices(j)));
+         if isempty(tt),
+          tt = '-----';
+         end
+         Text{i+t} = [Text{i+t} sprintf('%6s', tt)];
         end
       end
     end
@@ -214,7 +218,11 @@ for i=1:min(s,NumToOutput),
     for k=1:length(Indices),
       for j=1:length(Indices),
         if j ~= k,
-         Text{i+t} = [Text{i+t} sprintf('%6s', zBaseRiboseText(File(f).BaseRibose(Indices(k),Indices(j))))];
+         tt = zBaseRiboseText(File(f).BaseRibose(Indices(k),Indices(j)));
+         if isempty(tt),
+          tt = '-----';
+         end
+         Text{i+t} = [Text{i+t} sprintf('%6s', tt)];
         end
       end
     end
@@ -285,7 +293,7 @@ for i=1:min(s,NumToOutput),
     end
   end
 
-  if ~isempty(strfind(pwd,'zirbel')),
+  if 0 > 1 && ~isempty(strfind(pwd,'zirbel')),
     Text{i+t} = [Text{i+t} ' http://rna.bgsu.edu/r3d-2-msa?units='];
 
 %    Text{i+t} = [Text{i+t} File(f).NT(Indices(1)).ID ':' File(f).NT(Indices(3)).ID ','];
