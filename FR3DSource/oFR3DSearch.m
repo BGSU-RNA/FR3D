@@ -60,10 +60,15 @@ end
 if ~exist('File'),                           % if no molecule data is loaded,
   fprintf('Loading 3D structure files\n');
   [File,SIndex] = zAddNTData(Filenames,0,[],Verbose,KeepAA);   % load PDB data
+elseif isfield(File(1),'ListLoaded') && strcmp(File(1).ListLoaded,Query.SearchFiles{1}),
+  fprintf('Using loaded files, assuming they are right\n');
+  SIndex = 1:length(File);
 else
   fprintf('Loading 3D structure files if necessary\n');
   [File,SIndex] = zAddNTData(Filenames,0,File,Verbose,KeepAA); %add PDB data if needed
 end                       % SIndex tells which elements of File to search
+
+File(1).ListLoaded = Query.SearchFiles{1};
 
 % ------------------------------------------- Store actual filenames
 %                                             rather than list name(s)
@@ -232,6 +237,8 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
         save(['SearchSaveFiles' filesep Search.SaveName '.mat'], 'Search');  % save any changes like new discrepancies
       end
     end
+  else
+    fprintf('No candidates found\n');
   end
 else
   fprintf('No valid query was found\n');
