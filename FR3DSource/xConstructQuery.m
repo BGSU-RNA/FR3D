@@ -119,16 +119,14 @@ end
 
 % ---------------------------------------------------------------------
 
-if Query.Geometric == 1,                    % model comes from a file
+if ~isfield(Query,'LocWeight'),
+  Query.LocWeight = ones(1,Query.NumNT);
+end
+if ~isfield(Query,'AngleWeight'),
+  Query.AngleWeight = ones(1,Query.NumNT);
+end
 
-  if ~isfield(Query,'Diagonal'),
-    if ~isfield(Query,'LocWeight'),
-      Query.LocWeight = ones(1,Query.NumNT);
-    end
-    if ~isfield(Query,'AngleWeight'),
-      Query.AngleWeight = ones(1,Query.NumNT);
-    end
-  end
+if Query.Geometric == 1,                    % model comes from a file
 
   if ~isfield(Query,'DiscCutoff'),
     Query.DiscCutoff = 0.4;
