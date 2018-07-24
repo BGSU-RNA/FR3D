@@ -98,9 +98,11 @@ if isempty(UseFile) && CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.c
     GetFR3DPythonLocation
     if ~isempty(PythonLocation),
       fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in %s\n',[PDBID '.cifatoms']);
-      [status,result] = system(['python ' PythonLocation 'cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
+      [status,result] = system([PythonVersion ' ' PythonLocation 'cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
     else
       fprintf('zReadCIFAtoms: You can modify GetFR3DPythonLocation.m to specify where to find cifatom_writing.py to produce .cifatoms file.\n');
+      fprintf('zReadCIFAtoms:  Python 2.7 is needed, also set the variable PythonVersion to tell how to run python 2.7 on your machine.\n');
+      fprintf('repositories fr3d-python and pdbx are also needed.  Contact Craig Zirbel\n');
     end
     if status == 0,
       UseFile = [PDBID '.cifatoms'];
