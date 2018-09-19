@@ -24,13 +24,14 @@ if ~exist('Verbose'),
   Verbose = 1;                               % default is to print output
 end
 
-if ~exist('GUIactive') && ~exist('UsingLibrary'),  % FR3D should just search
+if ~exist('Query') && ~exist('GUIactive') && ~exist('UsingLibrary'),  % FR3D should just search
   Query     = xSpecifyQuery;                 % get search parameters
-  if isfield(Query,'SearchFiles'),           % if query specifies files
-    Filenames = Query.SearchFiles;
-  else
-    Filenames = {'1s72'};                    % default
-  end
+end
+
+if isfield(Query,'SearchFiles'),           % if query specifies files
+  Filenames = Query.SearchFiles;
+else
+  Filenames = {'1s72'};                    % default
 end
 
 % ----------------------------------------- Load PDB files if needed --------
