@@ -30,10 +30,14 @@ for f=1:length(File),
   for i=2:Model.NumNT                % loop through model nucleotides
     for j=1:(i-1)
       PS{i,j} = xPairwiseScreen(File(f),Codes,Model,i,j);
-      PS{j,i} = PS{i,j}';
+      PS{j,i} = PS{i,j}';                   % ' will transpose matrix
       NNZ(i,j) = nnz(PS{i,j});              % number of non-zero entries
       NNZ(j,i) = NNZ(i,j);
     end
+  end
+
+  if isfield(Model,'WritePairsOriginal'),
+    OrigPS = PS;
   end
 
   %-----------------------------------------------------------------------
@@ -133,12 +137,16 @@ for f=1:length(File),
 
   %-------------------------------------------------------------------------
 
-%  if ~isempty(strfind(pwd,'zirbel')),
-%    xWritePairsAndCandidatesDatabase(File(f).Filename,Model,PS,List,Perm,cputime-ttzt);
-%  end
-
   if ~isempty(List),
-    List(:,Perm) = List(:,1:Model.NumNT);     % re-order nucleotides
+    List(:,Perm) = List(:,1:Model.NumNT);     % put positions in original order
+  end
+
+  if isfield(Model,'WritePairs'),
+    if isfield(Model,'WritePairsOriginal'),
+      xWritePairsAndCandidatesDatabase(File(f).Filename,File(f).Distance,Model,OrigPS,List,Perm,cputime-ttzt);
+    else
+      xWritePairsAndCandidatesDatabase(File(f).Filename,File(f).Distance,Model,PS,List,Perm,cputime-ttzt);
+    end
   end
 
   [s,t] = size(List);
