@@ -1,4 +1,4 @@
-% xFindHexahedra.m returns a list of indices (i,j,k,m) for which 
+% xFindHexahedra.m returns a list of indices (i,j,k,m) for which
 % A(i,j) > 0, B(k,i) > 0, C(k,j) > 0, D(m,i) > 0, E(m,j) > 0, F(m,k) > 0
 % G(r,i) > 0, H(r,j) > 0, I(r,m) > 0, J(r,k) > 0
 
@@ -66,23 +66,23 @@ switch num
         TList   = [i j];
         count=length(i);
     case 3
-        [TList,count]=Case3(Cutoff,TList,LL,i,j,count,A,B,C); 
-        
+        [TList,count]=Case3(Cutoff,TList,LL,i,j,count,A,B,C);
+
     case 4
-        [TList,count]=Case4(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F); 
+        [TList,count]=Case4(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F);
 
     case 5
-        [TList,count]=Case5(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J); 
-        
+        [TList,count]=Case5(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J);
+
     case 6
         [TList,count]=Case6(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O);
 
     case 7
         [TList,count]=Case7(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U);
-        
+
     case 8
-        [TList,count]=Case8(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,BB); 
-        
+        [TList,count]=Case8(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,BB);
+
     case 9
         SS = zeros(LL,1);
         [TList,count,SS]=Case9(Cutoff,TList,SS,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,BB,CC,DD,EE,FF,GG,HH,II,JJ);
@@ -92,13 +92,13 @@ TList = TList(1:count,:);
 
 %---------------------------------------------------------------
 function [TList,count]=Case3(Cutoff,TList,LL,i,j,count,A,B,C)
-    
+
 
 TList = uint16(zeros(LL,3));
 count = 0;
 for n=1:length(i),
   in = i(n);
-  jn = j(n);  
+  jn = j(n);
   k = find(B(:,in) .* C(:,jn));
   K = length(k);
   if count + K > LL - 10000,                      % memory management
@@ -154,14 +154,14 @@ function [TList,count]=Case5(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J)
 
   for n=1:length(i),
       in = i(n);
-      jn = j(n);      
+      jn = j(n);
       k = find(B(:,in) .* C(:,jn));
       m = find(D(:,in) .* E(:,jn));
       [mm,kk]  = find(F(m,k));
       r = find(G(:,in) .* H(:,jn));
       for p = 1:length(kk),
             kkkp = k(kk(p));
-            mmmp = m(mm(p));          
+            mmmp = m(mm(p));
            SSkm= A(jn,in) + B(kkkp,in) + C(kkkp,jn) ...
             + D(mmmp,in) + E(mmmp,jn) + F(mmmp,kkkp);
             if SSkm<Cutoff(4)
@@ -218,7 +218,7 @@ function [TList,count]=Case6(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M
 if count > 1000000,
   fprintf('Found %2d million candidates so far\n',fix(count/1000000));
 end
-                        end                   
+                        end
                         SSrs = SSkm + G(rrrrsq,in)+H(rrrrsq,jn)+I(rrrrsq,kkkp)+J(rrrrsq,mmmp)+...
                             K(ssssrq,in)+L(ssssrq,jn)+M(ssssrq,kkkp)+N(ssssrq,mmmp)+O(ssssrq,rrrrsq);
                         if SSrs < Cutoff(6)
@@ -241,23 +241,23 @@ function [TList,count]=Case7(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M
         r = find(G(:,in) .* H(:,jn));
         s = find(K(:,in) .* L(:,jn));
         t = find(P(:,in) .* Q(:,jn));
-        for p = 1:length(kk),    
+        for p = 1:length(kk),
             kkkp = k(kk(p));
-            mmmp = m(mm(p));            
+            mmmp = m(mm(p));
             SSkm= A(jn,in) + B(kkkp,in) + C(kkkp,jn) ...
                 + D(mmmp,in) + E(mmmp,jn) + F(mmmp,kkkp);
-            if SSkm<Cutoff(4)          
+            if SSkm<Cutoff(4)
                 rr = find(I(r,kkkp) .* J(r,mmmp));
                 ss = find(M(s,kkkp) .* N(s,mmmp));
                 tt = find(R(t,kkkp) .* S(t,mmmp));
                 [sr,rs] = find(O(s(ss),r(rr)));
-                 for q=1:length(rs)   
+                 for q=1:length(rs)
                     rrrrsq=r(rr(rs(q)));
-                    ssssrq=s(ss(sr(q)));                     
+                    ssssrq=s(ss(sr(q)));
                     SSrs = SSkm + G(rrrrsq,in)+H(rrrrsq,jn)+I(rrrrsq,kkkp)+J(rrrrsq,mmmp)+...
                         K(ssssrq,in)+L(ssssrq,jn)+M(ssssrq,kkkp)+N(ssssrq,mmmp)+O(ssssrq,rrrrsq);
-                    if SSrs < Cutoff(6) 
-                        trs = find(T(t(tt),rrrrsq) .* U(t(tt),ssssrq));    
+                    if SSrs < Cutoff(6)
+                        trs = find(T(t(tt),rrrrsq) .* U(t(tt),ssssrq));
                         for e=1:length(trs)
                             ttttrse=t(tt(trs(e)));
                             SSts=SSrs+P(ttttrse,in)+Q(ttttrse,jn)+R(ttttrse,kkkp)+S(ttttrse,mmmp)+T(ttttrse,rrrrsq)+U(ttttrse,ssssrq);
@@ -269,7 +269,7 @@ function [TList,count]=Case7(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M
 if count > 1000000,
   fprintf('Found %2d million candidates so far\n',fix(count/1000000));
 end
-                                end        
+                                end
                                 count = count + 1;
                                 TList(count,:) = [in jn kkkp mmmp rrrrsq ssssrq t(tt(trs(e)))];
                             end
@@ -283,7 +283,7 @@ end
   function [TList,count]=Case8(Cutoff,TList,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,BB)
     for n=1:length(i),
       in = i(n);
-      jn = j(n);        
+      jn = j(n);
       k = find(B(:,in) .* C(:,jn));
       m = find(D(:,in) .* E(:,jn));
       [mm,kk]  = find(F(m,k));
@@ -297,11 +297,11 @@ end
         end
         for p = 1:length(kk),
             kkkp = k(kk(p));
-            mmmp = m(mm(p));            
+            mmmp = m(mm(p));
             SSkm= A(jn,in) + B(kkkp,in) + C(kkkp,jn) ...
                 + D(mmmp,in) + E(mmmp,jn) + F(mmmp,kkkp);
-            if SSkm<Cutoff(4)            
-            
+            if SSkm<Cutoff(4)
+
                 rr = find(I(r,kkkp) .* J(r,mmmp));
                 ss = find(M(s,kkkp) .* N(s,mmmp));
                 tt = find(R(t,kkkp) .* S(t,mmmp));
@@ -310,12 +310,12 @@ end
 
                  for q=1:length(rs)
                     rrrrsq=r(rr(rs(q)));
-                    ssssrq=s(ss(sr(q)));                     
+                    ssssrq=s(ss(sr(q)));
                     SSrs = SSkm + G(rrrrsq,in)+H(rrrrsq,jn)+I(rrrrsq,kkkp)+J(rrrrsq,mmmp)+...
                         K(ssssrq,in)+L(ssssrq,jn)+M(ssssrq,kkkp)+N(ssssrq,mmmp)+O(ssssrq,rrrrsq);
-                    if SSrs < Cutoff(6) 
+                    if SSrs < Cutoff(6)
 
-                        trs = find(T(t(tt),rrrrsq) .* U(t(tt),ssssrq));    
+                        trs = find(T(t(tt),rrrrsq) .* U(t(tt),ssssrq));
                         hrs = find(Z(h(hh),rrrrsq) .* AA(h(hh),ssssrq));
                         [ht,th] = find(BB(h(hh(hrs)),t(tt(trs))));
                         for e=1:length(ht)
@@ -346,7 +346,7 @@ end
 
     for n=1:length(i),                         % loop through pairs
       in = i(n);                               % indices of this pair
-      jn = j(n);        
+      jn = j(n);
       k = find(B(:,in) .* C(:,jn));            % k that agree with pair
       m = find(D(:,in) .* E(:,jn));            % m that agree with pair
       [mm,kk]  = find(F(m,k));                 % k and m that match too
@@ -357,10 +357,10 @@ end
         u = find(CC(:,in) .* DD(:,jn));
         for p = 1:length(kk),                  % loop through tetrahedra
             kkkp = k(kk(p));                   % tetrahedron in jn kkkp mmmp
-            mmmp = m(mm(p));            
+            mmmp = m(mm(p));
             SSkm = A(jn,in) + B(kkkp,in) + C(kkkp,jn) ...
                  + D(mmmp,in) + E(mmmp,jn) + F(mmmp,kkkp);
-            if SSkm<Cutoff(4)            
+            if SSkm<Cutoff(4)
                 rr = find(I(r,kkkp) .* J(r,mmmp));
                 ss = find(M(s,kkkp) .* N(s,mmmp));
                 tt = find(R(t,kkkp) .* S(t,mmmp));
@@ -369,18 +369,18 @@ end
                 [sr,rs] = find(O(s(ss),r(rr)));
                  for q=1:length(rs)
                     rrrrsq=r(rr(rs(q)));
-                    ssssrq=s(ss(sr(q)));                     
+                    ssssrq=s(ss(sr(q)));
                     SSrs = SSkm + G(rrrrsq,in)+H(rrrrsq,jn)+I(rrrrsq,kkkp)+J(rrrrsq,mmmp)+...
                         K(ssssrq,in)+L(ssssrq,jn)+M(ssssrq,kkkp)+N(ssssrq,mmmp)+O(ssssrq,rrrrsq);
-                    if SSrs < Cutoff(6) 
-                        trs = find(T(t(tt),rrrrsq) .* U(t(tt),ssssrq));    
+                    if SSrs < Cutoff(6)
+                        trs = find(T(t(tt),rrrrsq) .* U(t(tt),ssssrq));
                         hrs = find(Z(h(hh),rrrrsq) .* AA(h(hh),ssssrq));
                         urs = find(GG(u(uu),rrrrsq) .* HH(u(uu),ssssrq));
                         [ht,th] = find(BB(h(hh(hrs)),t(tt(trs))));
                         for e=1:length(ht)
-                            ttttrsthe=t(tt(trs(th(e)))); 
+                            ttttrsthe=t(tt(trs(th(e))));
                             hhhhrshte=h(hh(hrs(ht(e))));
-                               ust = find(II(u(uu(urs)),ttttrsthe) .* JJ(u(uu(urs)),hhhhrshte));                          
+                               ust = find(II(u(uu(urs)),ttttrsthe) .* JJ(u(uu(urs)),hhhhrshte));
                                for ee=1:length(ust)
                                    uuuursustee=u(uu(urs(ust(ee))));
                                     SSts=SSrs+P(ttttrsthe,in)+Q(ttttrsthe,jn)+R(ttttrsthe,kkkp)+S(ttttrsthe,mmmp)+T(ttttrsthe,rrrrsq)+U(ttttrsthe,ssssrq)+...
@@ -390,8 +390,8 @@ end
                                     if SSts < Cutoff(9)
                                         if count + length(ust) > LL - 10000,                      % memory management
                                           AddLL = min(LL,1000000);
-                                          TList = [TList; uint16(zeros(AddLL,9))]; 
-                                          SS    = [SS; zeros(AddLL,1)];            
+                                          TList = [TList; uint16(zeros(AddLL,9))];
+                                          SS    = [SS; zeros(AddLL,1)];
                                           LL    = length(TList(:,1));
 if count > 1000000,
   fprintf('Found %2d million candidates so far\n',fix(count/1000000));
