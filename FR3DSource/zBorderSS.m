@@ -1,4 +1,5 @@
 % xBorderSS identifies nucleotides which border a single-stranded region by making nested canonical cWW basepairs
+% "nested" is determined by prioritizing basepairs that are closest to a hairpin, those which make the shortest arcs
 
 function [File] = zBorderSS(File,Verbose)
 
@@ -228,7 +229,6 @@ if File.NumNT > 0,
   end
 
   File.Flank = H;                       % store
-
 
   % Iterate through hairpins, internal loops, and junction loops
 
