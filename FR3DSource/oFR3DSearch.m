@@ -41,6 +41,10 @@ else
   Filenames = {'1s72'};                    % default
 end
 
+if ischar(Filenames),
+  Filenames = {Filenames};
+end
+
 % ----------------------------------------- Load PDB files if needed --------
 
 FullList = {};
@@ -82,8 +86,18 @@ end
 % ------------------------------------------- Construct details of search ---
 
 if isfield(Query,'Filename'),                % if query motif is from a file
-  [File,QIndex] = zAddNTData(Query.Filename,0,File,KeepAA);
+  if isfield(File,'ListLoaded'),             % awkward - need to deal with this way of saving time and trouble
+    tempListLoaded = File(1).ListLoaded;
+    File = rmfield(File,'ListLoaded');
+  else
+    tempListLoaded = '';
+  end
+  [File,QIndex] = zAddNTData(Query.Filename,0,File,0,KeepAA);
                                            % load data for Query, if needed
+  if ~isempty(tempListLoaded),
+    File(1).ListLoaded = tempListLoaded;
+  end
+
   Query = xConstructQuery(Query,File(QIndex)); % preliminary calculations
 else
   Query = xConstructQuery(Query);              % preliminary calculations
