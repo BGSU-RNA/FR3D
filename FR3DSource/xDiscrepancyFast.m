@@ -44,7 +44,8 @@ else
 
   while (S <= Model.LDiscCutoff) && (n <= L),
     ang = zAngleOfRotation(R*Cand(n).Rot*(Model.NT(n).Rot)');
-    S   = S + (ang^2)*Model.AngleWeight(n)^2;
+    S   = S + (ang * Model.AngleWeight(n))^2;
+    ang
     n   = n + 1;
   end
 
