@@ -344,7 +344,18 @@ end
   %---------------------------------------------------------------
     function [TList,count,SS]=Case9(Cutoff,TList,SS,LL,i,j,count,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,BB,CC,DD,EE,FF,GG,HH,II,JJ)
 
+    starttime = cputime;
+
     for n=1:length(i),                         % loop through pairs
+      if mod(n,100) == 0,
+        ww = whos;
+        wws = 0;
+        for wwi = 1:length(ww),
+          wws = wws + ww(wwi).bytes;
+        end
+        fprintf('Finished %5d of %5d, total time %10.4f, remaining %10.4f, found %8d, variables %8d\n',n,length(i),(cputime-starttime)*length(i)/n,(cputime-starttime)*(length(i)-n)/n,count,wws);
+%        memory
+      end
       in = i(n);                               % indices of this pair
       jn = j(n);
       k = find(B(:,in) .* C(:,jn));            % k that agree with pair
