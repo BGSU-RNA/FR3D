@@ -353,7 +353,6 @@ if (Query.Geometric > 0),
 
   % --------- Impose upper limit on distance differences; 2-nucleotide cutoff
 
-
   if Query.NumNT > 2,
     Wp = Query.LocWeight(p);
     Wq = Query.LocWeight(q);
