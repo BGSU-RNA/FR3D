@@ -21,7 +21,7 @@ if nargin < 2,
     X = repmat(diag(G),1,M);           % repeat a in each column
   end
 
-  D = sqrt(X + X' - 2*G);            % |u-v| = sqrt(|u|^2 + |v|^2 - 2 u . v)
+  D = real(sqrt(X + X' - 2*G));            % |u-v| = sqrt(|u|^2 + |v|^2 - 2 u . v)
 
 elseif s == t,
 
@@ -36,7 +36,7 @@ elseif s == t,
     Y = repmat(a',1,N);                 % repeat a in each column
   end
 
-  D = sqrt(X + Y - 2*A*B');           % |u-v| = sqrt(|u|^2 + |v|^2 - 2 u . v)
+  D = real(sqrt(X + Y - 2*A*B'));           % |u-v| = sqrt(|u|^2 + |v|^2 - 2 u . v)
 
 else
 
