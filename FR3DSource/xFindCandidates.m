@@ -41,6 +41,9 @@ for f=1:length(File),
     end
   end
 
+
+  NNZ
+
   if isfield(Model,'WritePairsOriginal'),
     OrigPS = PS;
   end
