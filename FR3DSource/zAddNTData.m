@@ -92,9 +92,9 @@ if length(FullList) > 0,
                 end
                 clear NewF;
                 F = length(File);
+                Index(f) = F;                           % point to it
                 k = length(LoadedFiles);
                 LoadedFiles{k+1} = FullList{f};
-                Index(f) = F;                           % point to it
             else                                        % but if PDB has been loaded
                 Index(f) = i(1);                        % point to first instance
                 if length(File(i(1)).NT) == 0,          % no nucleotides in the file for some reason
