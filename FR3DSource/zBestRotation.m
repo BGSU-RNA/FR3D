@@ -7,14 +7,18 @@
 
 % It is assumed that the means have been subtracted from X and Y
 
-function [R] = zBestRotation(A,B)
+function [R] = zBestRotation(A,B,LocationWeight)
 
 n = length(A(:,1));                 % number of data points
+
+if nargin < 3,
+  LocationWeight = ones(1,n);
+end
 
 M = zeros(3,3);                     % initialize the matrix M
 
 for i=1:n,                          % go through all data points
-  M = M + A(i,:)' * B(i,:);         % "outer product" of two vectors -> matrix
+  M = M + A(i,:)' * B(i,:) * LocationWeight(i);     % "outer product" of two vectors -> matrix
 end
 
 [v,d] = eig(M'*M);                  % eigenvector matrix, eigenvalue matrix
@@ -29,7 +33,7 @@ Mb = M*b/sqrt(-e(2));
 
 if det([a b c]) > 0,
   g = cross(Ma,Mb);
-else 
+else
   g = -cross(Ma,Mb);
 end
 

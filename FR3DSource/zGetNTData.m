@@ -52,8 +52,8 @@ for f=1:length(Filenames),
 
   clear File
 
-  if ~isempty(strfind(upper(extension),'.PDB')) || ~isempty(strfind(upper(extension),'.CIF')) || ~isempty(strfind(upper(extension),'.CIFATOMS')), 
-    File = zReadandAnalyze(Filename);
+  if ~isempty(strfind(upper(extension),'.PDB')) || ~isempty(strfind(upper(extension),'.CIF')) || ~isempty(strfind(upper(extension),'.CIFATOMS')),
+    File = zReadandAnalyze(Filename,Verbose);
     ReadCode = 4;
   else
 
@@ -253,8 +253,11 @@ for f=1:length(Filenames),
   end
 
   if ~isfield(File,'PDBFilename'),
-    File.PDBFilename = [File.Filename '.pdb'];   % will self-correct the
-                                                 % next time PDB is read
+    if ~strcmpi(File.Filename,'.pdb'),
+      File.PDBFilename = [File.Filename '.pdb'];
+    else
+      File.PDBFilename = File.Filename;
+    end
   end
 
   if ~isfield(File,'BaseRibose'),
@@ -263,16 +266,24 @@ for f=1:length(Filenames),
   end
 
   if ~isfield(File,'Backbone'),
-    File = zBackboneConformation(File,Verbose);
-    if File.NumNT > 1,
-      File.Backbone(1,1) = 1;                    % register that we checked
+    try
+      File = zBackboneConformation(File,Verbose);
+      if File.NumNT > 1,
+        File.Backbone(1,1) = 1;                    % register that we checked
+      end
+      SaveCode = 1;
+    catch
+      if File.NumNT > 1,
+        File.Backbone(1,1) = 1;                    % register that we checked
+      end
     end
-    SaveCode = 1;
   end
 
   if File.NumNT > 1 && sum(sum(File.Backbone)) == 0,
-    File = zBackboneConformation(File,Verbose);
-    SaveCode = 1;
+    try
+      File = zBackboneConformation(File,Verbose);
+      SaveCode = 1;
+    end
   end
 
   if ~isfield(File,'Range') || ~isfield(File,'Crossing') || ClassifyCode > 0,

@@ -41,23 +41,38 @@ else
   Filenames = {'1s72'};                    % default
 end
 
+if ischar(Filenames),
+  Filenames = {Filenames};
+end
+
 % ----------------------------------------- Load PDB files if needed --------
 
-if length(Filenames) > 100,
+FullList = {};
+
+for j=1:length(Filenames),
+    FullList = [FullList zReadPDBList(Filenames{j},1)];
+end
+
+if length(FullList) > 100 || (exist('File') > 0 && length(File) > 100),
   KeepAA = 0;
-  fprintf('xFR3DSearch:  Note that because mmCIF files can have so many amino acids, Matlab can run out of memory.\n');
-  fprintf('Accordingly, amino acids are being stripped out of the files to keep memory usage lower\n');
+  fprintf('oFR3DSearch:  Note that because mmCIF files can have so many amino acids, Matlab can run out of memory.\n');
+  fprintf('oFR3DSearch:  Accordingly, amino acids are being stripped out of the files to keep memory usage lower\n');
 else
   KeepAA = 1;
 end
 
 if ~exist('File'),                           % if no molecule data is loaded,
   fprintf('Loading 3D structure files\n');
-  [File,SIndex] = zAddNTData(Filenames,0,[],Verbose);   % load PDB data
+  [File,SIndex] = zAddNTData(Filenames,0,[],Verbose,KeepAA);   % load PDB data
+elseif isfield(File(1),'ListLoaded') && strcmp(File(1).ListLoaded,Query.SearchFiles{1}),
+  fprintf('Using loaded files, assuming they are right\n');
+  SIndex = 1:length(File);
 else
   fprintf('Loading 3D structure files if necessary\n');
-  [File,SIndex] = zAddNTData(Filenames,0,File,Verbose); %add PDB data if needed
+  [File,SIndex] = zAddNTData(Filenames,0,File,Verbose,KeepAA); %add PDB data if needed
 end                       % SIndex tells which elements of File to search
+
+File(1).ListLoaded = Query.SearchFiles{1};
 
 % ------------------------------------------- Store actual filenames
 %                                             rather than list name(s)
@@ -71,8 +86,18 @@ end
 % ------------------------------------------- Construct details of search ---
 
 if isfield(Query,'Filename'),                % if query motif is from a file
-  [File,QIndex] = zAddNTData(Query.Filename,0,File);
+  if isfield(File,'ListLoaded'),             % awkward - need to deal with this way of saving time and trouble
+    tempListLoaded = File(1).ListLoaded;
+    File = rmfield(File,'ListLoaded');
+  else
+    tempListLoaded = '';
+  end
+  [File,QIndex] = zAddNTData(Query.Filename,0,File,0,KeepAA);
                                            % load data for Query, if needed
+  if ~isempty(tempListLoaded),
+    File(1).ListLoaded = tempListLoaded;
+  end
+
   Query = xConstructQuery(Query,File(QIndex)); % preliminary calculations
 else
   Query = xConstructQuery(Query);              % preliminary calculations
@@ -226,6 +251,8 @@ if isfield(Query,'NumNT'),                    % if query is specified OK
         save(['SearchSaveFiles' filesep Search.SaveName '.mat'], 'Search');  % save any changes like new discrepancies
       end
     end
+  else
+    fprintf('No candidates found\n');
   end
 else
   fprintf('No valid query was found\n');

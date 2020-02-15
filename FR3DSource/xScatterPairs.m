@@ -199,7 +199,7 @@ while Stop == 0,
       if max(cc) - min(cc) < 1,
         ColorAxis =  [min(Color) max(Color)];      % accentuate colors
       else
-        ColorAxis =  [1 12];                       % color by paircode
+        ColorAxis =  [-15 15];                       % color by paircode; near will be blue or yellow
       end
     case 3, ColorAxis =  [15 19];
     case 4, ColorAxis =  [-12 30];

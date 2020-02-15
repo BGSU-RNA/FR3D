@@ -185,7 +185,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
   end
 
   if Verbose > 2,
-    fprintf('Classification is %7.2f after checking cutoffs.\n', a);
+    fprintf('zAnalyzePair: Classification is %7.2f after checking cutoffs.\n', a);
   end
 
   % ---------- Calculate hydrogen bonds for base pairing interactions
@@ -209,7 +209,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
   end
 
   if Verbose > 2,
-    fprintf('Classification is %7.2f after gap cutoffs.\n', a);
+    fprintf('zAnalyzePair: Classification is %7.2f after gap cutoffs.\n', a);
   end
 
   % ---------- Eliminate bad hydrogen bonds

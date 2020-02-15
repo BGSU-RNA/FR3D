@@ -3,6 +3,10 @@
 
 function [D] = zMutualDistance(A,L)
 
+if nargin < 2,
+  L = Inf;
+end
+
 [s,t] = size(A);                       % s is the number of rows
 
 if s < 2000,                           % calculate D all at once
@@ -37,7 +41,7 @@ else                                   % calculate small parts of D at a time
       g = 0;
     end
   end
-  
+
   D = sparse(s,s);                     % sparse matrix to store dists
 
   mm = [];

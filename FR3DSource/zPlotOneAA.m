@@ -1,5 +1,9 @@
 function [void] = zPlotOneAA(AA,ViewParam)
 
+if nargin < 2,
+  ViewParam.LabelSugar = 0;
+end
+
 if isfield(ViewParam,'LineStyle'),
   LS = ViewParam.LineStyle;
 else

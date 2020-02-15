@@ -119,16 +119,14 @@ end
 
 % ---------------------------------------------------------------------
 
-if Query.Geometric == 1,                    % model comes from a file
+if ~isfield(Query,'LocWeight'),
+  Query.LocWeight = ones(1,Query.NumNT);
+end
+if ~isfield(Query,'AngleWeight'),
+  Query.AngleWeight = ones(1,Query.NumNT);
+end
 
-  if ~isfield(Query,'Diagonal'),
-    if ~isfield(Query,'LocWeight'),
-      Query.LocWeight = ones(1,Query.NumNT);
-    end
-    if ~isfield(Query,'AngleWeight'),
-      Query.AngleWeight = ones(1,Query.NumNT);
-    end
-  end
+if Query.Geometric == 1,                    % model comes from a file
 
   if ~isfield(Query,'DiscCutoff'),
     Query.DiscCutoff = 0.4;
@@ -291,7 +289,9 @@ if isfield(Query,'Edges'),
         Query.BaseRibose{j,i}     = BR2;
         Query.ExcludeBaseRibose{i,j} = EBR1;
         Query.ExcludeBaseRibose{j,i} = EBR2;
+        Query.Flank{i,j}           = Flank;    % added 2017-07-05
         Query.Flank{j,i}           = Flank;
+        Query.Range{i,j}           = Range;    % added 2017-07-05
         Query.Range{j,i}           = Range;
         Query.Coplanar{j,i}        = Coplanar;
         Query.OKBB{i,j}      = ReqBB;

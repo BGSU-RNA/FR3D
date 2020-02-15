@@ -1,6 +1,9 @@
 function [void] = zPlotOneNT(NT,ViewParam)
 
 X  = NT.Fit;
+if nargin < 2,
+  ViewParam.Sugar = 1;
+end
 
 if isfield(ViewParam,'GlycoAtomSize'),
   GlycoAtomSize = ViewParam.GlycoAtomSize;

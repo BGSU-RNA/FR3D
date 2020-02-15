@@ -11,7 +11,7 @@ PDBFile = [File.PDBID '.pdb'];             % programs below do not read .cif fil
 
 if exist('chiropraxis.jar') == 2 ...       % if chiropraxis is here
    && File.NumNT > 1 ...                   % and there is more than one NT
-   && exist(PDBFile) == 2,        % and the PDB file is available
+   && exist(PDBFile) == 2,                 % and the PDB file is available
 
   d = which(PDBFile);
   e = which('chiropraxis.jar');
@@ -75,7 +75,7 @@ if exist('chiropraxis.jar') == 2 ...       % if chiropraxis is here
 
   c = 0;                                      % current index in the file
 
-  
+
 
   for t = 1:length(T),
   a = T{t};

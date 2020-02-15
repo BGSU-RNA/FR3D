@@ -31,21 +31,20 @@ if (L == 2),
 else
 
   MCC = Model.CenteredCenters;          % nucleotide centers in model
-  MWC = Model.WeightedCenteredCenters;
 
   CandiCenters = cat(1,Cand.Center);
-  CMean = Model.LocWeight * CandiCenters / Model.NumNT;
+  CMean = Model.LocWeight * CandiCenters / sum(Model.LocWeight);
 
   CC = CandiCenters - ones(L,1) * CMean;  % subtract mean
 
-  R = zBestRotation(CC, MWC);             % candidate onto model
+  R = zBestRotation(CC, MCC, Model.LocWeight);             % candidate onto model
 
   S = Model.LocWeight * sum(((MCC - CC*R').^2)')';  % distances between centers
   n = 1;                                    % nucleotide number for angles
 
   while (S <= Model.LDiscCutoff) && (n <= L),
     ang = zAngleOfRotation(R*Cand(n).Rot*(Model.NT(n).Rot)');
-    S   = S + (ang^2)*Model.AngleWeight(n)^2;
+    S   = S + (ang * Model.AngleWeight(n))^2;
     n   = n + 1;
   end
 

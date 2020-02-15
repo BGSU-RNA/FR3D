@@ -155,7 +155,11 @@ end
 
 if isfield(Query,'Flank'),
   if ~isempty(Query.Flank{p,q}),
-    D = D .* File.Flank;                 % only keep pairs between nested cWW
+    if Query.Flank{p,q} == 1,
+      D = D .* File.Flank;               % only keep pairs of nucleotides that border a single-stranded region
+    elseif Query.Flank{p,q} == 0,
+      D = D .* (1-File.Flank);           % exclude pairs of nucleotides that border a single-stranded region
+    end
   end
 end
 
@@ -204,7 +208,7 @@ if isfield(Query,'Coplanar'),            % screen by coplanarity
 end
 
 % --------------------------------- The following don't use matrix operations
-    
+
 [i,j,d] = find(D);         % nucleotide pairs with OK distances and interactions
 
 
@@ -240,7 +244,7 @@ end
 
 if isfield(Query,'MaxDiffMat'),
   if Query.MaxDiffMat(p,q) < Inf,
-    k = find(abs(i-j) <= Query.MaxDiffMat(p,q)); 
+    k = find(abs(i-j) <= Query.MaxDiffMat(p,q));
                                         % retain pairs close enough together
     i = i(k);
     j = j(k);
@@ -294,7 +298,7 @@ if isfield(Query,'OKCodes'),
       k = find(Query.OKCodes{p}(Codes(i)) .* Query.OKCodes{q}(Codes(j)));
     end
 
-    i = i(k); 
+    i = i(k);
     j = j(k);
     d = d(k);
   end
@@ -348,7 +352,6 @@ if (Query.Geometric > 0),
   d = d + 0.00000001 * (d == 0);       % avoid rejecting model; make d nonzero
 
   % --------- Impose upper limit on distance differences; 2-nucleotide cutoff
-
 
   if Query.NumNT > 2,
     Wp = Query.LocWeight(p);

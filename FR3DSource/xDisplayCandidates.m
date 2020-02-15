@@ -187,6 +187,13 @@ for ii=1:L,
       d = sprintf('%5d',Search.Discrepancy(ii)); % orig candidate number
     end
   Search.Lab{ii} = [File(f).Filename n ' ' b];
+
+  if N == 2 && ~isempty(strfind(pwd,'zirbel')),
+    ei = Search.Candidates(ii,1);
+    ej = Search.Candidates(ii,2);
+    et = strtrim(zEdgeText(File(f).Edge(ei,ej)));
+    Search.Lab{ii} = [Search.Lab{ii} sprintf('%+5s',et)];
+  end
 end
 
 % ----------------------------- find maximum gap between candidate nucleotides
@@ -252,7 +259,9 @@ if Query.Geometric == 0 || ~isfield(Query,'WeightedCenteredCenters'),
   f              = Search.Candidates(j(1),N+1);
   Query.Indices  = double(Search.Candidates(j(1),1:N));
   Query.NT       = File(f).NT(Query.Indices);
-  Query.LocWeight= ones(1,Query.NumNT);
+  if ~isfield(Query,'LocWeight'),
+    Query.LocWeight= ones(1,Query.NumNT);
+  end
   Query          = xPrecomputeForDiscrepancy(Query);
   Query.Filename = 'Central candidate';
 end
@@ -511,8 +520,11 @@ while stop == 0,
         Search = xMutualDiscrepancy(File,Search,Limit); % calculate some discrepancies
 
         if ~isempty(strfind(pwd,'zirbel')),
+          fprintf('Ordering by similarity\n');
+          tic
 %          p(1:Limit) = TSPGreedyInsertion(Search.Disc(1:Limit,1:Limit),[],100);
           p(1:Limit) = OLO(Search.Disc(1:Limit,1:Limit),'average');
+          toc
         else
           p(1:Limit) = zOrderbySimilarity(Search.Disc(1:Limit,1:Limit));
         end
@@ -906,12 +918,12 @@ function PlotMotif(File,Search,Query,Display,i)
   VP.LabelBases = Display(1).labelbases;
   VP.ShowBeta   = Display(1).showbeta;
 
-  if Query.NumNT > 2,
-    MC = Query.WeightedCenteredCenters;          % align to the model
-    CandiCenters = cat(1,File(f).NT(Indices).Center);
-    CC = CandiCenters - ones(N,1)*mean(CandiCenters);
+  if Query.NumNT > 2,                                  % align to the model
+    MC = Query.CenteredCenters;                        % nucleotide centers minus the overall center
+    CandiCenters = cat(1,File(f).NT(Indices).Center);  % centers for this candidate
+    CC = CandiCenters - ones(N,1)*Query.LocWeight * CandiCenters / sum(Query.LocWeight);  % centered centers for this candidate
 
-    R = zBestRotation(MC, CC);
+    R = zBestRotation(MC, CC, Query.LocWeight);
     S = mean(CandiCenters);
   elseif length(Indices) > 1,
     R = File(f).NT(Indices(1)).Rot;
@@ -1052,7 +1064,9 @@ function PlotMotif(File,Search,Query,Display,i)
 
       D = zDistance(c,a);
       [i,j,k] = find(D);                          %
-      w = find(k <= Display(1).neighborhood(8));                            % within 8 Angstroms
+
+      aadist = max(Display(1).neighborhood(8),8);      % within 8 Angstroms
+      w = find(k <= aadist);
 
   %  	try
       if ~isempty(w),
@@ -1182,7 +1196,7 @@ if ~isfield(Display,'colorstate'), % set default values
   Display(1).aabackbonetrace  = 0;     % don't draw a separate backbone trace
   if isfield(Search,'oExploreNT'),
     Display(1).colorstate = 1;
-    Display(1).neighborhood = [1 0 0 1 1 0 0 12];
+%    Display(1).neighborhood = [1 0 0 1 1 0 0 12];
     Display(1).backbonetrace = 1;        % don't draw a separate backbone trace
   end
 else

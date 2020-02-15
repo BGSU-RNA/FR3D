@@ -9,6 +9,11 @@ starttime = cputime;                        % to track time usage
 NNZ = [];                                   % number of entries in PS
 
 for f=1:length(File),
+
+  if isfield(Model,'WritePairs'),
+    xWriteQuery(File(f).Filename,Model);
+  end
+
  if File(f).NumNT > 0,                      % if the file is non-empty
   filestarttime = cputime;                  % for this file only
   Codes = cat(1,File(f).NT(:).Code);        % codes to use in nucleotide mask
@@ -30,10 +35,17 @@ for f=1:length(File),
   for i=2:Model.NumNT                % loop through model nucleotides
     for j=1:(i-1)
       PS{i,j} = xPairwiseScreen(File(f),Codes,Model,i,j);
-      PS{j,i} = PS{i,j}';
+      PS{j,i} = PS{i,j}';                   % ' will transpose matrix
       NNZ(i,j) = nnz(PS{i,j});              % number of non-zero entries
       NNZ(j,i) = NNZ(i,j);
     end
+  end
+
+
+  NNZ
+
+  if isfield(Model,'WritePairsOriginal'),
+    OrigPS = PS;
   end
 
   %-----------------------------------------------------------------------
@@ -133,12 +145,19 @@ for f=1:length(File),
 
   %-------------------------------------------------------------------------
 
-%  if ~isempty(strfind(pwd,'zirbel')),
-%    xWritePairsAndCandidatesDatabase(File(f).Filename,Model,PS,List,Perm,cputime-ttzt);
-%  end
-
   if ~isempty(List),
-    List(:,Perm) = List(:,1:Model.NumNT);     % re-order nucleotides
+    List(:,Perm) = List(:,1:Model.NumNT);     % put positions in original order
+  end
+
+  PS(Perm,Perm) = PS;             % undo the permutations
+
+  if isfield(Model,'WritePairs'),
+    if isfield(Model,'WritePairsOriginal'),
+      xWritePairsAndCandidatesDatabase(File(f),File(f).Filename,File(f).Distance,Model,OrigPS,List,Perm,cputime-ttzt);
+    else
+      xWritePairsAndCandidatesDatabase(File(f),File(f).Filename,File(f).Distance,Model,PS,List,Perm,cputime-ttzt);
+    end
+    xWriteQuery(File(f).Filename,Model);
   end
 
   [s,t] = size(List);
@@ -163,4 +182,3 @@ end
 
 zFlushOutput
 
-PS(Perm,Perm) = PS;             % undo the permutations

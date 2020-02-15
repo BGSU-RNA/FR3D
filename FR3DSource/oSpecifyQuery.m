@@ -40,12 +40,25 @@
 %   Query.MaxDiff        maximum difference between sorted nucleotide indices
 %   Query.MinDiff        minimum difference between sorted nucleotide indices
 %
-%   Query.Geometric      set to 0 to ignore geometry, only use symbolic constraints 
+%   Query.Geometric      set to 0 to ignore geometry, only use symbolic constraints
 %                        Default is 1.
 %   Query.ExcludeOverlap set to 1 to eliminate highly redundant motifs with
 %     larger discrepancies; often, you get the same candidate with one or two
 %     nucleotides different but much higher discrepancy.  Default is 1 when
 %     Query.NumNT > 6.
+
+% GG stack
+  clear Query
+  Query.Name = 'Stacked GG';
+  Query.Filename       = '2LX1';
+  Query.NTList         = {'6' '8'};
+  Query.ChainList      = {'A' 'A'};     %
+  Query.DiscCutoff     = 0.5;
+  Query.SearchFiles    = {'nrlist_2.134_3.0A_list'};
+  Query.SearchFiles    = {'1S72'};
+  oFR3DSearch
+  return
+
 
 % AG basepairs
 
@@ -294,7 +307,7 @@ case 'Sarcin7Mixed'
   Query.NTList         = {'2694' '2701' '2693' '2702' '2692' '2691' '2703'};
   Query.ChainList      = {'0' '0' '0' '0' '0' '0' '0'};   % all in the 23S
   Query.Edges{3,4}     = 'tWH';
-  Query.DiscCutoff     = 0.5;       
+  Query.DiscCutoff     = 0.5;
   Query.ExcludeOverlap = 0;
 
 case 'Sarcin9Mixed'
@@ -313,7 +326,7 @@ case 'KinkTurnCentral'
   Query.NTList         = {'80' '97' '81' '93' '94' '98'};
   Query.ChainList      = {'0' '0' '0' '0' '0' '0'};   % all in the 23S
   Query.Edges{1,2}     = 'tHS';
-  Query.DiscCutoff     = 0.7;  
+  Query.DiscCutoff     = 0.7;
   Query.ExcludeOverlap = 1;
 
 case 'KinkTurnClosing'
@@ -322,27 +335,27 @@ case 'KinkTurnClosing'
   Query.NTList         = {'80' '97' '81' '93' '100' '77'};
   Query.ChainList      = {'0' '0' '0' '0' '0' '0'};   % all in the 23S
   Query.Edges{1,2}     = 'tHS';
-  Query.DiscCutoff     = 0.9;    
+  Query.DiscCutoff     = 0.9;
   Query.ExcludeOverlap = 1;
 
 case 'GNRA4NonSeq'
   Query.Description    = 'GRNA hairpin without sequential constraint';
   Query.Filename       = '1s72';
   Query.NTList         = {'804' '805' '808' '809'};
-  Query.ChainList      = {'0' '0' '0' '0'}; 
+  Query.ChainList      = {'0' '0' '0' '0'};
   Query.Edges{1,4}     = 'cWW';
   Query.Edges{2,3}     = 'tSH';
-  Query.DiscCutoff     = 1;      
+  Query.DiscCutoff     = 1;
   Query.ExcludeOverlap = 1;
 
 case 'GNRA4Seq'
   Query.Description    = 'GRNA hairpin with sequential constraint';
   Query.Filename       = '1s72';
   Query.NTList         = {'804' '805' '808' '809'};
-  Query.ChainList      = {'0' '0' '0' '0'}; 
+  Query.ChainList      = {'0' '0' '0' '0'};
   Query.Edges{1,4}     = 'cWW';
   Query.Edges{2,3}     = 'tSH';
-  Query.DiscCutoff     = 1;      
+  Query.DiscCutoff     = 1;
   Query.MaxDiff(1,4)   = 6;
   Query.ExcludeOverlap = 1;
 
@@ -350,7 +363,7 @@ case 'GNRA5'
   Query.Description    = 'GRNA hairpin 5 nucleotide';
   Query.Filename       = '1s72';
   Query.NTList         = {'804' '805' '807' '808' '809'};
-  Query.ChainList      = {'0' '0' '0' '0' '0'}; 
+  Query.ChainList      = {'0' '0' '0' '0' '0'};
   Query.Edges{1,5}     = 'cWW bif';
   Query.Edges{1,2}     = 's35';
   Query.Edges{3,4}     = 's35';
@@ -377,7 +390,7 @@ case 'GNRA4NonSeq'
   Query.Description    = 'GRNA hairpin without sequential constraint';
   Query.Filename       = '1s72';
   Query.NTList         = {'804' '809' '805' '808'};
-  Query.ChainList      = {'0' '0' '0' '0'}; 
+  Query.ChainList      = {'0' '0' '0' '0'};
   Query.Mask           = 'NNNN';
   Query.Edges{1,2}     = 'ncWW';
   Query.Edges{3,4}     = 'ntSH';

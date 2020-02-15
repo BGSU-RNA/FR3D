@@ -214,7 +214,7 @@ for j=1:length(Indices),                 % Loop through all nucleotides
   if VP.BackboneTrace > 0 && j < length(Indices) && any(k+1 == Indices) && File.Covalent(k,k+1) > 0,
     p1 = (File.NT(k).Sugar(10,:) - S) * R;
     p2 = (File.NT(k+1).Sugar(10,:) - S) * R;
-    plot3([p1(1) p2(1)], [p1(2) p2(2)], [p1(3) p2(3)],'linewidth',5);
+    plot3([p1(1) p2(1)], [p1(2) p2(2)], [p1(3) p2(3)],'linewidth',5,'color',VP.Color);
   end
 end
 
@@ -320,7 +320,7 @@ if VP.Animate == 1,
 
       zPlotOneNTRotated(File.NT(k),VP,R,S);
     end
-  
+
     Title = strcat(File.NT(Indices(1)).Base,File.NT(Indices(1)).Number);
     for j=2:length(Indices),
       nt = File.NT(Indices(j));
@@ -332,13 +332,13 @@ if VP.Animate == 1,
     else
       FN = '';
     end
-  
+
     Title = strcat(Title,[' ' strrep(FN,'_','\_')]);
-  
+
     axis equal
     axis([-maxradius maxradius -maxradius maxradius minheight maxheight]);
     set(gca,'TickLength',[0 0]);
-    grid off  
+    grid off
 %    axis off
     view(0,0);
     drawnow

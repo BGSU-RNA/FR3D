@@ -134,6 +134,8 @@ if length(e) == 1,
       T = 'abcdefghijkl';
       E = [E T(d)];
     end
+  else
+    E = [E ' '];                                       % near pairs will align better now
   end
 else
   E = '';

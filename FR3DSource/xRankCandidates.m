@@ -51,9 +51,12 @@ end
 Candidates  = Candidates(1:count,:);
 if N > 2,
   Discrepancy = sqrt(Discrepancy(1:count,1))/Model.NumNT;
+else
+  Discrepancy = Discrepancy(1:count,1);             % not crystal clear that this is correct ...
 end
 
 [y,i]       = sort(Discrepancy);                    % sort by discrepancy
+
 Candidates  = Candidates(i,:);
 Discrepancy = Discrepancy(i);
 
