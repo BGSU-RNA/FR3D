@@ -9,7 +9,7 @@ PDBID = strrep(PDBID,'-CIF','');              % strip off this identifier of the
 PDBID = strrep(PDBID,'.mat','');
 
 attempts = 0;
-while attempts < 30,
+while attempts < 3,
   attempts = attempts + 1;
   try
     t = urlread(['http://www.pdb.org/pdb/rest/customReport.xml?pdbids=' PDBID '&customReportColumns=source,resolution,experimentalTechnique,structureTitle,releaseDate']);
