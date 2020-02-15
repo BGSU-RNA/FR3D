@@ -13,6 +13,7 @@ while attempts < 30,
   attempts = attempts + 1;
   try
     t = urlread(['http://www.pdb.org/pdb/rest/customReport.xml?pdbids=' PDBID '&customReportColumns=source,resolution,experimentalTechnique,structureTitle,releaseDate']);
+    break;
   catch
     pause(1)
     fprintf('zGetPDBInfo:  Having trouble reading %s data from PDB; attempt %d\n',PDBID,attempts);
