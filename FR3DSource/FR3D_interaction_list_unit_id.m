@@ -1,7 +1,8 @@
 % FR3D_interaction_list_unit_id produces lists of all FR3D annotated interactions
 
-% To run from the command line,     matlab -r FR3D_interaction_list_unit_id('1s72')
+% To run from a terminal,           matlab -r FR3D_interaction_list_unit_id('1s72')
 % To put files in a specific place, matlab -r FR3D_interaction_list_unit_id('1s72','C:\Users\zirbel\Documents\FR3D')
+% To run from Matlab,               FR3D_interaction_list_unit_id('1s72')
 
 % 1S72_interactions_FR3D.txt contains all interactions except near
 % 1S72_near_interactions_FR3D.txt contains near interactions
