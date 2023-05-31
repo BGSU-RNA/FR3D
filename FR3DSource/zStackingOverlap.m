@@ -3,7 +3,12 @@
 
 function [SO] = zStackingOverlap(N1,N2)
 
-switch N1.Code,
+Code = N1.Code;
+if Code == 9
+  Code = find(N1.Base == 'ACGU');
+end
+
+switch Code,
   case 1,
 X = [[ -2.100463  0.000000  4.271447  1.920945  0.230436 -2.100463]; ...
      [  0.447145 -1.009320  1.317924  5.150733  4.699718  0.447145]]';
@@ -30,10 +35,10 @@ t = [[    4    4    7    7]; ...
      [    6    3    6    2]]';
 end
 
-S = N1.Fit(1,:);
-R = N1.Rot;
-L = length(N2.Fit(:,1));         % Number of base atoms
-Y = (N2.Fit   - ones(L,1)*S) * R; % rotated into position
+S = N1.Fit(1,:);                  % N1/N9 atom, glycosidic atom of N1
+R = N1.Rot;                       % rotation matrix of N1
+L = length(N2.Fit(:,1));          % Number of base atoms of N2
+Y = (N2.Fit   - ones(L,1)*S) * R; % atoms of base 2 rotated into position
 
 warning off
 
