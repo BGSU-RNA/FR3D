@@ -1,10 +1,10 @@
 % zAnalyzePair(N1,N2,CL) computes distances, angles, and classification
-% codes.
+% codes for basepairs and stacking.
 
 function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
 
   if nargin < 3,
-    CL = zClassLimits;                              % read ClassLimits matrix
+    CL = zClassLimits;                      % read basepair ClassLimits matrix
 
     if exist('PairExemplars.mat','file') > 0,
       load('PairExemplars','Exemplar');
@@ -21,7 +21,15 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
     Displ = (N2.Fit(1,:)-N1.Fit(1,:)) * N1.Rot;   % vector shift from 1 to 2
   end
 
-  Pair.Paircode = 4*(N2.Code-1) + N1.Code;     % AA is 1, CA is 2, etc.
+  Code1 = N1.Code;
+  Code2 = N2.Code;
+  if Code1 == 9,                             % modified RNA nucleotide
+    Code1 = find(N1.Base == 'ACGU');         % code of parent base
+  end
+  if Code2 == 9,                             % modified RNA nucleotide
+    Code2 = find(N2.Base == 'ACGU');         % code of parent base
+  end
+  Pair.Paircode = 4*(Code2-1) + Code1;       % AA is 1, CA is 2, etc.
 
   Pair.Displ = Displ;                        % vector shift (from 1 to 2)
 
@@ -54,7 +62,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
 
   Lim(2,:) = [15 13 16 12];     % total number of atoms, including hydrogen
 
-  d = zDistance(N2.Fit(1:Lim(2,N2.Code),:), N1.Center);
+  d = zDistance(N2.Fit(1:Lim(2,Code2),:), N1.Center);
                                            % distances to base 1 center
   [sorteddistances,sortedindices] = sort(d);
 
@@ -89,7 +97,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
 
     if (dot1 < 0.3381) && (dot2 < 0.3381) && (dot3 > 0.7757),
 
-      d = zDistance(N1.Fit(1:Lim(2,N1.Code),:), N2.Center);
+      d = zDistance(N1.Fit(1:Lim(2,Code1),:), N2.Center);
                                            % distances to base 2 center
       [y,m] = min(d);                      % identify the closest atom
       m = m(1);                            % in case of a tie, use the first
@@ -353,7 +361,7 @@ function [Pair] = zAnalyzePair(N1,N2,CL,Exemplar,Displ,Verbose)
 
   if fix(a) == 30 || abs(a) < 16,
     if ~isempty(Exemplar),
-      [c,d,ff,gg,h] = zDistanceToExemplars(Exemplar,N1,N2);
+      [c,d,ff,gg,h] = zDistanceToExemplars(Exemplar,N1,N2,Pair.Paircode);
       Pair.Classes   = c(1:3);
       Pair.Distances = d(1:3);
     end
