@@ -8,16 +8,55 @@
 %
 function [Hydrogen] = zCheckHydrogen(NT1,NT2,Class)
 
-Paircode = 4*(NT2.Code-1) + NT1.Code;
+Code1 = NT1.Code;
+Code2 = NT2.Code;
+if Code1 == 9,                             % modified RNA nucleotide
+  Code1 = find(NT1.Base == 'ACGU');         % code of parent base
+end
+if Code2 == 9,                             % modified RNA nucleotide
+  Code2 = find(NT2.Base == 'ACGU');         % code of parent base
+end
+
+Paircode = 4*(Code2-1) + Code1;       % AA is 1, CA is 2, etc.
+
 switch Paircode
   case {2, 3, 4, 8, 10, 12},
     N1 = NT2;
     N2 = NT1;
+    t  = Code1;
+    Code1 = Code2;
+    Code2 = t;
   otherwise
     N1 = NT1;
     N2 = NT2;
 end
-Paircode = 4*(N2.Code-1) + N1.Code;
+
+% for modified nucleotides, replace Sugar dictionary with matrix for convenience
+if N1.Code == 9
+  Sugar = [];
+  if ismember('O2*',keys(N1.Sugar))
+    Sugar(3,:) = N1.Sugar('O2*');
+  elseif ismember('O2''',keys(N1.Sugar))
+    Sugar(3,:) = N1.Sugar('O2''');
+  else
+    Sugar(3,:) = [Inf Inf Inf];           % O2' not present, can't make this interaction
+  end
+  N1.Sugar = Sugar;
+end
+
+if N2.Code == 9
+  Sugar = [];
+  if ismember('O2*',keys(N2.Sugar))
+    Sugar(3,:) = N2.Sugar('O2*');
+  elseif ismember('O2''',keys(N2.Sugar))
+    Sugar(3,:) = N2.Sugar('O2''');
+  else
+    Sugar(3,:) = [Inf Inf Inf];           % O2' not present, can't make this interaction
+  end
+  N2.Sugar = Sugar;
+end
+
+Paircode = 4*(Code2-1) + Code1;       % AA is 1, CA is 2, etc.
 
 if (Class == 1) & (Paircode == 1),
   Hydrogen(1).Angle    = zAngle(N1.Fit(6,:),N1.Fit(14,:),N2.Fit(4,:));
