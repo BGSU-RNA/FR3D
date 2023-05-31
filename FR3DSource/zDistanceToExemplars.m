@@ -1,9 +1,7 @@
 % zDistanceToExemplars(Exemplar,Pair) computes the distance to each
 % exemplar for the given pair of nucleotides
 
-function [c,d,f,g,i] = zDistanceToExemplars(Exemplar,NT1,NT2)
-
-pc = 4*(NT2.Code-1) + NT1.Code;     % AA is 1, CA is 2, etc.
+function [c,d,f,g,i] = zDistanceToExemplars(Exemplar,NT1,NT2,pc)
 
 k = 1;
 
