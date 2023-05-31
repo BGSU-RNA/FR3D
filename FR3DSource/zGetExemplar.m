@@ -36,9 +36,9 @@ switch paircode                           % reverse certain pairs
     sw  = -1;                                  % bases in reversed order
 end
 
-if paircode == 7,
-  Class = -Class;                              % this is crazy but works
-end
+% if paircode == 7,
+%   Class = -Class;       % this is crazy but works; didn't work!  fixed 2023-05-31
+% end
 
 if any(Class == [-1 -2 -7 -8]),
   Class = -Class;
