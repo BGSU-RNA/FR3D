@@ -37,7 +37,7 @@ if isfield(ViewParam,'LineThickness'),
     LT = str2num(LT);
   end
 else
-  LT = 2.0;                              % doesn't work for some reason!
+  LT = 2.0;                              % does not work for some reason!
 end
 
 SLT = LT;                                % line thickness for sugars
@@ -61,7 +61,7 @@ end
 if isfield(ViewParam,'Label'),
   Label = ViewParam.Label;
 elseif LB > 0,
-  Label = [NT.Base NT.Number];
+  Label = [NT.Unit '|' NT.Number];
 end
 
 if isfield(ViewParam,'LabelSugar'),
@@ -76,7 +76,12 @@ else
   ShowBeta = 0;
 end
 
-switch NT.Code
+Code = NT.Code;
+if Code == 9,        % modified nucleotide
+  % Code = find(NT.Base == 'ACGU'); % code of parent base
+end
+
+switch Code
   case 1,
     col = [1 0 0];   % A is red
   case 2,
@@ -85,7 +90,7 @@ switch NT.Code
     col = [0 1 0];   % G is green
   case 4,
     col = [0 0 1];   % U is blue
-  case 5,
+  case 9,
     col = [155 48 255]/255; % modified are purple
   otherwise,
     col = [0 0 0];
@@ -111,7 +116,6 @@ else
   numcol = [0 0 0];
 end
 
-
 if isfield(ViewParam,'Brightness'),
   col = col * ViewParam.Brightness;
 end
@@ -126,7 +130,7 @@ bc = gray;
 
 hold on
 
-switch NT.Code
+switch Code          % plot parent base
 case 1,
   i = [1 7 10 8 5 6];
   plot3(X(i,1),X(i,2),X(i,3),'Color',col,'LineWidth',LT,'LineStyle',LS);
@@ -185,26 +189,38 @@ case 4,
   plot3(X(i,1),X(i,2),X(i,3),'Color',gray,'LineWidth',LT,'LineStyle',LS);
   i = [4 11];
   plot3(X(i,1),X(i,2),X(i,3),'Color',gray,'LineWidth',LT,'LineStyle',LS);
-case 5,
+case 9,
   % we need a better algorithm to plot modified nucleotides!
   % we can use NT.Unit to tell which one it is, make a big switch statement
   % or read the CONECT information on each one in a database
-%  i = [1:length(X(:,1)) 1];               % full circle
+  % i = [1:length(X(:,1)) 1];               % full circle
 
-  D = zDistance(X,X);               % distances
-  [i,j] = find((triu(D) <= 1.7) .* (triu(D) > 0));
-  for k = 1:length(i),
-    plot3([X(i(k),1) X(j(k),1)],[X(i(k),2) X(j(k),2)],[X(i(k),3) X(j(k),3)],'Color',col,'LineWidth',LT,'LineStyle',LS);
+  col = [155 48 255]/255; % modified are purple
+
+  XX = [];
+  atoms = keys(NT.Loc);
+
+  for a = 1:length(atoms)                % loop through observed atom locations
+    XX = [XX; NT.Loc(atoms{a})];
   end
 
-  k = setdiff(1:length(X(:,1)),[i; j]);        % omitted atoms
+  D = zDistance(XX,XX);               % mutual distances
+  [i,j] = find((triu(D) <= 1.7) .* (triu(D) > 0));
+  for k = 1:length(i),
+    plot3([XX(i(k),1) XX(j(k),1)],[XX(i(k),2) XX(j(k),2)],[XX(i(k),3) XX(j(k),3)],'Color',col,'LineWidth',LT,'LineStyle',LS);
+  end
+
+  k = setdiff(1:length(XX(:,1)),[i; j]);        % omitted atoms
   for kk = 1:length(k),
     i = k(kk);                                % disconnected atom
     [y,j] = sort(D(i,:));                     % j(2) is nearest atom
-    plot3([X(i,1) X(j(2),1)],[X(i,2) X(j(2),2)],[X(i,3) X(j(2),3)],'Color',col,'LineWidth',LT,'LineStyle',LS);
+    plot3([XX(i,1) XX(j(2),1)],[XX(i,2) XX(j(2),2)],[XX(i,3) XX(j(2),3)],'Color',col,'LineWidth',LT,'LineStyle',LS);
   end
 
-%  plot3(X(:,1),X(:,2),X(:,3),'.','Color',col,'MarkerSize',18);
+  XX = NT.Center;
+  plot3(XX(1),XX(2),XX(3),'k.','MarkerSize',18);
+
+%  plot3(XX(:,1),XX(:,2),XX(:,3),'.','Color',col,'MarkerSize',18);
 
 end
 
@@ -215,74 +231,96 @@ if GlycoAtomSize > 0,
 end
 
 if Sugar == 1,
- if NT.Code <= 4,                 % standard base
-   Z = [NT.Sugar; NT.Fit(1,:)];
- elseif NT.Code == 5,             % modified base
-   j = 1;
-   for jj = length(NT.AtomName):-1:1,
-     if strcmp(NT.AtomName{jj},'N1') || strcmp(NT.AtomName{jj},'N9'),
-       j = jj;
-     end
-   end
+  if NT.Code <= 4,                 % standard base
+    Z = [NT.Sugar; NT.Fit(1,:)];   % sugar coordinates
+  elseif NT.Code == 9,             % modified base
+    XX = [];                       % accumulate sugar atoms
 
-%   D = zDistance(NT.Sugar,NT.Fit);
-%   [i,j] = find(D == min(min(D)));% indices of nearest atoms
+    atoms = keys(NT.Loc);          % base atoms
 
-   Z = [NT.Sugar; NT.Fit(j,:)];
-   if GlycoAtomSize > 0,
-    scatter3(X(j,1),X(j,2),X(j,3),GlycoAtomSize,col,'filled');% glycosidic atom
-   end
- else
-   Z = [NT.Sugar; NT.Sugar(end,:)];
- end
+    NT
 
- if length(NT.Sugar(:,1)) == 13,   % for some reason, some have 9
+    % glycosidic bond
+    for a = 1:length(atoms)
+      if strcmp(atoms{a},'N9') || (strcmp(NT.Unit,'PSU') && strcmp(atoms{a},'C5')) || (strcmp(atoms{a},'N1') && ~strcmp(NT.Unit,'PSU'))
+        XX = NT.Loc(atoms{a});     % glycosidic atom
+      end
+    end
 
-  k = [14 1 7 6 8 9 10 12];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  hold on
-  k = [11 10];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [6 4 5];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [4 2 3];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [2 1];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    atoms = keys(NT.Sugar);
 
-  % connect backbone, if distance is small enough
-  if norm(Z(13,1)-Z(10,1)) < 4 && CS > 0,       % O3' from previous nucleotide is known
-    k = [10 13];
+    for a = 1:length(atoms)        % loop through sugar atoms
+      XX = [XX; NT.Sugar(atoms{a})];
+    end
+
+    D = zDistance(XX,XX);               % mutual distances
+    [i,j] = find((triu(D) <= 1.7) .* (triu(D) > 0));
+    for k = 1:length(i),
+      plot3([XX(i(k),1) XX(j(k),1)],[XX(i(k),2) XX(j(k),2)],[XX(i(k),3) XX(j(k),3)],'Color',gray,'LineWidth',LT,'LineStyle',LS);
+    end
+
+    k = setdiff(1:length(XX(:,1)),[i; j]);        % omitted atoms
+    for kk = 1:length(k),
+      i = k(kk);                                % disconnected atom
+      [y,j] = sort(D(i,:));                     % j(2) is nearest atom
+      plot3([XX(i,1) XX(j(2),1)],[XX(i,2) XX(j(2),2)],[XX(i,3) XX(j(2),3)],'Color',gray,'LineWidth',LT,'LineStyle',LS);
+    end
+
+    if GlycoAtomSize > 0,
+      j = 1;
+      scatter3(XX(j,1),XX(j,2),XX(j,3),GlycoAtomSize,col,'filled');% glycosidic atom
+    end
+  end
+end
+
+if NT.Code < 9
+  if length(NT.Sugar(:,1)) == 13,   % for some reason, some have 9
+
+    k = [14 1 7 6 8 9 10 12];
     plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  end
+    hold on
+    k = [11 10];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    k = [6 4 5];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    k = [4 2 3];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    k = [2 1];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
 
-  if LSugar > 0,
-    A = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
-    for j=1:12,
-      text(Z(j,1)+0.1,Z(j,2),Z(j,3), A{j},'fontweight','bold','FontSize',LSugar);
+    % connect backbone, if distance is small enough
+    if norm(Z(13,1)-Z(10,1)) < 4 && CS > 0,       % O3 prime from previous nucleotide is known
+      k = [10 13];
+      plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    end
+
+    if LSugar > 0,
+      A = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
+      for j=1:12,
+        text(Z(j,1)+0.1,Z(j,2),Z(j,3), A{j},'fontweight','bold','FontSize',LSugar);
+      end
+    end
+  elseif length(NT.Sugar(:,1)) == 12,   % for some reason, some have 9
+
+    k = [13 1 7 6 8 9 10 12];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    hold on
+    k = [11 10];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    k = [6 4 5];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    k = [4 2 3];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+    k = [2 1];
+    plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
+
+    if LSugar > 0,
+      A = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
+      for j=1:12,
+        text(Z(j,1)+0.1,Z(j,2),Z(j,3), A{j},'fontweight','bold','FontSize',LSugar);
+      end
     end
   end
- elseif length(NT.Sugar(:,1)) == 12,   % for some reason, some have 9
-
-  k = [13 1 7 6 8 9 10 12];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  hold on
-  k = [11 10];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [6 4 5];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [4 2 3];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-  k = [2 1];
-  plot3(Z(k,1),Z(k,2),Z(k,3),'Color',bc,'LineWidth',SLT,'LineStyle',LS);
-
-  if LSugar > 0,
-    A = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P'};
-    for j=1:12,
-      text(Z(j,1)+0.1,Z(j,2),Z(j,3), A{j},'fontweight','bold','FontSize',LSugar);
-    end
-  end
- end
 end
 
 if LB > 0,
@@ -296,9 +334,17 @@ end
 
 if LabelAtoms > 0,
   zStandardBases
-  for j = 1:length(X(:,1)),
-    text(X(j,1),X(j,2),X(j,3),AtomNames{j,NT.Code});
-%    text(X(j,1),X(j,2),X(j,3),num2str(j));
+  if NT.Code < 9
+    for j = 1:length(X(:,1)),
+      text(X(j,1),X(j,2),X(j,3),AtomNames{j,NT.Code});
+  %    text(X(j,1),X(j,2),X(j,3),num2str(j));
+    end
+  elseif NT.Code == 9,
+    atoms = keys(NT.Loc);
+    for a = 1:length(atoms)
+      XX = NT.Loc(atoms{a});
+      text(XX(1),XX(2),XX(3),atoms{a});
+    end
   end
 end
 
