@@ -46,12 +46,12 @@ if ~isempty(strfind(lower(extension),'.pdb')),
   [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, OCC, BETA, ModelNum, Readable] = zReadPDBTextReadNew(Filename,Verbose);
   CoordinateFile = Filename;
   if Verbose > 0,
-    fprintf('zReadandAnalyze: Read PDB file\n');
+    fprintf('zReadandAnalyze: Read .PDB file\n');
   end
 else
   [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P, BETA, UNITID, ModelNum, Readable, CoordinateFile] = zReadCIFAtoms(Filename,Verbose);
   if Verbose > 0,
-    fprintf('zReadandAnalyze: Read CIF file\n');
+    fprintf('zReadandAnalyze: Read .cifatoms file %s\n',Filename);
   end
 end
 
@@ -66,7 +66,7 @@ if ~isempty(ATOMNUMBER),
     NTNUMBER(1:10)
   end
 
-  P = [P BETA];                           % include beta factors with positions to make it easier to assign them to atoms
+  P = [P BETA];  % include beta factors with positions to make it easier to assign them to atoms
 
   if Readable == 0,
     fprintf('zReadandAnalyze was unable to read the PDB file %s\n',Filename);
@@ -75,10 +75,10 @@ if ~isempty(ATOMNUMBER),
 
   % Move models in NMR file apart ---------------------------------------------
   % Otherwise they land right on top of one another and confuse basepairs
-  % But don't do this with files like 3NJ6, which are x-ray and have 2 models
+  % But dont do this with files like 3NJ6, which are x-ray and have 2 models
 
   if (max(ModelNum) > 2),
-    P(:,1) = P(:,1) + 1000*(ModelNum - 1);  % move by 1000 Angstroms
+    P(:,1) = P(:,1) + 1000*(ModelNum - 1);  % move x by 1000 Angstroms
   end
 
   % Read standard bases from Sponer QM calculations --------------------------
@@ -87,6 +87,11 @@ if ~isempty(ATOMNUMBER),
 
   Lim(1,:) = [10 8 11 8];       % number of base atoms, excluding hydrogen
   Lim(2,:) = [15 13 16 12];     % total number of atoms, including hydrogen
+
+  % Read modified nucleotides; defines the container.map variable modnt
+
+  zDefineModifiedNucleotides
+  modntnames = modnt.keys();
 
   % Define standard amino acid names
 
@@ -107,7 +112,9 @@ if ~isempty(ATOMNUMBER),
 
   while i <= length(NTNUMBER),                 % go through all atoms
 
-    while i <= length(NTNUMBER) && strcmp(ATOM_TYPE{i},'HETATM'),
+    % accumulate HETATM entries separately, skip over them
+    % that is needed for MG and other atoms
+    while i <= length(NTNUMBER) && strcmp(ATOM_TYPE{i},'HETATM') && ~ismember(UNITNAME{i},modntnames)
       Het(hh).AtomNumber = ATOMNUMBER(i);
       Het(hh).Atom       = ATOMNAME{i};
       Het(hh).Unit       = UNITNAME{i};
@@ -130,11 +137,10 @@ if ~isempty(ATOMNUMBER),
     if i <= length(NTNUMBER),
 
       UnitType = 0;                             % RNA NT = 1, Amino acid = 2, etc.
-      j = [];                                   % initialize rows of next nucleo.
+      j = [];                                   % initialize rows of next nt
       ntnum = NTNUMBER{i};                      % nucleotide number from pdb file
-      chnum = CHAIN{i}; %Anton 12/12/10
-  %   while (i <= length(NTNUMBER)) & (strcmp(NTNUMBER{i},ntnum)) %Anton 12/12/10
-  % to deal with consecutive nucleotides that differ only by chain
+      chnum = CHAIN{i};                         % Anton 12/12/10
+      % to deal with consecutive nucleotides that differ only by chain:
       while (i <= length(NTNUMBER)) && (strcmp(NTNUMBER{i},ntnum)) && (strcmp(CHAIN{i},chnum))  %Anton 12/12/10
                                                 % pull out rows for this nucleotide
                                                 % assumes they are continguous
@@ -144,8 +150,14 @@ if ~isempty(ATOMNUMBER),
 
       Sugar = Inf * ones(12,4);
       Loc   = Inf * ones(11,4);                 % make it possible to recognize missing atom locations
+                                                % 11 rows might not be enough for all modified nt
 
       UnitName = UNITNAME{j(1)};                % one or three letter code
+      if exist('UNITID') && length(UNITID{j(1)}) > 0
+        CurrentID = UNITID{j(1)};
+      else
+        CurrentID = sprintf('%s|%d|%s|%s|%s',PDBID,ModelNum(j(1)),CHAIN{j(1)},UNITNAME{j(1)},NTNUMBER{j(1)});
+      end
 
       if length(UnitName) == 1,                 % looks like a nucleotide
         NT(n).Base     = UNITNAME{j(1)};        % letter for this nucleotide
@@ -153,11 +165,7 @@ if ~isempty(ATOMNUMBER),
         NT(n).Chain    = CHAIN{j(1)};           % what chain nucleotide is in
         NT(n).Number   = NTNUMBER{j(1)};        % nucleotide number for this molecule
         NT(n).ModelNum = ModelNum(j(1));        % model number, especially for NMR
-        if exist('UNITID'),
-          NT(n).ID = UNITID{j(1)};              % Unit ID like 3G9Y|1|C|G|3
-        else
-          NT(n).ID = '';
-        end
+        NT(n).ID       = CurrentID;
         NT(n).AltLoc   = VERSION{j(1)};
       end
 
@@ -322,41 +330,90 @@ if ~isempty(ATOMNUMBER),
         k = min(4,length(j));
         AA(aa).Center     = mean(P(j(1:k),1:3),1); % backbone center
         AA(aa).ModelNum   = ModelNum(j(1));     % Anton 9/14/2011
-        if exist('UNITID'),
-          AA(aa).ID = UNITID{j(1)};          % Unit ID like 3G9Y|1|C|G|3
-        else
-          AA(aa).ID = '';
-        end
+        AA(aa).ID         = CurrentID;
 
         aa = aa + 1;
-        UnitType = 2;
+        UnitType = 2;               % amino acid
 
         % ------------------------- Might this be a nucleotide with 3 letter name?
+        % doesnt make sense to me, probably remove it
 
         for m = 1:length(AA(aa-1).Atom),
-          if ~isempty(strfind(AA(aa-1).Atom{m},'''')),
+          if ~isempty(strfind(AA(aa-1).Atom{m},'''')),  % look for a prime on atom name
             NTBackbone = 1;
           end
         end
 
-      else
+      elseif ismember(UnitName,modntnames)
+        fprintf('zReadandAnalyze: Storing coordinates of %s\n',CurrentID);
 
-        fprintf('zReadandAnalyze:  Unknown unit %s\n',UnitName);
+        thismodnt = modnt(UNITNAME{j(1)});
+
+        NT(n).Base     = thismodnt('standard'); % standard base for this modified NT
+        NT(n).Unit     = UNITNAME{j(1)};        % letter for this nucleotide
+        NT(n).Chain    = CHAIN{j(1)};           % what chain nucleotide is in
+        NT(n).Number   = NTNUMBER{j(1)};        % nucleotide number for this molecule
+        NT(n).ModelNum = ModelNum(j(1));        % model number, especially for NMR
+        NT(n).ID       = CurrentID;
+        NT(n).AltLoc   = VERSION{j(1)};
+
+        LocDict   = containers.Map;   % use a dictionary to store locations by atom name
+        SugarDict = containers.Map;   % use a dictionary to store locations by atom name
+        BetaDict  = containers.Map;   % use a dictionary to store locations by atom name
+
+        for k = min(j):max(j),
+          if strcmp(VERSION{k},'A') || strcmp(VERSION{k},'.') || strcmp(VERSION{k},'?') || isempty(VERSION{k}),
+
+            % store location of base atoms and sugar atoms in a dictionary
+            if any(ATOMNAME{k}=='''') || any(ATOMNAME{k} == '*') || any(ATOMNAME{k} == 'P') ...
+              || (strcmp(NT(n).Unit,'OMC') && strcmp(ATOMNAME{k},'CM2'))
+              an = ATOMNAME{k};
+              an = strrep(an,'*','''');         % replace * with ' for internal use
+              an = strrep(an,'O1P','OP1');
+              an = strrep(an,'O2P','OP2');
+              SugarDict(an) = P(k,1:3);         % store coordinates by atom name
+            else
+              LocDict(ATOMNAME{k}) = P(k,1:3);  % store coordinates by atom name
+            end
+            % store beta values by atom name
+            BetaDict(ATOMNAME{k}) = P(k,1:3);   % store coordinates by atom name
+          end
+        end
+
+        if ~ismember('P',keys(SugarDict)) && ismember('PA',keys(SugarDict))  % GTP case
+          SugarDict('P') = SugarDict('PA');
+        end
+        if ~ismember('OP1',keys(SugarDict)) && ismember('O1A',keys(SugarDict))  % GTP case
+          SugarDict('OP1') = SugarDict('O1A');
+        end
+        if ~ismember('OP2',keys(SugarDict)) && ismember('O2A',keys(SugarDict))  % GTP case
+          SugarDict('OP2') = SugarDict('O2A');
+        end
+
+        NT(n).Loc    = LocDict;                  % dictionary keyed by atom
+        NT(n).Sugar  = SugarDict;                % dictionary keyed by atom
+        NT(n).Beta   = BetaDict;                 % dictionary keyed by atom
+        NT(n).Center = [0 0 0];                  % will be revised later
+        NT(n).Code   = 9;                        % A is 1, C is 2, ... modnt are 9
+        UnitType = 4;                            % modified RNA nucleotide
+        n = n + 1;
 
       end                                         % end four if statements
 
+      % allocate more space for NT variable when it is full
       if n == ntDataSize,
         ntDataSize = ntDataSize * 2;
         NT(ntDataSize).Unit = '';
       end
 
+      % allocate more space for AA variable when it is full
       if aa == aaDataSize,
         aaDataSize = aaDataSize * 2;
         AA(aaDataSize).Unit = '';
       end
 
-      if (UnitType == 0) || NTBackbone == 1,      % unrecognized nucleotide
-        fprintf('Unrecognized unit:  %s%4s_%s will be added as HETATM ========= \n',UnitName,NTNUMBER{j(1)},CHAIN{j(1)});
+      if UnitType == 0 || NTBackbone == 1,      % unrecognized nucleotide
+        fprintf('Unrecognized unit:  %s will be added as HETATM ========= \n',CurrentID);
         if NTBackbone == 1,
           aa = aa - 1;                            % not an amino acid
         end
@@ -375,23 +432,23 @@ if ~isempty(ATOMNUMBER),
 
       elseif (UnitType == 1),                     % standard RNA base
 
-        if (max(max(Loc)) == Inf),                 % base atoms missing
-          n = n - 1;
+        if (max(max(Loc)) == Inf),                % base atoms missing
+          n = n - 1;                              % pretend this nt was never added
           if Verbose > 0,
             NumGood = length(find((Loc(1,:) < Inf) .* (abs(Loc(1,:)) > 0)));
-            fprintf('Base %s%4s_%s has %d atoms, so it will be skipped\n',UnitName,NTNUMBER{j(1)},CHAIN{j(1)},NumGood);
+            fprintf('Base %s has %d atoms, so it will be skipped\n',CurrentID,NumGood);
           end
         elseif (max(max(Sugar)) == Inf),          % sugar atom missing
           NumGood = 12;
           for k = 1:12,
             if Sugar(k,1) == Inf,
-              Sugar(k,:) = Loc(1,:);              % use glycosidic atom
+              Sugar(k,:) = Loc(1,:);              % use glycosidic atom instead
               NumGood    = NumGood - 1;
             end
           end
-          NT(n-1).Sugar = Sugar(:,1:3);
+          NT(n-1).Sugar = Sugar(:,1:3);           % n has already been incremented, so look back to fix
           if Verbose > 0,
-            fprintf('Base %s%4s_%s backbone has %d atoms, substituting glycosidic atom\n',NT(n-1).Base,NT(n-1).Number,NT(n-1).Chain,NumGood);
+            fprintf('Base %s backbone has %d atoms, substituting glycosidic atom\n',CurrentID,NumGood);
           end
         end
       end
@@ -408,24 +465,73 @@ if ~isempty(ATOMNUMBER),
 
   for n=1:NumNT,                                   % analyze all nucleotides
     C  = NT(n).Code;                               % A is 1, C is 2, ...
-    L  = Lim(1,C);                                 % number of atoms in base
-    X  = StandardLoc(1:L,:,C);                     % ideal base atom locations
-    Y  = NT(n).Loc(1:L,:);                         % observed atom locations
+    if C <= 4,                                     % standard RNA base
+      L  = Lim(1,C);                                 % number of atoms in base
+      X  = StandardLoc(1:L,:,C);                     % ideal base atom locations
+      Y  = NT(n).Loc(1:L,:);                         % observed atom locations
 
-    [r, sc, sh] = zBestTransformation(X,Y);        % find best rotation, shift
+      [r, sc, sh] = zBestTransformation(X,Y);        % find best rotation, shift
 
-    L2 = Lim(2,C);                                 % num of atoms and hyd in base
-    X2 = StandardLoc(1:L2,:,C);                    % ideal base & hyd locations
-    F  = (sh*ones(1,L2) + r*X2')';                 % best fit without scaling
-    e  = sqrt(sum(sum((Y - F(1:L,:)).^2)))/L;      % error measure;
-                                                   % should be between 0 and 10
-    if (e > 0.1) && Verbose > 0,
-      fprintf('Nucleotide %c%s has average fitting error %6.4f Angstroms\n', NT(n).Base, NT(n).Number, e);
+      L2 = Lim(2,C);                                 % num of atoms and hyd in base
+      X2 = StandardLoc(1:L2,:,C);                    % ideal base & hyd locations
+      F  = (sh*ones(1,L2) + r*X2')';                 % best fit without scaling
+      e  = sqrt(sum(sum((Y - F(1:L,:)).^2)))/L;      % error measure;
+                                                     % should be between 0 and 10
+      if (e > 0.1) && Verbose > 0,
+        fprintf('Nucleotide %c%s has average fitting error %6.4f Angstroms\n', NT(n).Base, NT(n).Number, e);
+      end
+
+      NT(n).Rot         = r;                         % save the rotation matrix
+      NT(n).Fit(1:L2,:) = F;                         % fitted locations of base, H
+
+    elseif C == 9 && ismember(NT(n).Unit,keys(modnt)),  % known modified nucleotide
+%      NT(n)
+%      fprintf('Modified nucleotide %s\n',NT(n).ID)
+
+      ModNTEntry = modnt(NT(n).Unit);
+      ModAtomFromParentAtom = ModNTEntry("modfromparent");
+
+      C = find(NT(n).Base == 'ACGU');                % code number of parent base
+
+      X = [];                                        % parent atom locations in the plane
+      Y = [];                                        % modified nt locations in space
+
+      for a = 1:Lim(1,C),                            % loop over heavy atoms in parent base
+        if ismember(AtomNames{a,C},keys(ModAtomFromParentAtom)) % atom in correspondence?
+          X = [X; StandardLoc(a,:,C)];               % append location in the plane
+
+          AtomNames{a,C}
+          ModAtomFromParentAtom(AtomNames{a,C})
+          NT(n)
+
+          Y = [Y; NT(n).Loc(ModAtomFromParentAtom(AtomNames{a,C}))]; % append location in space
+        end
+      end
+
+      [r, sc, sh] = zBestTransformation(X,Y);        % find best rotation, shift
+
+      L2 = Lim(2,C);                                 % num of atoms and hyd in base
+      X2 = StandardLoc(1:L2,:,C);                    % ideal base & hyd locations
+      F  = (sh*ones(1,L2) + r*X2')';                 % best fit without scaling
+%      e  = sqrt(sum(sum((Y - F(1:L,:)).^2)))/L;      % error measure; too hard for mod nt
+
+      NT(n).Rot         = r;                         % save the rotation matrix
+      NT(n).Fit(1:L2,:) = F;                         % fitted parent base atoms
+      NT(n).Center      = mean(F(1:Lim(1,C),:));     % use center of fitted parent heavy atoms
+
+%      NT(n)
+
+      if Verbose > 1
+        figure(1)
+        clf
+        VP.LabelBases = 10;
+        VP.LabelAtoms = 10;
+        VP.Sugar = 1;
+        zPlotOneNT(NT(n),VP)
+        pause
+      end
     end
-
-    NT(n).Rot         = r;                         % save the rotation matrix
-    NT(n).Fit(1:L2,:) = F;                         % fitted locations of base, H
-    NT(n).Syn         = 0;
+    NT(n).Syn         = 0;                           % determine anti/syn later
   end
 
   % Fill in fields of File ----------------------------------------------------
