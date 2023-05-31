@@ -92,5 +92,7 @@ for Class = [1:12],
   end
 end
 
+fclose(fid);
+
 % save([pwd filesep 'FR3DSource' filesep 'PairExemplars'],'Exemplar','ExemplarIDI'); % Matlab version 7 only
 % save PairExemplars_Version_6.mat Exemplar ExemplarIDI -V6 % for compatibility with older versions
