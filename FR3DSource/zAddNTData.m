@@ -13,7 +13,7 @@
 % ReadCode = 0 : load .mat files
 % ReadCode = 1 : load .mat files and reclassify
 % ReadCode = 3 : load, but do not append to File (for reclassification)
-% ReadCode = 4 : read .pdb file and reclassify
+% ReadCode = 4 : read .cifatoms or .cif or .pdb file and reclassify
 
 % F = zAddNTData('NonRedundant_2008_02_21_list',0,[],1);
 % F = zAddNTData('http://rna.bgsu.edu/rna3dhub/nrlist/download/2.108/4.0A/csv',0,[],1,0)  % download representative set and use it
@@ -71,8 +71,8 @@ if length(FullList) > 0,
         if ~isempty(FullList{f}),
             i = strmatch(lower(FullList{f}), LoadedFiles, 'exact');
             if isempty(i),                                  % if PDB not loaded,
-                NewF = zLoadIFE(FullList{f},ReadCode,Verbose);
-%                NewF = zGetNTData(FullList{f},ReadCode,Verbose); %   load it
+                NewF = zLoadIFE(FullList{f},ReadCode,Verbose); % this will call zGetNTData
+
                 if KeepAA == 0,
                     NewF = rmfield(NewF,'AA');
                 end
