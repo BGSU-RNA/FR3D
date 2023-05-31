@@ -37,10 +37,10 @@ end
 
 % ------------------------------ specify cutoffs for classification
 
-CarbonDist    = 4.0;                           % max massive - oxygen distance
+CarbonDist    = 4.0;                           % max heavy - oxygen distance
 nCarbonDist   = 4.5;                           % near category
 
-NitrogenDist  = 3.5;                           % max massive - oxygen distance
+NitrogenDist  = 3.5;                           % max heavy - oxygen distance
 nNitrogenDist = 4.0;                           % near category
 
 AL = 130;                                      % angle limit for BPh
@@ -60,8 +60,8 @@ T = [];                          % data on which hydrogen with which oxygen(s)
 zStandardBases
 Sugar = {'C1*','C2*','O2*','C3*','O3*','C4*','O4*','C5*','O5*','P','O1P','O2P','O3 of next'};
 
-p   = [3 7];                           % rows of the ribose oxygens
-pn  = {'O2*','O4*'};                % names of ribose oxygens
+p   = [3 7];                     % rows of the ribose oxygens
+pn  = {'O2*','O4*'};             % names of ribose oxygens
 
 % ------------------------------ loop through files and classify
 
@@ -109,15 +109,44 @@ for f = 1:length(File),
    N1 = File(f).NT(i(k));                       % nucleotide i information
    N2 = File(f).NT(j(k));                       % nucleotide j information
 
+   if N2.Code < 5,                              % RNA
+    Phosphorus = N2.Sugar(10,:);                % row 10 of the matrix
+    Oxygens = N2.Sugar(p,:);                    % two rows of the matrix
+   elseif N2.Code < 9,                          % DNA
+    Phosphorus = N2.Sugar(10,:);                % row 10 of the matrix
+    Oxygens = N2.Sugar(p,:);                    % one row of the matrix
+   else
+    if ismember('P',keys(N2.Sugar))
+      Phosphorus = N2.Sugar('P');
+    else
+      Phosphorus = [Inf Inf Inf];
+    end
+    if ismember('O4*',keys(N2.Sugar))
+      Oxygens = N2.Sugar('O4*');
+    elseif ismember('O4''',keys(N2.Sugar))
+      Oxygens = N2.Sugar('O4''');
+    end
+    if ismember('O2*',keys(N2.Sugar))
+      Oxygens = [Oxygens; N2.Sugar('O2*')];
+    elseif ismember('O2''',keys(N2.Sugar))
+      Oxygens = [Oxygens; N2.Sugar('O2''')];
+    end
+   end
+
    DT = [];                                     % accumulate data here
 
-   ph = (N2.Sugar(10,:)-N1.Fit(1,:)) * N1.Rot;  % phosphorus displacement
+   ph = (Phosphorus-N1.Fit(1,:)) * N1.Rot;  % phosphorus displacement
 
-    switch N1.Code
+    Code = N1.Code;
+    if Code == 9,
+      Code = find(N1.Base == 'ACGU');
+    end
+
+    switch Code
       case 1,                         % Base A
               h   = [11 12 14 15];    % rows of the base hydrogens
               hn  = {'H2','H8','1H6','2H6'}; % names of the base hydrogens
-              m   = [ 9  7  6  6];    % rows of the corresponding massive atoms
+              m   = [ 9  7  6  6];    % rows of the corresponding heavy atoms
               e   = [ 1  4  2  3];    % code for location of the interaction
       case 2,                         % Base C
               h   = [10 11 12 13];
@@ -136,26 +165,26 @@ for f = 1:length(File),
               e   = [16 15 17];
     end
 
-    dis = zDistance(N1.Fit(m,:), N2.Sugar(p,:)); % distances between mass & O's
-    nearDL = nDL(m)' * ones(1,2);     % limits to compare to
-    dis = dis .* (dis < nearDL);      % massive-oxygen pairs close enough
+    dis = zDistance(N1.Fit(m,:), Oxygens); % distances between mass & O's
+    nearDL = nDL(m)' * ones(1,size(Oxygens,1));  % limits to compare to
+    dis = dis .* (dis < nearDL);      % heavy-oxygen pairs close enough
 
     g = [];                           % internal classification number
     w = [];                           % which oxygen interacts
     Angle = [];
     Dist  = [];
 
-    for mm = 1:length(m),             % massive atom to consider
+    for mm = 1:length(m),             % heavy atom to consider
      pp = find(dis(mm,:));            % oxygens close enough to consider
      for n = 1:length(pp),            % loop through potential oxygens
-      Angle(n)=zAngle(N1.Fit(m(mm),:),N1.Fit(h(mm),:),N2.Sugar(p(pp(n)),:));
-                                      % base massive - hydrogen - oxygen angle
+      Angle(n)=zAngle(N1.Fit(m(mm),:),N1.Fit(h(mm),:),Oxygens(pp(n),:));
+                                      % base heavy - hydrogen - oxygen angle
       Dist(n) = dis(mm,pp(n));        % distance
      end
 
-     PAngle = zAngle(N1.Fit(m(mm),:),N1.Fit(h(mm),:),N2.Sugar(10,:));
-                                      % base massive - hydrogen - phosphorus angle
-     PDist  = zDistance(N1.Fit(m(mm),:),N2.Sugar(10,:));        % distance
+     PAngle = zAngle(N1.Fit(m(mm),:),N1.Fit(h(mm),:),Phosphorus);
+                                      % base heavy - hydrogen - phosphorus angle
+     PDist  = zDistance(N1.Fit(m(mm),:),Phosphorus);        % distance
 
      [u,v] = min(-Angle+60*Dist);     % order by quality of potential bond
 
@@ -173,7 +202,7 @@ for f = 1:length(File),
 
         if Verbose > 1,
           % store information for later display
-          ox = (N2.Sugar(p(pp(n)),:)-N1.Fit(1,:)) * N1.Rot; % oxygen displ
+          ox = (Oxygens(pp(n),:)-N1.Fit(1,:)) * N1.Rot; % oxygen displ
 
           a = [f i(k) j(k) N1.Code g(end) mm pp(n) Angle(n) Dist(n) ox ph File(f).Distance(i(k),j(k)) (v(1)==n) -u(1) PAngle PDist str2num(N1.Number) str2num(N2.Number)];
 
@@ -184,18 +213,18 @@ for f = 1:length(File),
           % 2  index of base
           % 3  index of nucleotide using ribose
           % 4  code of base
-          % 5  classification number for this massive-oxygen pair
-          % 6  which massive atom is interacting
+          % 5  classification number for this heavy-oxygen pair
+          % 6  which heavy atom is interacting
           % 7  which oxygen is interacting
           % 8  angle of interaction, in degrees
-          % 9  distance from massive atom to oxygen, in Angstroms
+          % 9  distance from heavy atom to oxygen, in Angstroms
           %10  displacement of oxygen atom relative to C1' of base
           %13  displacement of phophorus atom relative to C1' of base
           %16  distance between centers of the two bases
           %17  1 if this is the best oxygen for this hydrogen, 0 otherwise
           %18  approximate quality of the hydrogen bond
-          %19  angle made by massive, hydrogen, phosphorus
-          %20  distance from massive to phosphorus
+          %19  angle made by heavy, hydrogen, phosphorus
+          %20  distance from heavy to phosphorus
           %21  nucleotide number of base
           %22  nucleotide number of ribose donor
           %23  (to be added below) classification of this interaction
@@ -221,7 +250,7 @@ for f = 1:length(File),
       end
 
      end  % loop over potential oxygens
-    end   % loop over massive atoms
+    end   % loop over heavy atoms
 
      if length(g) > 0,
        if (min(g) < 100) && (max(g) > 100),
@@ -269,7 +298,7 @@ for f = 1:length(File),
         subplot(2,2,c)
 
         oxyg = p(w(1));
-        oxygxyz = N2.Sugar(oxyg,:);
+        oxygxyz = Oxygens(oxyg,:);
         oxygxyzrot = (oxygxyz - N1.Fit(1,:)) * N1.Rot;
 
         colors = {'r','c'};
