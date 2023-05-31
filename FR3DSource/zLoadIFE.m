@@ -19,21 +19,22 @@ if nargin < 4,
   File = zGetNTData(a{1},ReadCode,Verbose);     % load the whole 3D structure file
 end
 
-if length(a) > 1,                              % a model or chain is specified
-  keep = zeros(1,length(File.NT));             % 0 means not to keep a nucleotide
-  for k = 1:length(IFE),
-    for n = 1:length(File.NT),
-      if ~isempty(strfind(File.NT(n).ID,IFE{k})),  % check each IFE part against each nucleotide ID
+if length(a) > 1,                                 % a model or chain is specified
+  indices = [];                                   % empty list
+  for k = 1:length(IFE),                          % loop over IFEs separated by + symbol
+    keep = zeros(1,length(File.NT));              % 0 means not to keep a nucleotide
+    for n = 1:length(File.NT),                    % loop over individual nucleotides
+      if ~isempty(strfind(File.NT(n).ID,IFE{k})), % check each IFE part against each nucleotide ID
         keep(n) = 1;
       end
     end
+    indices = [indices find(keep)];
   end
 
-  indices = find(keep);
 
   if Verbose > 0,
     numnt = length(indices);
-    fprintf('Keeping %5d nucleotides from %s\n',length(indices),IFE{1});
+    fprintf('Keeping %5d nucleotides from %d chains in %s\n',length(indices),length(IFE),a{1});
   end
 
   try
