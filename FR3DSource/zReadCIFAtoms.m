@@ -80,7 +80,7 @@ if isempty(UseFile),
       c = urlread(['http://www.rcsb.org/pdb/files/' PDBID '.cif']);
     end
     if Verbose > 0,
-      fprintf('zReadCIFAtoms: Read the URL\n', PDBID);
+      fprintf('zReadCIFAtoms: Read %d lines of the URL for %s\n', length(c), PDBID);
       drawnow
     end
     fid = fopen(['PDBFiles' filesep PDBID '.cif'],'w');
@@ -92,7 +92,7 @@ if isempty(UseFile),
   end
 end
 
-if isempty(UseFile) && CIFDownloaded > 0 && ~isempty(strfind(lower(Filename),'.cifatoms')),
+if isempty(UseFile) && CIFDownloaded > 0 && (isempty(strfind(lower(Filename),'.cif')) || ~isempty(strfind(lower(Filename),'.cifatoms'))),
   try
     status = 1;
     GetFR3DPythonLocation
