@@ -13,12 +13,35 @@ for f = 1:length(File),
     File(f).Distance = zMutualDistance(c,16); % compute distances < 16 Angstroms
   end
 
-
-
   for i = 2:length(File(f).NT),
-    a = File(f).NT(i).Sugar(10,:);      % phosphorus of current NT
-    b = File(f).NT(i-1).Sugar(5,:);     % O3 of previous NT
-    c = File(f).NT(i-1).Sugar(3,:);     % O2 of previous NT
+    if File(f).NT(i).Code < 9
+      a = File(f).NT(i).Sugar(10,:);      % phosphorus of current NT
+    else
+      Sugar = File(f).NT(i).Sugar;        % dictionary of sugar atom locations
+      if ismember('P',keys(Sugar))
+        a = Sugar('P');
+      else
+        fprintf('%s has no P atom\n',File(f).NT(i).ID);
+        a = [Inf Inf Inf];
+      end
+    end
+
+    if File(f).NT(i-1).Code < 9
+      b = File(f).NT(i-1).Sugar(5,:);     % O3 of previous NT
+      c = File(f).NT(i-1).Sugar(3,:);     % O2 of previous NT
+    else
+      Sugar = File(f).NT(i-1).Sugar;      % dictionary of sugar atom locations
+      if ismember('O3''',keys(Sugar))
+        b = Sugar('O3''');
+      else
+        b = [Inf Inf Inf];
+      end
+      if ismember('O2''',keys(Sugar))
+        c = Sugar('O2''');
+      else
+        c = [Inf Inf Inf];
+      end
+    end
 
     x = norm(a-b);                      % P-O3 distance
     y = norm(a-c);                      % P-O2 distance
@@ -32,7 +55,19 @@ for f = 1:length(File),
     else
       j = find(File(f).Distance(i-1,:));     % nucleotides somewhat near i-1
       for k = 1:length(j),
-        a = File(f).NT(j(k)).Sugar(10,:);      % phosphorus of current NT
+
+        if File(f).NT(j(k)).Code < 9
+          a = File(f).NT(j(k)).Sugar(10,:);      % phosphorus of current NT
+        else
+          Sugar = File(f).NT(j(k)).Sugar;        % dictionary of sugar atom locations
+	      if ismember('P',keys(Sugar))
+	        a = Sugar('P');
+	      else
+	        fprintf('%s has no P atom\n',File(f).NT(i).ID);
+	        a = [Inf Inf Inf];
+	      end
+        end
+
         x = norm(a-b);
         y = norm(a-c);
 
