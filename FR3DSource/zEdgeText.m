@@ -101,9 +101,13 @@ if length(e) == 1,
   end
 
   if nargin == 4,
-    if any(fix(abs(e)) == [11 12 111 112]),
-      EE = E;                                     % reset to original
-    elseif any(abs(e) == [1 7 8]) && (C1 == C2),
+    if any(fix(abs(e)) == [11 111]),                     % cSS pairs
+      EE = E;                                            % use uppercase/lowercase
+    elseif any(fix(abs(e)) == [12 112]) && (C1 == 1),    % tSS AA pairs
+      EE = E;                                            % use uppercase/lowercase
+    elseif any(abs(e) == [1 7 101 107]) && (C1 == C2),           % cWW, cHH pairs
+      EE = E;
+    elseif any(abs(e) == [8 108]) && (C1 == C2) && (C1 > 1), % tHH except AA
       EE = E;
     end
   end
