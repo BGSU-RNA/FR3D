@@ -52,6 +52,7 @@ for f=1:length(Filenames),
 
   clear File
 
+  % if the user has specifically requested a particular extension
   if ~isempty(strfind(upper(extension),'.PDB')) || ~isempty(strfind(upper(extension),'.CIF')) || ~isempty(strfind(upper(extension),'.CIFATOMS')),
     File = zReadandAnalyze(Filename,Verbose);
     ReadCode = 4;
@@ -177,9 +178,7 @@ for f=1:length(Filenames),
   File.Distance = [];                        % only compute this if needed
 
   if length(File.NT) > 1,                    % if it has nucleotides,
-    if length(File.NT(1).Sugar(:,1)) < 13,
-      File = zStoreO3(File);
-    end
+    File = zStoreO3(File);                   % store O3 of previous nt with next nt
 
     if (ReadCode == 1) || (ReadCode == 3) || (ReadCode == 4) || ...
       (ClassifyCode == 1) || (File.ClassVersion < CurrentVersion),
@@ -309,7 +308,6 @@ for f=1:length(Filenames),
     File = zGetPDBInfo(File);          % get resolution and other info
     SaveCode = 1;
   end
-
 
   % obsolete code for reading .pdb1 files to get the biological unit coordinates; these can be obtained with symmetry operators in CIF files
   if 0 > 1,
