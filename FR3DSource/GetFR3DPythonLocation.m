@@ -2,7 +2,7 @@
 
 if ~isempty(strfind(pwd,'zirbel')),
   PythonLocation = 'C:\Users\zirbel\Documents\GitHub\fr3d-python\examples\';
-  PythonVersion = 'python';                    % python 2.7 required
+  PythonVersion = 'python311';
 else
   PythonLocation = '';
   PythonVersion = 'python';
