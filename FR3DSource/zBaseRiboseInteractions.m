@@ -116,20 +116,20 @@ for f = 1:length(File),
     Phosphorus = N2.Sugar(10,:);                % row 10 of the matrix
     Oxygens = N2.Sugar(p,:);                    % one row of the matrix
    else
-    if ismember('P',keys(N2.Sugar))
-      Phosphorus = N2.Sugar('P');
+    if ismember('P',keys(N2.SugarDict))
+      Phosphorus = N2.SugarDict('P');
     else
       Phosphorus = [Inf Inf Inf];
     end
-    if ismember('O4*',keys(N2.Sugar))
-      Oxygens = N2.Sugar('O4*');
-    elseif ismember('O4''',keys(N2.Sugar))
-      Oxygens = N2.Sugar('O4''');
+    if ismember('O4*',keys(N2.SugarDict))
+      Oxygens = N2.SugarDict('O4*');
+    elseif ismember('O4''',keys(N2.SugarDict))
+      Oxygens = N2.SugarDict('O4''');
     end
-    if ismember('O2*',keys(N2.Sugar))
-      Oxygens = [Oxygens; N2.Sugar('O2*')];
-    elseif ismember('O2''',keys(N2.Sugar))
-      Oxygens = [Oxygens; N2.Sugar('O2''')];
+    if ismember('O2*',keys(N2.SugarDict))
+      Oxygens = [Oxygens; N2.SugarDict('O2*')];
+    elseif ismember('O2''',keys(N2.SugarDict))
+      Oxygens = [Oxygens; N2.SugarDict('O2''')];
     end
    end
 
