@@ -39,7 +39,7 @@ for f = 1:length(File),
 
   DataHeader1 = sprintf('# PDB_ID_FR3D_Version_%s',Vers);
 
-  DataHeader2 = sprintf('PDB_ID\tInteraction\tNucleotide_1_Base\tNucleotide_1_PDB_Number\tNucleotide_1_Chain\tNucleotide_1_Sequence_Position\tNucleotide_2_Base\tNucleotide_2_PDB_Number\tNucleotide_2_Chain\tNucleotide_2_Sequence_Position');
+  DataHeader2 = sprintf('PDB_ID\tInteraction\tNucleotide_1_Base\tNucleotide_1_PDB_Number\tNucleotide_1_Chain\tNucleotide_1_Sequence_Position\tNucleotide_2_Base\tNucleotide_2_PDB_Number\tNucleotide_2_Chain\tNucleotide_2_Sequence_Position\tunit_id_1\tunit_id_2');
 
   % -------------------------------------------------- Set paths
 
@@ -96,7 +96,7 @@ for f = 1:length(File),
 
       T = zEdgeText(File(f).Edge(i,j(k)),0,N1.Code,N2.Code);
 
-      DText{c} = sprintf('%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%d\n', File(f).Filename, T, N1.Base, N1.Number, N1.Chain, ii, N2.Base, N2.Number, N2.Chain, jj);
+      DText{c} = sprintf('%s\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%d\t%s\t%s\n', File(f).Filename, T, N1.Base, N1.Number, N1.Chain, ii, N2.Base, N2.Number, N2.Chain, jj, N1.ID, N2.ID);
 
       InterType(c) = abs(File(f).Edge(i,j(k)));
 
