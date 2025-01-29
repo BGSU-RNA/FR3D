@@ -31,30 +31,31 @@ switch Paircode
     N2 = NT2;
 end
 
+% already done in zReadandAnalyze.m
 % for modified nucleotides, replace Sugar dictionary with matrix for convenience
-if N1.Code == 9
-  Sugar = [];
-  if ismember('O2*',keys(N1.Sugar))
-    Sugar(3,:) = N1.Sugar('O2*');
-  elseif ismember('O2''',keys(N1.Sugar))
-    Sugar(3,:) = N1.Sugar('O2''');
-  else
-    Sugar(3,:) = [Inf Inf Inf];           % O2' not present, can't make this interaction
-  end
-  N1.Sugar = Sugar;
-end
+% if N1.Code == 9
+%   Sugar = [];
+%   if ismember('O2*',keys(N1.SugarDict))
+%     Sugar(3,:) = N1.SugarDict('O2*');
+%   elseif ismember('O2''',keys(N1.SugarDict))
+%     Sugar(3,:) = N1.SugarDict('O2''');
+%   else
+%     Sugar(3,:) = [Inf Inf Inf];           % O2' not present, can't make this interaction
+%   end
+%   N1.Sugar = Sugar;
+% end
 
-if N2.Code == 9
-  Sugar = [];
-  if ismember('O2*',keys(N2.Sugar))
-    Sugar(3,:) = N2.Sugar('O2*');
-  elseif ismember('O2''',keys(N2.Sugar))
-    Sugar(3,:) = N2.Sugar('O2''');
-  else
-    Sugar(3,:) = [Inf Inf Inf];           % O2' not present, can't make this interaction
-  end
-  N2.Sugar = Sugar;
-end
+% if N2.Code == 9
+%   Sugar = [];
+%   if ismember('O2*',keys(N2.Sugar))
+%     Sugar(3,:) = N2.Sugar('O2*');
+%   elseif ismember('O2''',keys(N2.Sugar))
+%     Sugar(3,:) = N2.Sugar('O2''');
+%   else
+%     Sugar(3,:) = [Inf Inf Inf];           % O2' not present, can't make this interaction
+%   end
+%   N2.Sugar = Sugar;
+% end
 
 Paircode = 4*(Code2-1) + Code1;       % AA is 1, CA is 2, etc.
 
