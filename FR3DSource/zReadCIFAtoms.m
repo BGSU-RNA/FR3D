@@ -1,4 +1,7 @@
 % zReadCIFAtoms.m reads ATOM and HETATM records extracted from a CIF file
+% The Filename passed in could be like 4TNA or 4TNA.cif or 4TNA.cifatoms
+% No support for .gz versions of .cif or .cifatoms
+
 % It assumes that the data fields are always in this order:
 % loop_
 % _atom_site.group_PDB           'ATOM'
@@ -43,104 +46,146 @@ function [ATOM_TYPE, ATOMNUMBER, ATOMNAME, VERSION, UNITNAME, CHAIN, NTNUMBER, P
 
 Verbose = 1;
 
-CIFDownloaded = 0;
-UseFile = '';
+[pathstr, PDBID, extension] = fileparts(Filename);
 
-[pathstr, name, extension] = fileparts(Filename);
-PDBID = name;
-
-if exist(Filename),                    % file is found, either with a direct path, or on Matlab's path
-  UseFile = Filename;
-elseif exist([PDBID '.cif']) && length(pathstr) == 0,     % .cif file found, not directed to a specific path
+if exist(Filename,'file') == 2              % file is found, either with a direct path, or on Matlab's path
+  fprintf(Filename+"\n")
+  route = 1;
+  CIFDownloaded = 1;
+  UseFile = [PDBID extension];
+  if length(pathstr) > 0
+    UsePath = pathstr;
+  else
+    [UsePath,~,~] = fileparts(which(Filename));         % get the path to the file
+  end
+elseif exist([Filename '.cifatoms'],'file') % only name was given, but .cifatoms file is found
+  route = 2;
+  CIFDownloaded = 1;
+  UseFile = [PDBID '.cifatoms'];
+  [UsePath,~,~] = fileparts(which([Filename '.cifatoms']));  % get the path to the file
+elseif exist([Filename '.cif'],'file') % only name was given, but .cif file is found
+  route = 3;
   CIFDownloaded = 1;
   UseFile = [PDBID '.cif'];
-elseif length(pathstr) > 0,            % directed to a specific path, but no file found there; should download cif to there
-
-else                                   % no .cif file found
-  if ~(exist('PDBFiles') == 7),        % if directory doesn't yet exist
-    mkdir('PDBFiles');
-  end
-  path(path,[pwd filesep 'PDBFiles']);
-
-  if ~(exist('PrecomputedData') == 7),        % if directory doesn't yet exist
-    mkdir('PrecomputedData');
-  end
-  path(path,[pwd filesep 'PrecomputedData']);
+  [UsePath,~,~] = fileparts(which([Filename '.cif']));  % get the path to the file
+elseif exist([PDBID '.cif'],'file')    % .cif file is found
+  route = 4;
+  CIFDownloaded = 1;
+  UseFile = [PDBID '.cif'];
+  [UsePath,~,~] = fileparts(which([PDBID '.cif']));  % get the path to the file
+elseif length(pathstr) > 0             % directed to a specific path but no file found there; should download cif to there
+  route = 5;
+  CIFDownloaded = 0;
+  UseFile = [PDBID '.cif'];
+  UsePath = pathstr;                   % use the indicated path
+else                                   % no path given, no .cif file found yet
+  route = 6;
+  CIFDownloaded = 0;
+  UseFile = [PDBID '.cif'];
+  UsePath = zPathToDirectory('PDBFiles');  % get the path to where the PDBFiles directory is
+  UsePath = [UsePath filesep 'PDBFiles'];  % the actual path to PDBFiles
 end
 
-if isempty(UseFile),
+fprintf('Using filename %s and path %s from route %d\n', UseFile, UsePath, route);
+
+if length(UsePath) > 0 && ~exist(UsePath,'dir')          % if directory doesn't yet exist
+  mkdir(UsePath);
+end
+
+% make sure .cif file is downloaded, if needed
+if CIFDownloaded == 0
   try
-    if Verbose > 0,
+    if Verbose > 0
       fprintf('zReadCIFAtoms: Attempting to download %s.cif from PDB\n', PDBID);
       drawnow
     end
-    if exist('webread'),
-      c = webread(['http://www.rcsb.org/pdb/files/' PDBID '.cif']);
+    if exist('webread','file')
+      c = webread(['https://www.rcsb.org/pdb/files/' PDBID '.cif']);
     else
-      c = urlread(['http://www.rcsb.org/pdb/files/' PDBID '.cif']);
+      c = urlread(['https://www.rcsb.org/pdb/files/' PDBID '.cif']);
     end
-    if Verbose > 0,
-      fprintf('zReadCIFAtoms: Read %d lines of the URL for %s\n', length(c), PDBID);
-      drawnow
-    end
-    fid = fopen(['PDBFiles' filesep PDBID '.cif'],'w');
+    fid = fopen([UsePath filesep UseFile],'w');
     fprintf(fid,'%s\n',c);
     fclose(fid);
+    if Verbose > 0
+      fprintf('zReadCIFAtoms: Read %d lines of the URL for %s and saved in %s\n', length(c), PDBID, UsePath);
+      drawnow
+    end
     CIFDownloaded = 1;
   catch
     fprintf('zReadCIFAtoms: Unable to download %s.cif from PDB\n', PDBID);
   end
 end
 
-if isempty(UseFile) && CIFDownloaded > 0 && (isempty(strfind(lower(Filename),'.cif')) || ~isempty(strfind(lower(Filename),'.cifatoms'))),
+% make sure PrecomputedData directory exists
+if exist('PrecomputedData','dir')
+  % not sure this works, Matlab is weird about "which" with directories, the path, and pwd
+  try
+    PrecomputedDataPath = which('PrecomputedData');
+  catch
+    PrecomputedDataPath = [pwd filesep 'PrecomputedData'];
+  end
+else
+  % if directory doesn't yet exist
+  % not likely to work
+  CommonPath = which('PDBFiles');
+  PrecomputedDataPath = [CommonPath filesep 'PrecomputedData'];
+  if ~exist(PrecomputedDataPath,'dir')        % if directory doesn't yet exist
+    mkdir(PrecomputedDataPath);
+  end
+  path(path,PrecomputedDataPath);
+end
+
+% make sure .cifatoms file exists
+[~, ~, extension] = fileparts(UseFile);
+if extension == ".cif"
+  % have a .cif file but not a .cifatoms file yet
   try
     status = 1;
     GetFR3DPythonLocation
-    if ~isempty(PythonLocation),
-      fprintf('zReadCIFAtoms: Attempting to add unit ids and any crystal symmetries and save in %s\n',[PDBID '.cifatoms']);
-      [status,result] = system([PythonVersion ' ' PythonLocation 'cifatom_writing.py ' pwd filesep 'PDBFiles' filesep PDBID '.cif']);
+    if ~isempty(PythonLocation)
+      fprintf('zReadCIFAtoms: Attempting to add unit ids and any symmetries and save in %s\n',[PDBID '.cifatoms']);
+      [status,result] = system([PythonVersion ' ' PythonLocation 'cifatom_add_unitid.py ' UsePath filesep UseFile]);
+      % fprintf('zReadCIFAtoms: status: %s result: %s\n',status, result)
     else
       fprintf('zReadCIFAtoms: You can modify GetFR3DPythonLocation.m to specify where to find cifatom_writing.py to produce .cifatoms file.\n');
-      fprintf('zReadCIFAtoms:  Python 2.7 is needed, also set the variable PythonVersion to tell how to run python 2.7 on your machine.\n');
-      fprintf('repositories fr3d-python and pdbx are also needed.  Contact Craig Zirbel\n');
+      fprintf('zReadCIFAtoms: Repositories fr3d-python and pdbx are also needed.\n');
+      fprintf('Contact Craig Zirbel zirbel@bgsu.edu with questions.\n');
     end
-    if status == 0,
+    if status == 0
       UseFile = [PDBID '.cifatoms'];
-      fprintf('zReadCIFAtoms: Produced a .cifatoms file\n');
+      fprintf('zReadCIFAtoms: Produced %s in %s\n',UseFile,UsePath);
     else
-      UseFile = [PDBID '.cif'];
       fprintf('zReadCIFAtoms: Was not able to produce a .cifatoms file\n');
       fprintf('%s\n',result)
+      fprintf('zReadCIFAtoms: Will try to read the .cif file instead\n');
     end
   catch
-    fprintf('zReadCIFAtoms: Unable to use cifatom_writing.py to convert .cif file to .cifatoms file\n');
-    UseFile = [PDBID '.cif'];
+    fprintf('zReadCIFAtoms: Unable to convert .cif file to .cifatoms file\n');
+    fprintf('zReadCIFAtoms: Will try to read the .cif file instead\n');
   end
 end
 
-DataSize = 1000;                       % keep track of how much space is allocated, allocate more as needed
-
-if ~isempty(UseFile) && exist(UseFile),
-  c = 1;                               % line counter
-  if Verbose > 0,
-    fprintf('zReadCIFAtoms: Reading %s\n', UseFile);
+if ~isempty(UseFile) && exist(UseFile,'file')
+  % read the file and figure out the header lines, which are data columns
+  if Verbose > 0
+    fprintf('zReadCIFAtoms: Reading %s from %s found on route %d\n', UseFile, UsePath, route);
   end
-  fid = fopen(UseFile,'r');
+  fid = fopen([UsePath filesep UseFile],'r');
   StartHeader = 0;                       % keep track of whether any header lines have been found yet
   header = 1;
   headerlines = 0;
   fieldcounter = 0;
-  row = 1;
   UnitIDField = [];
   ColumnsToKeep = 1;
 
   Line = fgetl(fid);
-  while ischar(Line) && header == 1,
+  while ischar(Line) && header == 1
     headerlines = headerlines + 1;
     if StartHeader > 0 && any(strfind(Line,'ATOM') > 0) || any(strfind(Line,'HETATM') > 0),   % line contains ATOM or HETATM
       header = 0;                                    % header is over
     end
-    if ~isempty(strfind(Line,'_atom_site.')),
+    if ~isempty(strfind(Line,'_atom_site.'))
       StartHeader = 1;
       fieldcounter = fieldcounter + 1;
       switch strrep(Line,' ',''),
@@ -203,7 +248,6 @@ if ~isempty(UseFile) && exist(UseFile),
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
         ColumnsToKeep = ColumnsToKeep + 1;
       case '_atom_site.auth'
-      case '_atom_id'
       case '_atom_site.pdbx_PDB_model_num'
         ModelNumberField = fieldcounter;
         fieldtocolumn(fieldcounter) = ColumnsToKeep;
@@ -222,11 +266,11 @@ if ~isempty(UseFile) && exist(UseFile),
   headerlines = headerlines - 1;
 
   fprintf('zReadCIFAtoms: Found %d fields to read\n',fieldcounter);
-  fprintf('zReadCIFAtoms: Found %d header lines to skip\n',headerlines);
+  % fprintf('zReadCIFAtoms: Found %d header lines to skip\n',headerlines);
 
   format = '';
-  for i = 1:fieldcounter,
-    if any(i == [XCoordField YCoordField ZCoordField ModelNumberField]),
+  for i = 1:fieldcounter
+    if any(i == [XCoordField YCoordField ZCoordField ModelNumberField])
       format = [format '%f'];
     elseif any(i == [AtomTypeField AtomNumberField AtomLabelIDField VersionField UnitNameField ChainField InsertionCodeField ResidueNumberField UnitIDField])
       format = [format '%s'];
@@ -235,33 +279,33 @@ if ~isempty(UseFile) && exist(UseFile),
     end
   end
 
-  if Verbose > 0,
+  if Verbose > 1
     D = whos();
-    fprintf('Bytes before reading:  %12d\n',sum(cat(1,D.bytes)));
+    fprintf('zReadCIFAtoms: Bytes before reading:  %12d\n',sum(cat(1,D.bytes)));
   end
 
+  % read the data in the .cif or .cifatoms file
   fid = fopen(UseFile);
   A = textscan(fid,format,'headerlines',headerlines);
   fclose(fid);
 
-  if Verbose > 0,
+  if Verbose > 1
     D = whos();
-    fprintf('Bytes  after reading:  %12d\n',round(sum(cat(1,D.bytes))));
+    fprintf('zReadCIFAtoms: Bytes  after reading:  %12d\n',round(sum(cat(1,D.bytes))));
   end
 
   i = 1;
-
-  while strcmp(A{fieldtocolumn(AtomTypeField)}{i},'ATOM') || strcmp(A{fieldtocolumn(AtomTypeField)}{i},'HETATM'),
+  while strcmp(A{fieldtocolumn(AtomTypeField)}{i},'ATOM') || strcmp(A{fieldtocolumn(AtomTypeField)}{i},'HETATM')
     i = i + 1;
   end
   NumLines = i-1;
 
-  if Verbose > 0,
+  if Verbose > 1
     D = whos();
-    fprintf('%12d\n',round(sum(cat(1,D.bytes))));
+    fprintf('zReadCIFAtoms: Bytes  after reading:  %12d\n',round(sum(cat(1,D.bytes))));
   end
 
-  fprintf('zReadCIFAtoms: Found %d lines of ATOM data\n',NumLines);
+  fprintf('zReadCIFAtoms: Found %d lines of ATOM or HETATM data\n',NumLines);
 
   ATOM_TYPE     = A{fieldtocolumn(AtomTypeField)}(1:NumLines);
   ATOMNAME      = A{fieldtocolumn(AtomLabelIDField)}(1:NumLines);
@@ -274,16 +318,16 @@ if ~isempty(UseFile) && exist(UseFile),
   P             = [A{fieldtocolumn(XCoordField)}(1:NumLines) A{fieldtocolumn(YCoordField)}(1:NumLines) A{fieldtocolumn(ZCoordField)}(1:NumLines)];
   ModelNum      = A{fieldtocolumn(ModelNumberField)}(1:NumLines);
 
-  if Verbose > 0,
+  if Verbose > 1
     D = whos();
-    fprintf('Bytes after storing: %12d\n',sum(cat(1,D.bytes)));
+    fprintf('zReadCIFAtoms: Bytes after storing: %12d\n',sum(cat(1,D.bytes)));
   end
 
-  fprintf('zReadCIFAtoms: Defined most variables to pass back\n');
+  % fprintf('zReadCIFAtoms: Defined most variables to pass back\n');
 
   BETA = NaN * ones(NumLines,1);
   OCC = cell(NumLines,1);
-  for i = 1:NumLines,
+  for i = 1:NumLines
     if InsertionCode{i} ~= '?'
       NTNUMBER{i} = [NTNUMBER{i} InsertionCode{i}];
     end
@@ -291,7 +335,7 @@ if ~isempty(UseFile) && exist(UseFile),
     OCC{i} = '';
   end
 
-  if ~isempty(UnitIDField),
+  if ~isempty(UnitIDField)
     UNITID = A{fieldtocolumn(UnitIDField)}(1:NumLines);
   else
     UNITID = OCC;
@@ -299,9 +343,9 @@ if ~isempty(UseFile) && exist(UseFile),
 
   Readable = 1;
 
-  if Verbose > 0,
+  if Verbose > 1
     D = whos();
-    fprintf('Bytes at the end: %12d\n',sum(cat(1,D.bytes)));
+    fprintf('zReadCIFAtoms: Bytes at the end: %12d\n',sum(cat(1,D.bytes)));
   end
 
 else
